@@ -59,6 +59,10 @@ app.include_router(google_books.router, prefix="/api")
 from app.api.routes import bangumi
 app.include_router(bangumi.router, prefix="/api")
 
+# 统一搜索路由
+from app.api.routes import unified_search
+app.include_router(unified_search.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点
