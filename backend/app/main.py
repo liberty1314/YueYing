@@ -51,6 +51,10 @@ app.include_router(auth.router, prefix="/api")
 from app.api.routes import tmdb
 app.include_router(tmdb.router, prefix="/api")
 
+# Google Books API 路由
+from app.api.routes import google_books
+app.include_router(google_books.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点
