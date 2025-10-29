@@ -55,6 +55,10 @@ app.include_router(tmdb.router, prefix="/api")
 from app.api.routes import google_books
 app.include_router(google_books.router, prefix="/api")
 
+# Bangumi API 路由
+from app.api.routes import bangumi
+app.include_router(bangumi.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点

@@ -90,6 +90,14 @@ class Settings(BaseSettings):
         default=None, alias="GOOGLE_BOOKS_API_KEY"
     )
 
+    # Bangumi API（番组计划）
+    BANGUMI_API_KEY: Optional[str] = Field(
+        default=None, alias="BANGUMI_API_KEY"
+    )
+    BANGUMI_APP_ID: Optional[str] = Field(
+        default=None, alias="BANGUMI_APP_ID"
+    )
+
     # ====================================
     # LLM API 配置
     # ====================================
