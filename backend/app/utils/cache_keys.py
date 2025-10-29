@@ -1,81 +1,70 @@
 """
-缓存键常量定义
+缓存键和 TTL 配置
 
-统一管理所有缓存键的前缀，方便维护和管理
+定义所有缓存键的前缀和过期时间
 """
 
+# ==================== 缓存键前缀 ====================
 
-class CacheKeys:
-    """缓存键常量"""
+# 用户相关
+USER_CACHE_PREFIX = "user"
+USER_SESSION_PREFIX = "session"
 
-    # 用户相关
-    USER_BY_ID = "user:id"
-    USER_BY_EMAIL = "user:email"
-    USER_BY_USERNAME = "user:username"
-    USER_SETTINGS = "user:settings"
+# 内容相关
+ITEM_CACHE_PREFIX = "item"
+ITEM_LIST_PREFIX = "item:list"
 
-    # 内容相关
-    ITEM_BY_ID = "item:id"
-    ITEM_BY_EXTERNAL_ID = "item:external"
-    ITEM_SEARCH = "item:search"
+# 标签相关
+TAG_CACHE_PREFIX = "tag"
 
-    # 第三方 API 缓存
-    TMDB_MOVIE = "tmdb:movie"
-    TMDB_TV = "tmdb:tv"
-    TMDB_SEARCH = "tmdb:search"
-    DOUBAN_MOVIE = "douban:movie"
-    DOUBAN_BOOK = "douban:book"
-    GOOGLE_BOOKS = "google:books"
-    ANILIST_ANIME = "anilist:anime"
+# 收藏相关
+COLLECTION_CACHE_PREFIX = "collection"
 
-    # 统计数据
-    STATS_USER = "stats:user"
-    STATS_ITEM = "stats:item"
-    STATS_SYSTEM = "stats:system"
-
-    # 推荐系统
-    RECOMMEND_USER = "recommend:user"
-    RECOMMEND_ITEM = "recommend:item"
-
-    # API 限流
-    RATE_LIMIT_API = "ratelimit:api"
-    RATE_LIMIT_USER = "ratelimit:user"
-
-    # 会话
-    SESSION = "session"
-
-    # 验证码
-    VERIFICATION_CODE = "verify:code"
-    PASSWORD_RESET = "verify:password_reset"
+# 外部 API 相关
+TMDB_PREFIX = "tmdb"
+DOUBAN_PREFIX = "douban"
+GOOGLE_BOOKS_PREFIX = "google_books"
+ANILIST_PREFIX = "anilist"
 
 
-class CacheTTL:
-    """缓存过期时间常量（秒）"""
+# ==================== TTL (Time-To-Live) 配置 ====================
 
-    # 短期缓存（5分钟）
-    SHORT = 5 * 60
+# 短期缓存 (5 分钟)
+SHORT_CACHE_TTL = 5 * 60
 
-    # 中期缓存（30分钟）
-    MEDIUM = 30 * 60
+# 中期缓存 (30 分钟)
+MEDIUM_CACHE_TTL = 30 * 60
 
-    # 长期缓存（1小时）
-    LONG = 60 * 60
+# 长期缓存 (1 小时)
+LONG_CACHE_TTL = 60 * 60
 
-    # 超长期缓存（1天）
-    VERY_LONG = 24 * 60 * 60
+# 超长期缓存 (24 小时)
+VERY_LONG_CACHE_TTL = 24 * 60 * 60
 
-    # 第三方 API 缓存（1小时）
-    API_CACHE = 60 * 60
+# 用户数据缓存
+USER_CACHE_TTL = MEDIUM_CACHE_TTL
+USER_SESSION_TTL = 7 * 24 * 60 * 60  # 7 天
 
-    # 用户会话（7天）
-    SESSION = 7 * 24 * 60 * 60
+# 内容数据缓存
+ITEM_CACHE_TTL = LONG_CACHE_TTL
+ITEM_LIST_TTL = MEDIUM_CACHE_TTL
 
-    # 验证码（10分钟）
-    VERIFICATION_CODE = 10 * 60
+# 标签缓存
+TAG_CACHE_TTL = VERY_LONG_CACHE_TTL
 
-    # 密码重置（30分钟）
-    PASSWORD_RESET = 30 * 60
+# 收藏缓存
+COLLECTION_CACHE_TTL = MEDIUM_CACHE_TTL
 
-    # 永不过期
-    NEVER = None
+# 外部 API 缓存
+TMDB_SEARCH_TTL = MEDIUM_CACHE_TTL  # 搜索结果 30 分钟
+TMDB_MOVIE_DETAIL_TTL = VERY_LONG_CACHE_TTL  # 电影详情 24 小时
+TMDB_TV_DETAIL_TTL = VERY_LONG_CACHE_TTL  # 剧集详情 24 小时
 
+DOUBAN_SEARCH_TTL = MEDIUM_CACHE_TTL
+DOUBAN_DETAIL_TTL = VERY_LONG_CACHE_TTL
+
+GOOGLE_BOOKS_SEARCH_TTL = MEDIUM_CACHE_TTL
+GOOGLE_BOOKS_DETAIL_TTL = VERY_LONG_CACHE_TTL
+
+ANILIST_SEARCH_TTL = MEDIUM_CACHE_TTL
+ANILIST_DETAIL_TTL = VERY_LONG_CACHE_TTL

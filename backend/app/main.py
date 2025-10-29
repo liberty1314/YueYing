@@ -47,11 +47,20 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # 认证路由
 app.include_router(auth.router, prefix="/api")
 
+# TMDB API 路由
+from app.api.routes import tmdb
+app.include_router(tmdb.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点
 # ====================================
-@app.get("/health", tags=["health"])
+@app.get(
+    "/health",
+    tags=["health"],
+    summary="健康检查",
+    description="检查服务运行状态"
+)
 async def health_check():
     """健康检查端点"""
     return JSONResponse(
@@ -64,7 +73,12 @@ async def health_check():
 
 
 # 根路径
-@app.get("/", tags=["root"])
+@app.get(
+    "/",
+    tags=["root"],
+    summary="API 根路径",
+    description="欢迎页面，提供 API 基本信息和文档链接"
+)
 async def root():
     """根路径"""
     return {

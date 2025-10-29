@@ -23,7 +23,13 @@ from app.models.user import User
 router = APIRouter(prefix="/auth", tags=["认证"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="用户注册",
+    description="创建新用户账户"
+)
 def register(
     user_data: UserRegister,
     db: Session = Depends(get_db),
@@ -37,7 +43,12 @@ def register(
     return user
 
 
-@router.post("/login", response_model=Token)
+@router.post(
+    "/login",
+    response_model=Token,
+    summary="用户登录",
+    description="验证用户凭据并返回访问令牌和刷新令牌"
+)
 def login(
     login_data: UserLogin,
     db: Session = Depends(get_db),
@@ -60,7 +71,12 @@ def login(
     return tokens
 
 
-@router.post("/refresh", response_model=dict)
+@router.post(
+    "/refresh",
+    response_model=dict,
+    summary="刷新令牌",
+    description="使用刷新令牌获取新的访问令牌"
+)
 def refresh_token(
     refresh_data: TokenRefresh,
 ):
@@ -77,7 +93,12 @@ def refresh_token(
     }
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="获取当前用户信息",
+    description="返回当前登录用户的详细信息"
+)
 def get_current_user_info(
     current_user: User = Depends(get_current_active_user),
 ):
@@ -89,7 +110,12 @@ def get_current_user_info(
     return current_user
 
 
-@router.post("/change-password", response_model=dict)
+@router.post(
+    "/change-password",
+    response_model=dict,
+    summary="修改密码",
+    description="修改当前用户的密码"
+)
 def change_password(
     password_data: PasswordChange,
     current_user: User = Depends(get_current_active_user),
@@ -115,7 +141,12 @@ def change_password(
     }
 
 
-@router.post("/logout", response_model=dict)
+@router.post(
+    "/logout",
+    response_model=dict,
+    summary="退出登录",
+    description="退出登录（客户端应删除本地存储的 token）"
+)
 def logout(
     current_user: User = Depends(get_current_active_user),
 ):
