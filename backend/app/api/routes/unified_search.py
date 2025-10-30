@@ -33,7 +33,6 @@ router = APIRouter(prefix="/search", tags=["统一搜索"])
     - tv: 电视剧（TMDB）
     - anime: 动画（Bangumi）
     - book: 书籍（Google Books）
-    - game: 游戏（Bangumi）
     - all: 所有类型
     
     搜索结果会自动去重、排序并分页。

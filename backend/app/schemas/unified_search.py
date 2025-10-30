@@ -13,7 +13,6 @@ class ContentType(str, Enum):
     TV = "tv"
     ANIME = "anime"
     BOOK = "book"
-    GAME = "game"
     ALL = "all"
 
 
@@ -141,8 +140,7 @@ class SearchStatsResponse(BaseModel):
                     "movie": 15,
                     "tv": 10,
                     "anime": 10,
-                    "book": 15,
-                    "game": 0
+                    "book": 15
                 }
             }
         }

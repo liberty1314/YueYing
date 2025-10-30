@@ -15,6 +15,7 @@ const nextConfig = {
       'img2.doubanio.com', // 豆瓣图片
       'img1.doubanio.com',
       's4.anilist.co', // AniList 图片
+      'lain.bgm.tv', // Bangumi 图片
     ],
     formats: ['image/webp', 'image/avif'],
   },

@@ -23,7 +23,6 @@ class ContentType(str, Enum):
     TV = "tv"
     ANIME = "anime"
     BOOK = "book"
-    GAME = "game"
     ALL = "all"
 
 
@@ -55,7 +54,7 @@ class UnifiedSearchService:
 
         Args:
             query: 搜索关键词
-            content_type: 内容类型（movie/tv/anime/book/game/all）
+            content_type: 内容类型（movie/tv/anime/book/all）
             max_results: 每个来源的最大结果数
             page: 页码
 
@@ -81,9 +80,6 @@ class UnifiedSearchService:
 
         if content_type in [ContentType.BOOK, ContentType.ALL]:
             search_tasks.append(self._search_google_books(query, max_results))
-
-        if content_type in [ContentType.GAME, ContentType.ALL]:
-            search_tasks.append(self._search_bangumi_games(query, max_results))
 
         # 并行执行所有搜索任务
         results = await asyncio.gather(*search_tasks, return_exceptions=True)
@@ -165,26 +161,6 @@ class UnifiedSearchService:
             ]
         except Exception as e:
             logger.error(f"Bangumi anime search failed: {e}")
-            return []
-
-    async def _search_bangumi_games(
-        self, query: str, max_results: int
-    ) -> List[Dict[str, Any]]:
-        """搜索Bangumi游戏"""
-        try:
-            response = await self.bangumi.search_subjects(
-                keyword=query,
-                type=4,  # 游戏
-                max_results=max_results,
-            )
-            subjects = response.get("list", [])
-
-            return [
-                self._normalize_bangumi_subject(subject, "game")
-                for subject in subjects
-            ]
-        except Exception as e:
-            logger.error(f"Bangumi game search failed: {e}")
             return []
 
     async def _search_google_books(
