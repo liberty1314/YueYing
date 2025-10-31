@@ -120,11 +120,6 @@ export function SearchCard({
                     <span>{result.year}</span>
                   </div>
                 )}
-
-                {/* 来源 */}
-                <Badge variant="outline" className="text-xs">
-                  {result.source}
-                </Badge>
               </div>
             </div>
 

@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Container } from "@/components/common/Container";
-import { SearchResults } from "@/components/search/SearchResults";
+import { SearchResults, type ViewMode } from "@/components/search/SearchResults";
 import { SearchPagination } from "@/components/search/SearchPagination";
 import { FilterBar } from "@/components/search/FilterBar";
+import { ContentDetailDialog } from "@/components/content/ContentDetailDialog";
 import type { FilterOptions } from "@/components/search/AdvancedFilter";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -63,6 +64,11 @@ export default function ExplorePage() {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedResult, setSelectedResult] = useState<SearchResult | null>(
+    null
+  );
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   
   // 用于请求取消的 AbortController
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -199,6 +205,21 @@ export default function ExplorePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // 处理查看详情
+  const handleViewDetail = (result: SearchResult) => {
+    setSelectedResult(result);
+    setDetailDialogOpen(true);
+  };
+
+  // 处理添加成功
+  const handleAddSuccess = () => {
+    toast({
+      title: "添加成功",
+      description: "内容已添加到你的记录",
+    });
+    setDetailDialogOpen(false);
+  };
+
   // 同步 URL 参数到状态
   useEffect(() => {
     setSearchQuery(query);
@@ -243,6 +264,9 @@ export default function ExplorePage() {
           isLoading={isLoading}
           error={error}
           query={searchQuery}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onView={handleViewDetail}
         />
 
         {/* 分页 */}
@@ -256,6 +280,14 @@ export default function ExplorePage() {
           </div>
         )}
       </Container>
+
+      {/* 详情对话框 */}
+      <ContentDetailDialog
+        result={selectedResult}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        onAddSuccess={handleAddSuccess}
+      />
     </div>
   );
 }
