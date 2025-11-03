@@ -20,9 +20,13 @@ from app.models.base import BaseModel
 class ItemStatus(str, enum.Enum):
     """记录状态枚举"""
 
-    WANT = "want"  # 想看/想读
-    DOING = "doing"  # 在看/在读
-    DONE = "done"  # 看过/读过
+    WANT_TO_WATCH = "want_to_watch"  # 想看/想读
+    WATCHING = "watching"  # 在看/在读
+    WATCHED = "watched"  # 看过/读过
+    # 保留旧值兼容性
+    WANT = "want"  
+    DOING = "doing"  
+    DONE = "done"  
 
 
 class UserItem(BaseModel):
@@ -37,11 +41,17 @@ class UserItem(BaseModel):
     item_id = Column(
         Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    status = Column(Enum(ItemStatus), nullable=False, default=ItemStatus.WANT, index=True)
-    rating = Column(Float, nullable=True)  # 评分 0-5
+    status = Column(String(50), nullable=False, default="want_to_watch", index=True)  # 改为 String 以支持新值
+    rating = Column(Integer, nullable=True)  # 评分 0-10（改为 Integer）
+    notes = Column(Text, nullable=True)  # 个人笔记
+    
+    # 日期字段（新）
+    started_at = Column(String(50), nullable=True)  # 开始日期
+    completed_at = Column(String(50), nullable=True)  # 完成日期
+    
+    # 旧字段（保留兼容性）
     watched_date = Column(Date, nullable=True, index=True)  # 观看/阅读完成日期
     progress = Column(Integer, nullable=True)  # 进度（第几集/第几页）
-    notes = Column(Text, nullable=True)  # 个人笔记
     is_favorite = Column(Integer, nullable=False, default=0)  # 是否收藏
 
     # 关系
