@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { EditForm } from "@/components/library/EditForm";
 import { DeleteConfirmDialog } from "@/components/library/DeleteConfirmDialog";
 import { TagInput } from "@/components/tags/TagInput";
+import { AITagGenerator } from "@/components/tags/AITagGenerator";
 import { userItemsApi } from "@/lib/user-items-api";
 import { tagsApi } from "@/lib/tags-api";
 import { useToast } from "@/hooks/use-toast";
@@ -188,6 +189,12 @@ export default function ItemDetailPage() {
         variant: "destructive",
       });
     }
+  };
+
+  // AI 标签生成处理
+  const handleAITagsGenerated = async (newTags: Tag[]) => {
+    // 重新加载标签以获取最新状态
+    await loadTags();
   };
 
   const handleRemoveTag = async (tagId: number) => {
@@ -481,7 +488,14 @@ export default function ItemDetailPage() {
                 {/* 标签 */}
                 <Card>
                   <CardContent className="p-6">
-                    <h2 className="text-lg font-semibold mb-4">标签</h2>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold">标签</h2>
+                      <AITagGenerator
+                        userItemId={parseInt(id)}
+                        onTagsGenerated={handleAITagsGenerated}
+                        disabled={isLoadingTags}
+                      />
+                    </div>
                     <TagInput
                       selectedTags={itemTags}
                       availableTags={availableTags}

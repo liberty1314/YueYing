@@ -83,6 +83,14 @@ app.include_router(llm.router, prefix="/api")
 from app.api.routes import llm_config
 app.include_router(llm_config.router, prefix="/api")
 
+# AI 标签路由
+from app.api.routes import ai_tags
+app.include_router(ai_tags.router, prefix="/api")
+
+# 用户设置路由
+from app.api.routes import user_settings
+app.include_router(user_settings.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点

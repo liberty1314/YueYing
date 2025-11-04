@@ -96,18 +96,22 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
             # 获取异常堆栈
             exc_traceback = traceback.format_exc()
+            
+            # 获取错误信息（避免格式化字符串问题）
+            error_msg = str(exc)
+            error_type = type(exc).__name__
 
             # 记录异常日志
             logger.error(
-                f"Request failed | {method} {url} | "
-                f"Error: {str(exc)} | "
-                f"Time: {process_time:.4f}s",
+                "Request failed | {} {} | Error: {} | Time: {:.4f}s".format(
+                    method, url, error_msg, process_time
+                ),
                 extra={
                     "request_id": request_id,
                     "method": method,
                     "url": url,
-                    "error": str(exc),
-                    "error_type": type(exc).__name__,
+                    "error": error_msg,
+                    "error_type": error_type,
                     "traceback": exc_traceback,
                     "process_time": process_time,
                 },

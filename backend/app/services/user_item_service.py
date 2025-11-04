@@ -6,6 +6,7 @@ from typing import Optional, List, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc, case
 from loguru import logger
+import asyncio
 
 from app.models.user_item import UserItem
 from app.models.item import Item
@@ -14,6 +15,7 @@ from app.schemas.user_item import (
     UserItemUpdate,
     UserItemFilters,
 )
+from app.services.user_settings_service import UserSettingsService
 
 
 class UserItemService:
@@ -150,6 +152,34 @@ class UserItemService:
         db.refresh(user_item)
         
         logger.info(f"Created UserItem: {user_item.id} for user {user_id}")
+        
+        # 检查是否需要自动生成标签
+        try:
+            if UserSettingsService.check_auto_generate_tags(db, user_id):
+                logger.info(f"Auto-generating tags for user_item {user_item.id}")
+                # 异步触发标签生成（不阻塞主流程）
+                from app.ai.tag_generator import TagGenerator
+                # 使用 asyncio 在后台执行
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                # 创建后台任务
+                asyncio.create_task(
+                    TagGenerator.generate_and_save_tags(
+                        db=db,
+                        user_id=user_id,
+                        user_item_id=user_item.id,
+                        include_notes=True,
+                    )
+                )
+                logger.info(f"Triggered auto tag generation for user_item {user_item.id}")
+        except Exception as e:
+            # 不影响主流程，只记录错误
+            logger.error(f"Failed to trigger auto tag generation: {e}")
+        
         return user_item
 
     @staticmethod
