@@ -1,31 +1,37 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Loading } from "@/components/ui/loading";
+import { useAuthStore } from "@/store/authStore";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { status } = useSession();
   const router = useRouter();
+  const { isAuthenticated, isAdmin } = useAuthStore();
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    // 检查认证状态和管理员权限
+    if (!isAuthenticated) {
+      // 未登录，跳转到登录页
       router.push("/login");
+    } else if (!isAdmin) {
+      // 已登录但不是管理员，跳转到首页
+      router.push("/");
+    } else {
+      // 是管理员，允许访问
+      setIsChecking(false);
     }
-  }, [status, router]);
+  }, [isAuthenticated, isAdmin, router]);
 
-  if (status === "loading") {
+  // 检查中或未授权时显示加载状态
+  if (isChecking || !isAuthenticated || !isAdmin) {
     return <Loading />;
-  }
-
-  if (status === "unauthenticated") {
-    return null;
   }
 
   return (

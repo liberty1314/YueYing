@@ -12,15 +12,15 @@ class Collection(BaseModel):
 
     __tablename__ = "collections"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, comment="收藏集ID")
     user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True, comment="用户ID"
     )
-    name = Column(String(200), nullable=False)
-    description = Column(Text, nullable=True)
-    cover_url = Column(String(1000), nullable=True)
-    is_public = Column(Boolean, nullable=False, default=False)  # 是否公开
-    sort_order = Column(Integer, nullable=False, default=0)  # 排序顺序
+    name = Column(String(200), nullable=False, comment="收藏集名称")
+    description = Column(Text, nullable=True, comment="收藏集描述")
+    cover_url = Column(String(1000), nullable=True, comment="封面图URL")
+    is_public = Column(Boolean, nullable=False, default=False, comment="是否公开")
+    sort_order = Column(Integer, nullable=False, default=0, comment="排序顺序")
 
     # 关系
     user = relationship("User", back_populates="collections")
@@ -39,20 +39,22 @@ class CollectionItem(BaseModel):
 
     __tablename__ = "collection_items"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, comment="关系ID")
     collection_id = Column(
         Integer,
         ForeignKey("collections.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
+        comment="收藏集ID"
     )
     user_item_id = Column(
         Integer,
         ForeignKey("user_items.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
+        comment="用户记录ID"
     )
-    sort_order = Column(Integer, nullable=False, default=0)  # 在收藏集中的排序
+    sort_order = Column(Integer, nullable=False, default=0, comment="在收藏集中的排序")
 
     # 关系
     collection = relationship("Collection", back_populates="items")

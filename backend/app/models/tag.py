@@ -25,15 +25,15 @@ class Tag(BaseModel):
         UniqueConstraint('user_id', 'name', name='uix_user_tag_name'),
     )
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, comment="标签ID")
     user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True, comment="用户ID"
     )
-    name = Column(String(100), nullable=False, index=True)
-    type = Column(Enum(TagType), nullable=False, default=TagType.CUSTOM, index=True)
-    is_auto = Column(Boolean, nullable=False, default=False)  # 是否AI自动生成
-    color = Column(String(20), nullable=True)  # 标签颜色（用于前端显示）
-    description = Column(String(500), nullable=True)  # 标签描述
+    name = Column(String(100), nullable=False, index=True, comment="标签名称")
+    type = Column(Enum(TagType), nullable=False, default=TagType.CUSTOM, index=True, comment="标签类型")
+    is_auto = Column(Boolean, nullable=False, default=False, comment="是否AI自动生成")
+    color = Column(String(20), nullable=True, comment="标签颜色(十六进制)")
+    description = Column(String(500), nullable=True, comment="标签描述")
 
     # 关系
     user = relationship("User", back_populates="tags")
@@ -55,12 +55,12 @@ class UserItemTag(BaseModel):
         UniqueConstraint('user_item_id', 'tag_id', name='uix_user_item_tag'),
     )
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, comment="关系ID")
     user_item_id = Column(
-        Integer, ForeignKey("user_items.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("user_items.id", ondelete="CASCADE"), nullable=False, index=True, comment="用户记录ID"
     )
     tag_id = Column(
-        Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False, index=True, comment="标签ID"
     )
 
     # 关系
@@ -77,12 +77,12 @@ class ItemTag(BaseModel):
 
     __tablename__ = "item_tags"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, comment="关系ID(已废弃)")
     item_id = Column(
-        Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False, index=True, comment="条目ID"
     )
     tag_id = Column(
-        Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False, index=True, comment="标签ID"
     )
 
     # 关系

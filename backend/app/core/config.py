@@ -132,6 +132,13 @@ class Settings(BaseSettings):
     DEFAULT_LLM_MODEL: str = Field(default="deepseek-ai/DeepSeek-V3", alias="DEFAULT_LLM_MODEL")
 
     # ====================================
+    # 管理员初始化配置
+    # ====================================
+    ADMIN_USERNAME: Optional[str] = Field(default=None, alias="ADMIN_USERNAME")
+    ADMIN_PASSWORD: Optional[str] = Field(default=None, alias="ADMIN_PASSWORD")
+    ADMIN_EMAIL: Optional[str] = Field(default=None, alias="ADMIN_EMAIL")
+
+    # ====================================
     # 日志配置
     # ====================================
     LOG_LEVEL: str = Field(default="INFO", alias="LOG_LEVEL")

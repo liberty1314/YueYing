@@ -8,6 +8,8 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuthStore } from '@/store/authStore'
+import { getCurrentUser } from '@/lib/auth-api'
 
 export default function LoginForm() {
   const router = useRouter()
@@ -15,6 +17,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const { setUser, setToken } = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,6 +34,30 @@ export default function LoginForm() {
       if (result?.error) {
         setError(result.error)
       } else if (result?.ok) {
+        // 登录成功后，获取用户信息并设置到 authStore
+        try {
+          // 从 NextAuth session 获取 token
+          const response = await fetch('/api/auth/session')
+          const session = await response.json()
+          
+          if (session?.accessToken) {
+            // 使用 token 获取完整的用户信息（包括 role）
+            const userInfo = await getCurrentUser(session.accessToken)
+            
+            // 设置到 authStore
+            setToken(session.accessToken)
+            setUser({
+              id: userInfo.id.toString(),
+              email: userInfo.email,
+              name: userInfo.username,
+              avatar: userInfo.avatar_url,
+              role: userInfo.role,
+            })
+          }
+        } catch (err) {
+          console.error('获取用户信息失败:', err)
+        }
+        
         router.push('/')
         router.refresh()
       }

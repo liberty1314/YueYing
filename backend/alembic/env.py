@@ -14,12 +14,11 @@ from app.core.config import settings
 from app.core.database import Base
 
 # 导入所有模型（确保 Alembic 能检测到所有模型）
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.item import Item, ItemType
 from app.models.user_item import UserItem, ItemStatus
 from app.models.tag import Tag, TagType, ItemTag
 from app.models.collection import Collection, CollectionItem
-from app.models.admin import AdminUser, AdminRole
 from app.models.llm_config import LLMConfig
 
 # Alembic Config 对象

@@ -3,11 +3,12 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Home, Library, X, BarChart3 } from "lucide-react";
+import { Search, Home, Library, X, BarChart3, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import UserMenu from "@/components/auth/UserMenu";
+import { useAuthStore } from "@/store/authStore";
 
 const navItems = [
   {
@@ -32,6 +33,7 @@ export function Navbar() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isAdmin } = useAuthStore();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +79,22 @@ export function Navbar() {
               </Link>
             );
           })}
+          
+          {/* 管理后台入口 - 仅管理员可见 */}
+          {isAdmin && (
+            <Link href="/admin">
+              <Button
+                variant={pathname?.startsWith("/admin") ? "default" : "ghost"}
+                className={cn(
+                  "gap-2",
+                  pathname?.startsWith("/admin") && "bg-primary text-primary-foreground"
+                )}
+              >
+                <Shield className="h-4 w-4" />
+                管理后台
+              </Button>
+            </Link>
+          )}
         </nav>
 
         {/* 搜索框 */}

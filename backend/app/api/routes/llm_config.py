@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from loguru import logger
 
 from app.core.database import get_db
-from app.api.dependencies.auth import get_current_user
+from app.api.dependencies.auth import get_current_admin
 from app.models.user import User
 from app.schemas.llm import (
     LLMConfigCreate,
@@ -29,7 +29,7 @@ router = APIRouter(prefix="/llm-config", tags=["LLM Config"])
     description="获取当前的 LLM 配置（全局单例）。",
 )
 async def get_llm_config(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """获取 LLM 配置"""
@@ -81,7 +81,7 @@ async def get_llm_config(
 )
 async def create_llm_config(
     config_data: LLMConfigCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """创建 LLM 配置"""
@@ -123,7 +123,7 @@ async def create_llm_config(
 )
 async def update_llm_config(
     update_data: LLMConfigUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """更新 LLM 配置"""
@@ -171,7 +171,7 @@ async def update_llm_config(
     description="删除当前的 LLM 配置。",
 )
 async def delete_llm_config(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """删除 LLM 配置"""
@@ -198,7 +198,7 @@ async def delete_llm_config(
     description="获取所有 LLM 提供商的预设配置（从环境变量）。",
 )
 async def get_provider_presets(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
 ):
     """获取提供商预设配置"""
     try:
@@ -220,7 +220,7 @@ async def get_provider_presets(
 )
 async def test_llm_connection(
     test_request: LLMConfigTestRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
 ):
     """测试 LLM 连接"""
     try:

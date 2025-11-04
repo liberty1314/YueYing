@@ -17,7 +17,7 @@ from app.core.security import (
     decode_token,
 )
 from app.core.config import settings
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.user import UserRegister, UserLogin, UserCreate, Token, TokenData
 
 
@@ -277,6 +277,78 @@ class AuthService:
 
         logger.info(f"用户密码修改成功: {user.email} (ID: {user.id})")
         return True
+
+    @staticmethod
+    def initialize_admin(db: Session) -> Optional[User]:
+        """
+        从环境变量初始化管理员账户
+        
+        该方法在应用启动时执行，从 .env 文件读取管理员配置：
+        - ADMIN_USERNAME: 管理员用户名
+        - ADMIN_PASSWORD: 管理员密码（明文，将自动加密）
+        - ADMIN_EMAIL: 管理员邮箱（可选）
+        
+        如果数据库中不存在该用户名，则创建管理员账户；
+        如果已存在，则跳过创建。
+
+        Args:
+            db: 数据库会话
+
+        Returns:
+            创建的管理员用户对象，如果已存在或未配置则返回 None
+        """
+        # 检查是否配置了管理员信息
+        if not settings.ADMIN_USERNAME or not settings.ADMIN_PASSWORD:
+            logger.info("未配置管理员账户信息 (ADMIN_USERNAME 或 ADMIN_PASSWORD)，跳过管理员初始化")
+            return None
+        
+        # 检查数据库中是否已存在该用户名
+        existing_user = db.query(User).filter(User.username == settings.ADMIN_USERNAME).first()
+        
+        if existing_user:
+            logger.info(f"管理员账户已存在: {settings.ADMIN_USERNAME}，跳过初始化")
+            return None
+        
+        # 准备邮箱地址
+        admin_email = settings.ADMIN_EMAIL
+        if not admin_email:
+            # 如果未配置邮箱，使用默认格式
+            admin_email = f"{settings.ADMIN_USERNAME}@admin.local"
+        
+        # 检查邮箱是否已被使用
+        existing_email = db.query(User).filter(User.email == admin_email).first()
+        if existing_email:
+            logger.warning(
+                f"管理员初始化失败: 邮箱 {admin_email} 已被用户 {existing_email.username} 使用"
+            )
+            return None
+        
+        # 创建管理员账户
+        try:
+            hashed_password = get_password_hash(settings.ADMIN_PASSWORD)
+            admin_user = User(
+                username=settings.ADMIN_USERNAME,
+                email=admin_email,
+                hashed_password=hashed_password,
+                role=UserRole.ADMIN,
+                is_active=True,
+                is_verified=True,  # 管理员账户默认已验证
+                full_name="系统管理员",
+            )
+            
+            db.add(admin_user)
+            db.commit()
+            db.refresh(admin_user)
+            
+            logger.info(
+                f"✅ 管理员账户初始化成功: {admin_user.username} (ID: {admin_user.id}, Email: {admin_user.email})"
+            )
+            return admin_user
+            
+        except Exception as e:
+            db.rollback()
+            logger.error(f"管理员账户初始化失败: {e}")
+            return None
 
 
 # 创建全局认证服务实例

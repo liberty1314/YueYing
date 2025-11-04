@@ -29,15 +29,16 @@ export const authOptions: AuthOptions = {
           // 获取用户信息
           const user = await getCurrentUser(tokenResponse.access_token)
 
-          // 返回用户信息和 tokens
+          // 返回用户信息和 tokens（包括 role）
           return {
             id: user.id.toString(),
             email: user.email,
             name: user.username,
             image: user.avatar_url,
+            role: user.role,
             accessToken: tokenResponse.access_token,
             refreshToken: tokenResponse.refresh_token,
-          } as User & { accessToken: string; refreshToken: string }
+          } as User & { role: string; accessToken: string; refreshToken: string }
         } catch (error: any) {
           console.error('登录失败:', error)
           throw new Error(error.response?.data?.detail || '登录失败')
@@ -47,18 +48,20 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      // 首次登录时，将 tokens 添加到 JWT
+      // 首次登录时，将 tokens 和 role 添加到 JWT
       if (user) {
         token.accessToken = (user as any).accessToken
         token.refreshToken = (user as any).refreshToken
         token.id = user.id
+        token.role = (user as any).role
       }
       return token
     },
     async session({ session, token }) {
-      // 将 token 中的信息添加到 session
+      // 将 token 中的信息添加到 session（包括 role）
       if (token) {
         session.user.id = token.id as string
+        session.user.role = token.role as string
         session.accessToken = token.accessToken as string
         session.refreshToken = token.refreshToken as string
       }

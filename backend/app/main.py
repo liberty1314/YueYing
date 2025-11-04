@@ -130,18 +130,23 @@ async def startup_event():
     if settings.DEBUG:
         logger.info(f"📖 API文档: http://localhost:8000/docs")
     
-    # 初始化 LLM 配置（从环境变量）
+    # 初始化数据库相关配置
     try:
         from app.core.database import SessionLocal
         from app.services.llm_config_service import LLMConfigService
+        from app.services.auth import AuthService
         
         db = SessionLocal()
         try:
+            # 初始化 LLM 配置（从环境变量）
             LLMConfigService.initialize_from_env(db)
+            
+            # 初始化管理员账户（从环境变量）
+            AuthService.initialize_admin(db)
         finally:
             db.close()
     except Exception as e:
-        logger.error(f"初始化 LLM 配置失败: {e}")
+        logger.error(f"初始化配置失败: {e}")
 
 
 # 关闭事件

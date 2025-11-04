@@ -6,12 +6,14 @@ interface User {
   email: string
   name?: string
   avatar?: string
+  role: 'user' | 'admin'
 }
 
 interface AuthState {
   user: User | null
   token: string | null
   isAuthenticated: boolean
+  isAdmin: boolean
   setUser: (user: User | null) => void
   setToken: (token: string | null) => void
   logout: () => void
@@ -23,11 +25,16 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
+      isAdmin: false,
       setUser: (user) =>
-        set({ user, isAuthenticated: user !== null }),
+        set({ 
+          user, 
+          isAuthenticated: user !== null,
+          isAdmin: user?.role === 'admin'
+        }),
       setToken: (token) => set({ token }),
       logout: () =>
-        set({ user: null, token: null, isAuthenticated: false }),
+        set({ user: null, token: null, isAuthenticated: false, isAdmin: false }),
     }),
     {
       name: 'auth-storage',

@@ -34,25 +34,25 @@ class UserItem(BaseModel):
 
     __tablename__ = "user_items"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, comment="记录ID")
     user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True, comment="用户ID"
     )
     item_id = Column(
-        Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False, index=True, comment="条目ID"
     )
-    status = Column(String(50), nullable=False, default="want_to_watch", index=True)  # 改为 String 以支持新值
-    rating = Column(Integer, nullable=True)  # 评分 0-10（改为 Integer）
-    notes = Column(Text, nullable=True)  # 个人笔记
+    status = Column(String(50), nullable=False, default="want_to_watch", index=True, comment="观看状态")
+    rating = Column(Integer, nullable=True, comment="个人评分(0-10)")
+    notes = Column(Text, nullable=True, comment="个人笔记")
     
-    # 日期字段（新）
-    started_at = Column(String(50), nullable=True)  # 开始日期
-    completed_at = Column(String(50), nullable=True)  # 完成日期
+    # 日期字段
+    started_at = Column(String(50), nullable=True, comment="开始日期")
+    completed_at = Column(String(50), nullable=True, comment="完成日期")
     
-    # 旧字段（保留兼容性）
-    watched_date = Column(Date, nullable=True, index=True)  # 观看/阅读完成日期
-    progress = Column(Integer, nullable=True)  # 进度（第几集/第几页）
-    is_favorite = Column(Integer, nullable=False, default=0)  # 是否收藏
+    # 旧字段(兼容旧版)
+    watched_date = Column(Date, nullable=True, index=True, comment="观看完成日期(兼容旧版)")
+    progress = Column(Integer, nullable=True, comment="观看进度(集数/页数)")
+    is_favorite = Column(Integer, nullable=False, default=0, comment="是否收藏(0/1)")
 
     # 关系
     user = relationship("User", back_populates="user_items")

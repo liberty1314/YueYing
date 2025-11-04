@@ -9,7 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.services.auth import auth_service
 from app.schemas.user import TokenData
 
@@ -114,4 +114,29 @@ def get_optional_current_user(
         return None
 
     return None
+
+
+def get_current_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    获取当前管理员用户
+
+    验证用户是否具有管理员权限
+
+    Args:
+        current_user: 当前用户
+
+    Returns:
+        当前管理员用户
+
+    Raises:
+        HTTPException: 用户不是管理员
+    """
+    if not current_user.is_admin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要管理员权限",
+        )
+    return current_user
 

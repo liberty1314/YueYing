@@ -94,6 +94,7 @@ class UserResponse(UserBase):
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
     is_verified: bool = False
+    role: str = "user"  # 用户角色：user 或 admin
     created_at: datetime
     updated_at: datetime
 

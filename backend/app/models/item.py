@@ -26,50 +26,48 @@ class Item(BaseModel):
         UniqueConstraint('external_id', 'source', name='uix_external_id_source'),
     )
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, comment="条目ID")
     
-    # 外部数据源信息（新增）
-    external_id = Column(String(255), nullable=False, index=True)  # 外部ID
-    source = Column(String(50), nullable=False, index=True)  # 数据源 (tmdb/google_books/bangumi)
-    content_type = Column(String(50), nullable=False, index=True)  # 内容类型 (movie/tv/anime/book/game)
+    # 外部数据源信息
+    external_id = Column(String(255), nullable=False, index=True, comment="外部数据源ID")
+    source = Column(String(50), nullable=False, index=True, comment="数据源(tmdb/google_books/bangumi)")
+    content_type = Column(String(50), nullable=False, index=True, comment="内容类型(movie/tv/anime/book/game)")
     
     # 基本信息
-    type = Column(Enum(ItemType), nullable=True, index=True)  # 保留兼容性，改为可空
-    title = Column(String(500), nullable=False, index=True)
-    original_title = Column(String(500), nullable=True)
-    description = Column(Text, nullable=True)
+    type = Column(Enum(ItemType), nullable=True, index=True, comment="条目类型(枚举)")
+    title = Column(String(500), nullable=False, index=True, comment="标题")
+    original_title = Column(String(500), nullable=True, comment="原始标题")
+    description = Column(Text, nullable=True, comment="简介描述")
     
     # 图片
-    poster_url = Column(String(1000), nullable=True)  # 海报
-    backdrop_url = Column(String(1000), nullable=True)  # 背景图（新增）
-    cover_url = Column(String(1000), nullable=True)  # 封面（保留兼容性）
+    poster_url = Column(String(1000), nullable=True, comment="海报图URL")
+    backdrop_url = Column(String(1000), nullable=True, comment="背景图URL")
+    cover_url = Column(String(1000), nullable=True, comment="封面图URL(兼容旧版)")
     
     # 发行信息
-    release_date = Column(String(50), nullable=True)  # 发布日期（新增）
-    release_year = Column(Integer, nullable=True, index=True)
-    year = Column(String(10), nullable=True)  # 年份字符串（新增）
+    release_date = Column(String(50), nullable=True, comment="发布日期")
+    release_year = Column(Integer, nullable=True, index=True, comment="发行年份")
+    year = Column(String(10), nullable=True, comment="年份字符串")
     
     # 创作者
-    director = Column(String(255), nullable=True)
-    author = Column(String(255), nullable=True)
-    cast = Column(Text, nullable=True)  # JSON 格式存储演员列表
+    director = Column(String(255), nullable=True, comment="导演")
+    author = Column(String(255), nullable=True, comment="作者")
+    cast = Column(Text, nullable=True, comment="演员列表(JSON格式)")
     
     # 详细信息
-    genres = Column(Text, nullable=True)  # JSON 格式存储类型列表
-    duration = Column(Integer, nullable=True)  # 电影时长（分钟）或书籍页数
-    language = Column(String(50), nullable=True)
-    country = Column(String(100), nullable=True)
+    genres = Column(Text, nullable=True, comment="类型列表(JSON格式)")
+    duration = Column(Integer, nullable=True, comment="时长(分钟)或页数")
+    language = Column(String(50), nullable=True, comment="语言")
+    country = Column(String(100), nullable=True, comment="国家/地区")
 
-    # 元数据（新增）
-    extra_data = Column(JSON, nullable=True)  # 其他元数据（不能用metadata，是SQLAlchemy保留字段）
+    # 元数据
+    extra_data = Column(JSON, nullable=True, comment="额外元数据(JSON格式)")
 
-    # 外部ID（保留兼容性，改为可空）
-    external_ids = Column(JSON, nullable=True)
-    # 格式: {"tmdb": 123, "douban": "12345678", "anilist": 12345, ...}
+    # 外部ID(兼容旧版)
+    external_ids = Column(JSON, nullable=True, comment="外部平台ID映射(JSON)")
 
     # 外部评分
-    external_ratings = Column(JSON, nullable=True)
-    # 格式: {"tmdb": 8.5, "douban": 9.0, "anilist": 8.8}
+    external_ratings = Column(JSON, nullable=True, comment="外部平台评分(JSON)")
 
     # 关系
     user_items = relationship(
