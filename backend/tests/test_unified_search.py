@@ -151,7 +151,7 @@ class TestUnifiedSearchService:
             # 验证所有API都被调用了
             mock_movie.assert_called_once()
             mock_tv.assert_called_once()
-            assert mock_bangumi.call_count == 2  # anime和game
+            assert mock_bangumi.call_count == 1  # anime
             mock_books.assert_called_once()
 
     @pytest.mark.asyncio

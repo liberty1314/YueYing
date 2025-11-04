@@ -27,3 +27,13 @@ class ForbiddenError(Exception):
     """禁止访问异常"""
     pass
 
+
+class APIError(Exception):
+    """外部 API 调用异常"""
+    pass
+
+
+class ConfigurationError(Exception):
+    """配置错误异常"""
+    pass
+

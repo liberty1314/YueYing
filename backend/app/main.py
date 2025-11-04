@@ -75,6 +75,10 @@ app.include_router(tags.router, prefix="/api")
 from app.api.routes import stats
 app.include_router(stats.router, prefix="/api")
 
+# LLM 路由
+from app.api.routes import llm
+app.include_router(llm.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点

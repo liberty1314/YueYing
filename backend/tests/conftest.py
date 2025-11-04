@@ -8,6 +8,8 @@ from sqlalchemy.orm import sessionmaker
 
 from app.main import app
 from app.core.database import Base, get_db
+from app.models.user import User
+from app.core.security import get_password_hash
 
 # 测试数据库 URL（使用内存 SQLite）
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -54,5 +56,20 @@ def client(db):
         yield test_client
     
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def test_user(db):
+    """创建测试用户 fixture"""
+    user = User(
+        email="test@example.com",
+        username="testuser",
+        hashed_password=get_password_hash("testpassword123"),
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 

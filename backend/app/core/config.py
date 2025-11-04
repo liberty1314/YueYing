@@ -101,6 +101,12 @@ class Settings(BaseSettings):
     # ====================================
     # LLM API 配置
     # ====================================
+    # 硅基流动 (统一调用多个模型)
+    SILICONFLOW_API_KEY: Optional[str] = Field(default=None, alias="SILICONFLOW_API_KEY")
+    SILICONFLOW_BASE_URL: str = Field(
+        default="https://api.siliconflow.cn/v1", alias="SILICONFLOW_BASE_URL"
+    )
+    
     # DeepSeek
     DEEPSEEK_API_KEY: Optional[str] = Field(default=None, alias="DEEPSEEK_API_KEY")
     DEEPSEEK_BASE_URL: str = Field(
@@ -120,7 +126,10 @@ class Settings(BaseSettings):
     )
 
     # 默认 LLM 提供商
-    DEFAULT_LLM_PROVIDER: str = Field(default="deepseek", alias="DEFAULT_LLM_PROVIDER")
+    DEFAULT_LLM_PROVIDER: str = Field(default="siliconflow", alias="DEFAULT_LLM_PROVIDER")
+    
+    # 默认使用的模型
+    DEFAULT_LLM_MODEL: str = Field(default="deepseek-ai/DeepSeek-V3", alias="DEFAULT_LLM_MODEL")
 
     # ====================================
     # 日志配置
