@@ -79,6 +79,10 @@ app.include_router(stats.router, prefix="/api")
 from app.api.routes import llm
 app.include_router(llm.router, prefix="/api")
 
+# LLM 配置路由
+from app.api.routes import llm_config
+app.include_router(llm_config.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点
@@ -125,6 +129,19 @@ async def startup_event():
     logger.info(f"🔍 调试模式: {settings.DEBUG}")
     if settings.DEBUG:
         logger.info(f"📖 API文档: http://localhost:8000/docs")
+    
+    # 初始化 LLM 配置（从环境变量）
+    try:
+        from app.core.database import SessionLocal
+        from app.services.llm_config_service import LLMConfigService
+        
+        db = SessionLocal()
+        try:
+            LLMConfigService.initialize_from_env(db)
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"初始化 LLM 配置失败: {e}")
 
 
 # 关闭事件
