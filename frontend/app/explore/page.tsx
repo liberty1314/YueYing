@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Container } from "@/components/common/Container";
 import { SearchResults, type ViewMode } from "@/components/search/SearchResults";
 import { SearchPagination } from "@/components/search/SearchPagination";
@@ -10,6 +11,7 @@ import { ContentDetailDialog } from "@/components/content/ContentDetailDialog";
 import type { FilterOptions } from "@/components/search/AdvancedFilter";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export type ContentType = "all" | "movie" | "tv" | "anime" | "book";
 
@@ -46,6 +48,7 @@ export default function ExplorePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { status } = useSession();
 
   // 从 URL 获取搜索参数
   const query = searchParams.get("q") || "";
@@ -227,9 +230,24 @@ export default function ExplorePage() {
     setCurrentPage(page);
   }, [query, contentType, page]);
 
+  // 检查登录状态和访问权限
+  useEffect(() => {
+    // 如果未登录，跳转到登录页
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    // 如果已登录，但没有搜索查询，跳转到首页
+    if (status === "authenticated" && !query) {
+      router.push("/");
+    }
+  }, [status, query, router]);
+
   // URL 参数变化时执行搜索（带防抖）
   useEffect(() => {
-    if (!query) return;
+    // 只有在已登录且有搜索查询时才执行搜索
+    if (status !== "authenticated" || !query) return;
 
     // 防抖处理
     const debounceTimer = setTimeout(() => {
@@ -243,7 +261,21 @@ export default function ExplorePage() {
         abortControllerRef.current.abort();
       }
     };
-  }, [query, contentType, page, performSearch]);
+  }, [status, query, contentType, page, performSearch]);
+
+  // 加载中显示加载状态
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // 如果未登录或没有搜索查询，不渲染内容（会被useEffect重定向）
+  if (status === "unauthenticated" || !query) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">

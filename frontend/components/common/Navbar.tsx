@@ -16,11 +16,6 @@ const navItems = [
     icon: Home,
   },
   {
-    label: "探索发现",
-    href: "/explore",
-    icon: Search,
-  },
-  {
     label: "我的记录",
     href: "/library",
     icon: Library,

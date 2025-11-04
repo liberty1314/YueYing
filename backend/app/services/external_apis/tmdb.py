@@ -381,6 +381,32 @@ class TMDBClient:
         logger.info(f"Fetching top rated TV shows: page={page}")
         return await self._request("GET", "/tv/top_rated", params=params)
 
+    # ==================== 趋势相关 API ====================
+
+    @async_cached(prefix="tmdb:trending", expire=3600)  # 缓存1小时
+    async def get_trending(
+        self,
+        media_type: str = "all",  # all, movie, tv, person
+        time_window: str = "day",  # day, week
+        page: int = 1,
+        language: str = "zh-CN",
+    ) -> Dict[str, Any]:
+        """
+        获取趋势内容
+        
+        Args:
+            media_type: 媒体类型 (all, movie, tv, person)
+            time_window: 时间窗口 (day=今日, week=本周)
+            page: 页码
+            language: 语言
+            
+        Returns:
+            趋势列表
+        """
+        params = {"page": page, "language": language}
+        logger.info(f"Fetching trending {media_type} for {time_window}: page={page}")
+        return await self._request("GET", f"/trending/{media_type}/{time_window}", params=params)
+
     # ==================== 配置相关 API ====================
 
     async def get_configuration(self) -> Dict[str, Any]:

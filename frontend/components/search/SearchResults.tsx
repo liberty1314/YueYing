@@ -118,7 +118,7 @@ export function SearchResults({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 pb-4">
           {results.results.map((result) => (
             <SearchCardGrid
               key={result.id}

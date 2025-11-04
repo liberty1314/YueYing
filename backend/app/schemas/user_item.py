@@ -48,6 +48,7 @@ class UserItemBase(BaseModel):
     notes: Optional[str] = Field(None, description="笔记")
     started_at: Optional[str] = Field(None, description="开始日期")
     completed_at: Optional[str] = Field(None, description="完成日期")
+    progress: Optional[int] = Field(None, ge=0, description="观看进度（第几集/第几页）")
 
     class Config:
         use_enum_values = True
@@ -65,6 +66,7 @@ class UserItemUpdate(BaseModel):
     notes: Optional[str] = Field(None, description="笔记")
     started_at: Optional[str] = Field(None, description="开始日期")
     completed_at: Optional[str] = Field(None, description="完成日期")
+    progress: Optional[int] = Field(None, ge=0, description="观看进度（第几集/第几页）")
     
     # 允许更新内容信息
     title: Optional[str] = Field(None, min_length=1, max_length=500, description="标题")
@@ -149,6 +151,7 @@ class UserItemFilters(BaseModel):
             "started_at",
             "completed_at",
             "title",
+            "year",
         ]
         if v not in allowed_fields:
             raise ValueError(f"sort_by must be one of {allowed_fields}")

@@ -19,11 +19,10 @@ interface SortSelectorProps {
 
 const sortOptions: { value: SortField; label: string }[] = [
   { value: "status", label: "状态" },
-  { value: "updated_at", label: "更新时间" },
-  { value: "created_at", label: "添加时间" },
   { value: "rating", label: "评分" },
-  { value: "started_at", label: "开始时间" },
-  { value: "completed_at", label: "完成时间" },
+  { value: "created_at", label: "添加日期" },
+  { value: "year", label: "年份" },
+  { value: "started_at", label: "观看日期" },
   { value: "title", label: "标题" },
 ];
 

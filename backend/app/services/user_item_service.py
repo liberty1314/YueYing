@@ -319,9 +319,7 @@ class UserItemService:
         total = query.count()
 
         # 应用排序
-        if filters.sort_by == "title":
-            order_column = Item.title
-        elif filters.sort_by == "status":
+        if filters.sort_by == "status":
             # 自定义状态排序：watching(1) > want_to_watch(2) > watched(3)
             status_order = case(
                 (UserItem.status == "watching", 1),
@@ -335,7 +333,22 @@ class UserItemService:
                 query = query.order_by(asc(status_order))
             # 二级排序：按更新时间降序
             query = query.order_by(desc(UserItem.updated_at))
+        elif filters.sort_by == "title":
+            # 按标题排序
+            order_column = Item.title
+            if filters.sort_order == "desc":
+                query = query.order_by(desc(order_column))
+            else:
+                query = query.order_by(asc(order_column))
+        elif filters.sort_by == "year":
+            # 按年份排序
+            order_column = Item.year
+            if filters.sort_order == "desc":
+                query = query.order_by(desc(order_column))
+            else:
+                query = query.order_by(asc(order_column))
         else:
+            # 按 UserItem 的其他字段排序
             order_column = getattr(UserItem, filters.sort_by, UserItem.updated_at)
             if filters.sort_order == "desc":
                 query = query.order_by(desc(order_column))

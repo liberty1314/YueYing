@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Container } from "@/components/common/Container";
 import { FilterPanel } from "@/components/library/FilterPanel";
 import { GridView } from "@/components/library/GridView";
 import { ListView } from "@/components/library/ListView";
 import { SearchPagination } from "@/components/search/SearchPagination";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { userItemsApi } from "@/lib/user-items-api";
 import { useToast } from "@/hooks/use-toast";
 import type { UserItemFilters, UserItemListResponse } from "@/types/user-item";
@@ -17,6 +19,7 @@ export default function LibraryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { status } = useSession();
 
   // 从 URL 读取初始参数
   const initialStatus = searchParams.get("status") as any || undefined;
@@ -88,10 +91,20 @@ export default function LibraryPage() {
     router.replace(newUrl, { scroll: false });
   };
 
+  // 检查登录状态
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      // 未登录，重定向到登录页面
+      router.push("/login");
+    }
+  }, [status, router]);
+
   // 初始加载
   useEffect(() => {
-    loadData(filters);
-  }, []);
+    if (status === "authenticated") {
+      loadData(filters);
+    }
+  }, [status]);
 
   // 处理搜索（不立即更新URL，避免抖动）
   const handleSearch = (value: string) => {
@@ -169,12 +182,63 @@ export default function LibraryPage() {
     }
   };
 
+  // 加载中或未登录时显示加载状态
+  if (status === "loading") {
+    return (
+      <div className="min-h-[calc(100vh-64px)] bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // 如果未登录，不渲染内容（会被useEffect重定向）
+  if (status === "unauthenticated") {
+    return null;
+  }
+
   return (
     <div className="min-h-[calc(100vh-64px)] bg-background">
       <Container className="py-8">
-        {/* 页面标题 */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">我的记录</h1>
+        {/* 状态筛选标签 */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant={!filters.status ? "default" : "ghost"}
+              size="lg"
+              onClick={() => handleFiltersChange({ status: undefined })}
+              className="h-10 px-6 text-base font-semibold"
+            >
+              全部
+            </Button>
+            <Button
+              type="button"
+              variant={filters.status === "watching" ? "default" : "ghost"}
+              size="lg"
+              onClick={() => handleFiltersChange({ status: "watching" })}
+              className="h-10 px-6 text-base font-semibold"
+            >
+              在看
+            </Button>
+            <Button
+              type="button"
+              variant={filters.status === "want_to_watch" ? "default" : "ghost"}
+              size="lg"
+              onClick={() => handleFiltersChange({ status: "want_to_watch" })}
+              className="h-10 px-6 text-base font-semibold"
+            >
+              想看
+            </Button>
+            <Button
+              type="button"
+              variant={filters.status === "watched" ? "default" : "ghost"}
+              size="lg"
+              onClick={() => handleFiltersChange({ status: "watched" })}
+              className="h-10 px-6 text-base font-semibold"
+            >
+              看过
+            </Button>
+          </div>
         </div>
 
         {/* 工具栏 */}

@@ -408,6 +408,43 @@ async def get_tv_season_details(
         )
 
 
+# ==================== 趋势相关路由 ====================
+
+@router.get(
+    "/trending/{media_type}/{time_window}",
+    response_model=dict,
+    summary="获取趋势内容",
+    description="获取今日或本周的趋势电影/剧集"
+)
+async def get_trending(
+    media_type: str,  # all, movie, tv
+    time_window: str,  # day, week
+    page: int = Query(1, ge=1, le=500, description="页码"),
+    language: str = Query("zh-CN", description="语言"),
+):
+    """
+    获取趋势内容
+    
+    - media_type: all (全部), movie (电影), tv (剧集)
+    - time_window: day (今日), week (本周)
+    """
+    try:
+        logger.info(f"Fetching trending {media_type} for {time_window}")
+        result = await tmdb_client.get_trending(
+            media_type=media_type,
+            time_window=time_window,
+            page=page,
+            language=language,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error fetching trending: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取趋势失败: {str(e)}",
+        )
+
+
 # ==================== 配置相关路由 ====================
 
 @router.get(

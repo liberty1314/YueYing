@@ -62,6 +62,11 @@ class UserItem(BaseModel):
         back_populates="user_item",
         cascade="all, delete-orphan",
     )
+    tags = relationship(
+        "UserItemTag",
+        back_populates="user_item",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<UserItem(id={self.id}, user_id={self.user_id}, item_id={self.item_id}, status='{self.status}')>"

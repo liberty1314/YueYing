@@ -4,7 +4,7 @@
 
 export type WatchStatus = "want_to_watch" | "watching" | "watched";
 export type ContentType = "movie" | "tv" | "anime" | "book" | "game";
-export type SortField = "status" | "created_at" | "updated_at" | "rating" | "started_at" | "completed_at" | "title";
+export type SortField = "status" | "created_at" | "updated_at" | "rating" | "started_at" | "completed_at" | "title" | "year";
 export type SortOrder = "asc" | "desc";
 
 export interface UserItem {
@@ -16,6 +16,7 @@ export interface UserItem {
   notes?: string;
   started_at?: string;
   completed_at?: string;
+  progress?: number; // 观看进度（第几集/第几页）
   created_at: string;
   updated_at: string;
   // 内容信息

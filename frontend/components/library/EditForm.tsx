@@ -39,6 +39,7 @@ const editFormSchema = z.object({
   notes: z.string().optional(),
   started_at: z.string().optional(),
   completed_at: z.string().optional(),
+  progress: z.number().min(0).optional().nullable(),
 });
 
 type EditFormValues = z.infer<typeof editFormSchema>;
@@ -66,10 +67,14 @@ export function EditForm({ item, onSubmit, onCancel }: EditFormProps) {
       notes: item.notes || "",
       started_at: item.started_at || "",
       completed_at: item.completed_at || "",
+      progress: item.progress || null,
     },
   });
 
   const watchedStatus = form.watch("status");
+  
+  // 判断是否为剧集类型（TV/Anime）
+  const isSeriesType = item.content_type === "tv" || item.content_type === "anime";
 
   const handleSubmit = async (data: EditFormValues) => {
     setIsSubmitting(true);
@@ -132,6 +137,34 @@ export function EditForm({ item, onSubmit, onCancel }: EditFormProps) {
                   />
                 </FormControl>
                 <FormDescription>给这部作品打分（0-10分）</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {/* 观看进度 - 仅在"在看"且为剧集类型时显示 */}
+        {watchedStatus === "watching" && isSeriesType && (
+          <FormField
+            control={form.control}
+            name="progress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>当前观看集数</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    placeholder="第几集"
+                    {...field}
+                    value={field.value || ""}
+                    onChange={(e) =>
+                      field.onChange(e.target.value ? parseInt(e.target.value) : null)
+                    }
+                  />
+                </FormControl>
+                <FormDescription>记录当前观看到第几集</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

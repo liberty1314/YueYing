@@ -16,14 +16,14 @@ def setup_logging():
     if settings.LOG_FORMAT == "json":
         # 生产环境使用 JSON 格式
         log_format = (
-            "{"
+            '{'
             '"time": "{time:YYYY-MM-DD HH:mm:ss.SSS}", '
             '"level": "{level}", '
             '"message": "{message}", '
             '"file": "{file}", '
             '"function": "{function}", '
             '"line": {line}'
-            "}"
+            '}'
         )
     else:
         # 开发环境使用可读格式

@@ -67,6 +67,10 @@ app.include_router(unified_search.router, prefix="/api")
 from app.api.routes import user_items
 app.include_router(user_items.router, prefix="/api")
 
+# 标签管理路由
+from app.api.routes import tags
+app.include_router(tags.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点

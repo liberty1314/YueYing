@@ -19,14 +19,6 @@ interface FilterPanelProps {
   onViewModeChange: (mode: "grid" | "list") => void;
 }
 
-// 状态选项
-const statusOptions = [
-  { value: undefined, label: "全部" },
-  { value: "watching", label: "在看" },
-  { value: "want_to_watch", label: "想看" },
-  { value: "watched", label: "看过" },
-];
-
 // 类型选项
 const contentTypeOptions = [
   { value: undefined, label: "全部" },
@@ -59,11 +51,6 @@ export function FilterPanel({
 }: FilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // 处理状态变化
-  const handleStatusChange = (status: string | undefined) => {
-    onFiltersChange({ status: status as any });
-  };
-
   // 处理类型变化
   const handleTypeChange = (type: string | undefined) => {
     onFiltersChange({ content_type: type as any });
@@ -84,7 +71,6 @@ export function FilterPanel({
 
   // 判断是否有激活的筛选
   const hasActiveFilters = 
-    filters.status || 
     filters.content_type || 
     filters.year_from || 
     filters.year_to;
@@ -92,7 +78,6 @@ export function FilterPanel({
   // 清除所有筛选
   const handleReset = () => {
     onFiltersChange({
-      status: undefined,
       content_type: undefined,
       year_from: undefined,
       year_to: undefined,
@@ -144,32 +129,6 @@ export function FilterPanel({
       {/* 展开的筛选面板 - 独立的一行 */}
       {isExpanded && (
         <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-          {/* 状态筛选 */}
-          <div className="flex items-start gap-3">
-            <span className="text-sm font-medium text-muted-foreground min-w-[60px] pt-1">
-              状态
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              {statusOptions.map((option) => (
-                <Button
-                  key={option.value || "all"}
-                  type="button"
-                  variant={filters.status === option.value ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handleStatusChange(option.value)}
-                  className={cn(
-                    "h-8 px-4 transition-all",
-                    filters.status === option.value
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "hover:bg-background"
-                  )}
-                >
-                  {option.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
           {/* 类型筛选 */}
           <div className="flex items-start gap-3">
             <span className="text-sm font-medium text-muted-foreground min-w-[60px] pt-1">

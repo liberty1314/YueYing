@@ -11,9 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { EditForm } from "@/components/library/EditForm";
 import { DeleteConfirmDialog } from "@/components/library/DeleteConfirmDialog";
+import { TagInput } from "@/components/tags/TagInput";
 import { userItemsApi } from "@/lib/user-items-api";
+import { tagsApi } from "@/lib/tags-api";
 import { useToast } from "@/hooks/use-toast";
 import type { UserItem } from "@/types/user-item";
+import type { Tag } from "@/types/tag";
 import {
   ArrowLeft,
   Pencil,
@@ -69,6 +72,11 @@ export default function ItemDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // 标签相关状态
+  const [itemTags, setItemTags] = useState<Tag[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
 
   // 加载数据
   const loadData = async () => {
@@ -78,6 +86,9 @@ export default function ItemDetailPage() {
     try {
       const data = await userItemsApi.getUserItem(parseInt(id));
       setItem(data);
+      
+      // 加载标签
+      await loadTags();
     } catch (err: any) {
       console.error("Failed to load item:", err);
       setError(err.response?.data?.detail || "加载失败");
@@ -91,6 +102,32 @@ export default function ItemDetailPage() {
     }
   };
 
+  // 加载标签
+  const loadTags = async () => {
+    setIsLoadingTags(true);
+    try {
+      // 分别加载，避免一个失败影响另一个
+      const allTagsPromise = tagsApi.getTags({ limit: 100 });
+      const itemTagsPromise = tagsApi.getUserItemTags(parseInt(id)).catch(() => []);
+      
+      const [allTags, tags] = await Promise.all([allTagsPromise, itemTagsPromise]);
+      
+      setAvailableTags(allTags.tags);
+      setItemTags(tags);
+    } catch (err) {
+      console.error("Failed to load tags:", err);
+      // 至少尝试加载可用标签
+      try {
+        const allTags = await tagsApi.getTags({ limit: 100 });
+        setAvailableTags(allTags.tags);
+      } catch (e) {
+        console.error("Failed to load available tags:", e);
+      }
+    } finally {
+      setIsLoadingTags(false);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, [id]);
@@ -99,6 +136,8 @@ export default function ItemDetailPage() {
   const handleUpdate = async (data: any) => {
     try {
       const updated = await userItemsApi.updateUserItem(parseInt(id), data);
+      console.log("Updated item:", updated); // Debug log
+      console.log("Progress value:", updated.progress); // Debug log
       setItem(updated);
       setIsEditing(false);
       toast({
@@ -130,6 +169,84 @@ export default function ItemDetailPage() {
         description: err.response?.data?.detail || "无法删除记录",
         variant: "destructive",
       });
+    }
+  };
+
+  // 标签处理函数
+  const handleAddTag = async (tag: Tag) => {
+    try {
+      await tagsApi.addTagsToUserItem(parseInt(id), [tag.id]);
+      setItemTags([...itemTags, tag]);
+      toast({
+        title: "添加成功",
+        description: `已添加标签 "${tag.name}"`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "添加失败",
+        description: err.response?.data?.detail || "无法添加标签",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveTag = async (tagId: number) => {
+    try {
+      await tagsApi.removeTagFromUserItem(parseInt(id), tagId);
+      setItemTags(itemTags.filter((tag) => tag.id !== tagId));
+      toast({
+        title: "移除成功",
+        description: "已移除标签",
+      });
+    } catch (err: any) {
+      toast({
+        title: "移除失败",
+        description: err.response?.data?.detail || "无法移除标签",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateTag = async (tagName: string): Promise<Tag> => {
+    try {
+      const newTag = await tagsApi.createTag({ name: tagName, type: "custom" });
+      setAvailableTags([...availableTags, newTag]);
+      toast({
+        title: "创建成功",
+        description: `已创建标签 "${tagName}"`,
+      });
+      return newTag;
+    } catch (err: any) {
+      // 如果是409冲突错误（标签已存在），尝试从列表中找到该标签
+      if (err.response?.status === 409) {
+        try {
+          // 重新加载标签列表并直接获取
+          const allTags = await tagsApi.getTags({ limit: 100 });
+          setAvailableTags(allTags.tags);
+          
+          // 从新加载的列表中找到该标签
+          const existingTag = allTags.tags.find(
+            tag => tag.name.toLowerCase() === tagName.toLowerCase()
+          );
+          
+          if (existingTag) {
+            toast({
+              title: "标签已存在",
+              description: `标签 "${tagName}" 已存在，已为您选择`,
+            });
+            return existingTag;
+          }
+        } catch (loadErr) {
+          console.error("Failed to reload tags:", loadErr);
+        }
+      }
+      
+      toast({
+        title: "创建失败",
+        description: err.response?.data?.detail || "无法创建标签",
+        variant: "destructive",
+      });
+      throw err;
     }
   };
 
@@ -297,6 +414,33 @@ export default function ItemDetailPage() {
               </Card>
             ) : (
               <>
+                {/* 观看进度 - 仅在"在看"且为剧集类型时显示 */}
+                {item.status === "watching" && 
+                 (item.content_type === "tv" || item.content_type === "anime") && (
+                  <Card>
+                    <CardContent className="p-6">
+                      <h2 className="text-lg font-semibold mb-4">观看进度</h2>
+                      {/* Debug info */}
+                      {/* {process.env.NODE_ENV === "development" && (
+                        <div className="text-xs text-muted-foreground mb-2">
+                          Debug: progress={String(item.progress)}, type={typeof item.progress}
+                        </div>
+                      )} */}
+                      {typeof item.progress === "number" && item.progress > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <div className="text-3xl font-bold text-primary">
+                            第 {item.progress} 集
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          暂未记录观看进度，点击"编辑记录"可以添加当前观看集数
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* 日期信息 */}
                 {(item.started_at || item.completed_at) && (
                   <Card>
@@ -333,6 +477,21 @@ export default function ItemDetailPage() {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* 标签 */}
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="text-lg font-semibold mb-4">标签</h2>
+                    <TagInput
+                      selectedTags={itemTags}
+                      availableTags={availableTags}
+                      onAddTag={handleAddTag}
+                      onRemoveTag={handleRemoveTag}
+                      onCreateTag={handleCreateTag}
+                      placeholder="搜索或创建标签..."
+                    />
+                  </CardContent>
+                </Card>
 
                 {/* 元数据 */}
                 {item.metadata && Object.keys(item.metadata).length > 0 && (
