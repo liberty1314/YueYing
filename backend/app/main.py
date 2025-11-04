@@ -71,6 +71,10 @@ app.include_router(user_items.router, prefix="/api")
 from app.api.routes import tags
 app.include_router(tags.router, prefix="/api")
 
+# 统计数据路由
+from app.api.routes import stats
+app.include_router(stats.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点

@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Home, Library, X } from "lucide-react";
+import { Search, Home, Library, X, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,11 @@ const navItems = [
     label: "我的记录",
     href: "/library",
     icon: Library,
+  },
+  {
+    label: "统计",
+    href: "/stats",
+    icon: BarChart3,
   },
 ];
 
