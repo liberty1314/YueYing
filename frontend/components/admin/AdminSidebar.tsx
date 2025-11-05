@@ -10,6 +10,7 @@ import {
   Users,
   Database,
   Activity,
+  Brain,
 } from "lucide-react";
 
 const menuItems = [
@@ -38,12 +39,17 @@ const menuItems = [
     href: "/admin/monitoring",
     icon: Activity,
   },
-  {
-    title: "系统设置",
-    href: "/admin/system",
-    icon: Settings,
-  },
-];
+    {
+      title: "系统设置",
+      href: "/admin/system",
+      icon: Settings,
+    },
+    {
+      title: "RAG 系统",
+      href: "/admin/rag",
+      icon: Brain,
+    },
+  ];
 
 export function AdminSidebar() {
   const pathname = usePathname();

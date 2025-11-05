@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { ContentType } from "@/app/explore/page";
+import type { ContentType } from "@/app/search/page";
 import type { FilterOptions } from "./AdvancedFilter";
 
 interface FilterBarProps {

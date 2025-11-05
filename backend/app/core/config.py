@@ -52,6 +52,15 @@ class Settings(BaseSettings):
     MINIO_SECURE: bool = Field(default=False, alias="MINIO_SECURE")
 
     # ====================================
+    # 向量数据库配置
+    # ====================================
+    VECTOR_DB_PATH: str = Field(default="./data/chromadb", alias="VECTOR_DB_PATH")
+    EMBEDDING_MODEL: str = Field(
+        default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        alias="EMBEDDING_MODEL"
+    )
+
+    # ====================================
     # JWT 配置
     # ====================================
     JWT_SECRET_KEY: str = Field(..., alias="JWT_SECRET_KEY")

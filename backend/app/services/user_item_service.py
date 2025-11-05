@@ -153,6 +153,22 @@ class UserItemService:
         
         logger.info(f"Created UserItem: {user_item.id} for user {user_id}")
         
+        # 添加到向量存储
+        try:
+            from app.ai.rag.vector_store import get_vector_store
+            vector_store = get_vector_store()
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            loop.run_until_complete(vector_store.add_user_item(db, user_item))
+            logger.info(f"Added user_item {user_item.id} to vector store")
+        except Exception as e:
+            logger.error(f"Failed to add user_item {user_item.id} to vector store: {e}")
+        
         # 检查是否需要自动生成标签
         try:
             if UserSettingsService.check_auto_generate_tags(db, user_id):
@@ -268,6 +284,23 @@ class UserItemService:
         db.refresh(user_item)
         
         logger.info(f"Updated UserItem: {user_item_id}")
+        
+        # 更新向量存储
+        try:
+            from app.ai.rag.vector_store import get_vector_store
+            vector_store = get_vector_store()
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            loop.run_until_complete(vector_store.update_user_item(db, user_item))
+            logger.info(f"Updated user_item {user_item_id} in vector store")
+        except Exception as e:
+            logger.error(f"Failed to update user_item {user_item_id} in vector store: {e}")
+        
         return user_item
 
     @staticmethod
@@ -295,6 +328,23 @@ class UserItemService:
         db.commit()
         
         logger.info(f"Deleted UserItem: {user_item_id}")
+        
+        # 从向量存储中删除
+        try:
+            from app.ai.rag.vector_store import get_vector_store
+            vector_store = get_vector_store()
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            loop.run_until_complete(vector_store.delete_user_item(user_item_id))
+            logger.info(f"Deleted user_item {user_item_id} from vector store")
+        except Exception as e:
+            logger.error(f"Failed to delete user_item {user_item_id} from vector store: {e}")
+        
         return True
 
     @staticmethod

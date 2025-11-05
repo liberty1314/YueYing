@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { SearchResult } from "@/app/explore/page";
+import type { SearchResult } from "@/app/search/page";
 import Image from "next/image";
 
 interface SearchCardGridProps {
