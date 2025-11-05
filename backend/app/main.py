@@ -91,6 +91,10 @@ app.include_router(ai_tags.router, prefix="/api")
 from app.api.routes import user_settings
 app.include_router(user_settings.router, prefix="/api")
 
+# 推荐路由
+from app.api.routes import recommendations
+app.include_router(recommendations.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点
