@@ -4,42 +4,22 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from pydantic import BaseModel
 from loguru import logger
 
 from app.core.database import get_db
 from app.api.dependencies.auth import get_current_user
 from app.models.user import User
 from app.models.item import Item
+from app.models.user_item import UserItem
 from app.ai.recommender.hybrid import HybridRecommender
+from app.schemas.recommendation import (
+    RecommendationItem,
+    RecommendationsResponse,
+    RecommendationStrategy,
+)
 
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
-
-
-# ====================================
-# Pydantic Schemas
-# ====================================
-
-
-class RecommendationItem(BaseModel):
-    """推荐物品"""
-    item_id: int
-    title: str
-    poster_url: Optional[str] = None
-    content_type: str
-    score: float
-    genres: Optional[List[str]] = None
-
-    class Config:
-        from_attributes = True
-
-
-class RecommendationsResponse(BaseModel):
-    """推荐响应"""
-    recommendations: List[RecommendationItem]
-    total: int
-    strategy: str
 
 
 # ====================================

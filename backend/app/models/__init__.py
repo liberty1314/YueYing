@@ -10,6 +10,7 @@ from app.models.user_item import UserItem, ItemStatus
 from app.models.tag import Tag, TagType, ItemTag
 from app.models.collection import Collection, CollectionItem
 from app.models.llm_config import LLMConfig
+from app.models.system_settings import SystemSettings
 
 __all__ = [
     "BaseModel",
@@ -26,4 +27,5 @@ __all__ = [
     "Collection",
     "CollectionItem",
     "LLMConfig",
+    "SystemSettings",
 ]

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Container } from "@/components/common/Container";
 import { PageHeader } from "@/components/common/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty } from "@/components/ui/empty";
 import { Loading } from "@/components/ui/loading";
 import { OverviewCards } from "@/components/stats/OverviewCards";
@@ -18,7 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { ComprehensiveStats } from "@/types/stats";
 
 export default function StatsPage() {
-  const { data: session, status: sessionStatus } = useSession();
+  const router = useRouter();
+  const { status: sessionStatus } = useSession();
   const { toast } = useToast();
 
   const [stats, setStats] = useState<ComprehensiveStats | null>(null);
@@ -50,8 +51,23 @@ export default function StatsPage() {
     }
   };
 
+  // 检查登录状态
   useEffect(() => {
-    loadStats();
+    if (sessionStatus === "unauthenticated") {
+      // 未登录，提示并重定向到登录页面
+      toast({
+        title: "需要登录",
+        description: "请先登录才能查看统计数据",
+        variant: "default",
+      });
+      router.push("/login");
+    }
+  }, [sessionStatus, router]);
+
+  useEffect(() => {
+    if (sessionStatus === "authenticated") {
+      loadStats();
+    }
   }, [sessionStatus]);
 
   if (sessionStatus === "loading" || isLoading) {
@@ -59,19 +75,7 @@ export default function StatsPage() {
   }
 
   if (sessionStatus === "unauthenticated") {
-    return (
-      <Container className="py-8 text-center">
-        <Empty
-          title="请登录"
-          description="登录后才能查看你的统计数据。"
-          action={
-            <a href="/auth/login" className="text-primary hover:underline">
-              前往登录
-            </a>
-          }
-        />
-      </Container>
-    );
+    return null; // 会被useEffect重定向
   }
 
   if (error || !stats) {
@@ -92,11 +96,6 @@ export default function StatsPage() {
         <Empty
           title="暂无数据"
           description="你还没有添加任何记录，快去探索页面添加吧！"
-          action={
-            <a href="/explore" className="text-primary hover:underline">
-              前往探索
-            </a>
-          }
         />
       </Container>
     );

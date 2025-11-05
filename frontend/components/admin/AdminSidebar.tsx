@@ -40,7 +40,7 @@ const menuItems = [
   },
   {
     title: "系统设置",
-    href: "/admin/settings",
+    href: "/admin/system",
     icon: Settings,
   },
 ];

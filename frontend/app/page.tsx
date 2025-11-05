@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Container } from "@/components/common/Container";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { ContentSection } from "@/components/home/ContentSection";
+import { RecommendationsSection } from "@/components/home/RecommendationsSection";
 import { ContentDetailDialog } from "@/components/content/ContentDetailDialog";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -161,6 +162,9 @@ export default function HomePage() {
       </div>
 
       <Container className="space-y-12 py-8">
+        {/* 个性化推荐 */}
+        <RecommendationsSection />
+
         {/* 趋势 */}
         <div>
           <h2 className="text-3xl font-bold mb-6">🔥 热门趋势</h2>

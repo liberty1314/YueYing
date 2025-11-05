@@ -95,6 +95,10 @@ app.include_router(user_settings.router, prefix="/api")
 from app.api.routes import recommendations
 app.include_router(recommendations.router, prefix="/api")
 
+# 系统设置路由
+from app.api.routes import system_settings
+app.include_router(system_settings.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点

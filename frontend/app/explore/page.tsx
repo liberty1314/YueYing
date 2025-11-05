@@ -10,6 +10,7 @@ import { FilterBar } from "@/components/search/FilterBar";
 import { ContentDetailDialog } from "@/components/content/ContentDetailDialog";
 import type { FilterOptions } from "@/components/search/AdvancedFilter";
 import { api } from "@/lib/api";
+import { systemSettingsApi } from "@/lib/system-settings-api";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -232,17 +233,46 @@ export default function ExplorePage() {
 
   // 检查登录状态和访问权限
   useEffect(() => {
-    // 如果未登录，跳转到登录页
-    if (status === "unauthenticated") {
-      router.push("/login");
-      return;
-    }
+    const checkAccess = async () => {
+      // 如果未登录，提示并跳转到登录页
+      if (status === "unauthenticated") {
+        toast({
+          title: "需要登录",
+          description: "请先登录才能使用搜索功能",
+          variant: "default",
+        });
+        router.push("/login");
+        return;
+      }
 
-    // 如果已登录，但没有搜索查询，跳转到首页
-    if (status === "authenticated" && !query) {
-      router.push("/");
-    }
-  }, [status, query, router]);
+      // 如果已登录，检查探索功能是否启用
+      if (status === "authenticated") {
+        try {
+          const settings = await systemSettingsApi.getSettings();
+          if (!settings.enable_explore) {
+            // 探索功能未启用，重定向到首页
+            toast({
+              title: "功能未启用",
+              description: "探索功能当前未启用",
+              variant: "default",
+            });
+            router.push("/");
+            return;
+          }
+
+          // 如果没有搜索查询，跳转到首页
+          if (!query) {
+            router.push("/");
+          }
+        } catch (err) {
+          console.error("检查系统设置失败:", err);
+          router.push("/");
+        }
+      }
+    };
+
+    checkAccess();
+  }, [status, query, router, toast]);
 
   // URL 参数变化时执行搜索（带防抖）
   useEffect(() => {

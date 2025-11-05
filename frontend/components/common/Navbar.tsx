@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Home, Library, X, BarChart3, Shield } from "lucide-react";
+import { Search, Home, Library, X, BarChart3, Shield, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import UserMenu from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/authStore";
+import { systemSettingsApi } from "@/lib/system-settings-api";
 
-const navItems = [
+const baseNavItems = [
   {
     label: "首页",
     href: "/",
@@ -28,12 +29,52 @@ const navItems = [
   },
 ];
 
+const exploreNavItem = {
+  label: "探索发现",
+  href: "/discover",
+  icon: Sparkles,
+};
+
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isAdmin } = useAuthStore();
+  const { isAuthenticated, isAdmin } = useAuthStore();
+  const [navItems, setNavItems] = useState(baseNavItems);
+
+  // 加载系统设置
+  useEffect(() => {
+    const loadSettings = async () => {
+      // 只有已登录用户才需要加载系统设置
+      if (!isAuthenticated) {
+        setNavItems(baseNavItems);
+        return;
+      }
+
+      try {
+        const settings = await systemSettingsApi.getSettings();
+        
+        // 如果探索功能启用，在"我的记录"后插入"探索发现"
+        if (settings.enable_explore) {
+          const newNavItems = [
+            baseNavItems[0], // 首页
+            baseNavItems[1], // 我的记录
+            exploreNavItem,  // 探索发现
+            baseNavItems[2], // 统计
+          ];
+          setNavItems(newNavItems);
+        } else {
+          setNavItems(baseNavItems);
+        }
+      } catch (err) {
+        console.error("加载系统设置失败:", err);
+        setNavItems(baseNavItems);
+      }
+    };
+
+    loadSettings();
+  }, [isAuthenticated]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

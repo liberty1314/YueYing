@@ -13,6 +13,7 @@ import { EditForm } from "@/components/library/EditForm";
 import { DeleteConfirmDialog } from "@/components/library/DeleteConfirmDialog";
 import { TagInput } from "@/components/tags/TagInput";
 import { AITagGenerator } from "@/components/tags/AITagGenerator";
+import { SimilarItemsSection } from "@/components/recommendations/SimilarItemsSection";
 import { userItemsApi } from "@/lib/user-items-api";
 import { tagsApi } from "@/lib/tags-api";
 import { useToast } from "@/hooks/use-toast";
@@ -506,6 +507,11 @@ export default function ItemDetailPage() {
                     />
                   </CardContent>
                 </Card>
+
+                {/* 相似推荐 */}
+                {item.item_id && (
+                  <SimilarItemsSection itemId={item.item_id} />
+                )}
 
                 {/* 元数据 */}
                 {item.metadata && Object.keys(item.metadata).length > 0 && (

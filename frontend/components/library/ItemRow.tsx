@@ -141,7 +141,7 @@ export function ItemRow({ item, onDelete }: ItemRowProps) {
               </div>
 
               {/* 操作按钮 */}
-              <DropdownMenu>
+              {/* <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="flex-shrink-0">
                     <MoreVertical className="h-4 w-4" />
@@ -168,7 +168,7 @@ export function ItemRow({ item, onDelete }: ItemRowProps) {
                     删除
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenu> */}
             </div>
           </div>
         </div>
