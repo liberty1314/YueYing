@@ -7,12 +7,11 @@ import { Container } from "@/components/common/Container";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Empty } from "@/components/ui/empty";
 import { Loading } from "@/components/ui/loading";
-import { OverviewCards } from "@/components/stats/OverviewCards";
-import { TypeDistributionChart } from "@/components/stats/TypeDistributionChart";
-import { StatusDistributionChart } from "@/components/stats/StatusDistributionChart";
-import { RatingDistributionChart } from "@/components/stats/RatingDistributionChart";
-import { TimeTrendChart } from "@/components/stats/TimeTrendChart";
-import { TopTagsCloud } from "@/components/stats/TopTagsCloud";
+import { NewOverviewCards } from "@/components/stats/NewOverviewCards";
+import { ActivityHeatmap } from "@/components/stats/ActivityHeatmap";
+import { RecentActivityCarousel } from "@/components/stats/RecentActivityCarousel";
+import { ConsumptionAnalysis } from "@/components/stats/ConsumptionAnalysis";
+import { AIInsights } from "@/components/stats/AIInsights";
 import { statsApi } from "@/lib/stats-api";
 import { useToast } from "@/hooks/use-toast";
 import type { ComprehensiveStats } from "@/types/stats";
@@ -105,31 +104,36 @@ export default function StatsPage() {
     <div className="min-h-[calc(100vh-64px)] bg-background">
       <Container className="py-8">
         <PageHeader
-          title="数据统计"
-          description="查看你的观看记录统计数据和趋势分析"
+          title="个人仪表盘"
+          description="可视化你的活动、偏好和个性化洞察"
         />
 
         <div className="mt-6 space-y-6">
-          {/* 概览卡片 */}
-          <OverviewCards overview={stats.overview} />
+          {/* 模块一：数据总览 */}
+          <NewOverviewCards overview={stats.overview} />
 
-          {/* 分布图表 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 类型分布 */}
-            <TypeDistributionChart data={stats.type_distribution} />
+          {/* 模块二：活动日历热力图 */}
+          <ActivityHeatmap data={stats.activity_heatmap} />
 
-            {/* 状态分布 */}
-            <StatusDistributionChart data={stats.status_distribution} />
+          {/* 模块三：最近浏览 */}
+          <RecentActivityCarousel activities={stats.recent_activities} />
+
+          {/* 双栏布局：消费分析 + AI洞察 */}
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* 模块四：消费分析（占2列） */}
+            <div className="lg:col-span-2">
+              <ConsumptionAnalysis
+                typeDistribution={stats.type_distribution}
+                tagStats={stats.top_tags}
+                yearDistribution={stats.year_distribution}
+              />
+            </div>
+
+            {/* 模块五：AI洞察（占1列） */}
+            <div className="lg:col-span-1">
+              <AIInsights stats={stats} />
+            </div>
           </div>
-
-          {/* 评分分布 */}
-          <RatingDistributionChart data={stats.rating_distribution} />
-
-          {/* 时间趋势 */}
-          <TimeTrendChart data={stats.time_trend} />
-
-          {/* 热门标签 */}
-          {stats.top_tags.length > 0 && <TopTagsCloud data={stats.top_tags} />}
         </div>
       </Container>
     </div>

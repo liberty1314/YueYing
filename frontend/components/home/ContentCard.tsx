@@ -1,8 +1,9 @@
 "use client";
 
-import { Star, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { RatingBadge } from "@/components/common/RatingBadge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -41,8 +42,6 @@ export function ContentCard({
     ? new Date(first_air_date).getFullYear()
     : "";
 
-  const rating = vote_average ? vote_average.toFixed(1) : "";
-
   return (
     <div
       className="group cursor-pointer"
@@ -63,11 +62,10 @@ export function ContentCard({
             loading="lazy"
           />
           
-          {/* 评分标签 */}
-          {rating && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/80 backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white shadow-lg">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span>{rating}</span>
+          {/* 平台评分标签 */}
+          {vote_average && (
+            <div className="absolute top-2 right-2">
+              <RatingBadge rating={vote_average} type="platform" />
             </div>
           )}
 

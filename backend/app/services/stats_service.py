@@ -4,7 +4,7 @@
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from loguru import logger
 
 from app.models.user_item import UserItem
@@ -19,6 +19,9 @@ from app.schemas.stats import (
     TimeTrend,
     TagStats,
     ComprehensiveStats,
+    ActivityHeatmapData,
+    RecentActivityItem,
+    YearDistribution,
 )
 
 
@@ -66,12 +69,25 @@ class StatsService:
             .count()
         )
 
+        # 本月新增
+        now = datetime.now()
+        first_day_of_month = datetime(now.year, now.month, 1)
+        this_month_added = (
+            db.query(UserItem)
+            .filter(
+                UserItem.user_id == user_id,
+                UserItem.created_at >= first_day_of_month
+            )
+            .count()
+        )
+
         return OverviewStats(
             total_items=total_items,
             by_status=by_status,
             by_type=by_type,
             average_rating=round(avg_rating, 2) if avg_rating else None,
             total_rated=total_rated,
+            this_month_added=this_month_added,
         )
 
     @staticmethod
@@ -231,6 +247,92 @@ class StatsService:
         ]
 
     @staticmethod
+    def get_activity_heatmap(db: Session, user_id: int, days: int = 365) -> List[ActivityHeatmapData]:
+        """
+        获取活动热力图数据（过去N天）
+        """
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        
+        # 查询每天的活动数量（基于 updated_at）
+        results = (
+            db.query(
+                func.date(UserItem.updated_at).label("date"),
+                func.count(UserItem.id).label("count"),
+            )
+            .filter(
+                UserItem.user_id == user_id,
+                UserItem.updated_at >= start_date
+            )
+            .group_by(func.date(UserItem.updated_at))
+            .all()
+        )
+        
+        # 转换为字典便于查找
+        activity_dict = {str(d): count for d, count in results}
+        
+        # 生成完整的日期范围（包括没有活动的日期）
+        heatmap_data = []
+        current_date = start_date.date()
+        while current_date <= end_date.date():
+            date_str = current_date.strftime("%Y-%m-%d")
+            count = activity_dict.get(date_str, 0)
+            heatmap_data.append(ActivityHeatmapData(date=date_str, count=count))
+            current_date += timedelta(days=1)
+        
+        return heatmap_data
+
+    @staticmethod
+    def get_recent_activities(db: Session, user_id: int, limit: int = 10) -> List[RecentActivityItem]:
+        """
+        获取最近浏览/更新的记录
+        """
+        results = (
+            db.query(UserItem, Item)
+            .join(Item, UserItem.item_id == Item.id)
+            .filter(UserItem.user_id == user_id)
+            .order_by(UserItem.updated_at.desc())
+            .limit(limit)
+            .all()
+        )
+        
+        activities = []
+        for user_item, item in results:
+            activities.append(
+                RecentActivityItem(
+                    id=user_item.id,
+                    item_id=item.id,
+                    title=item.title,
+                    content_type=item.content_type,
+                    poster_url=item.poster_url,
+                    status=user_item.status,
+                    rating=user_item.rating,
+                    updated_at=user_item.updated_at,
+                )
+            )
+        
+        return activities
+
+    @staticmethod
+    def get_year_distribution(db: Session, user_id: int) -> List[YearDistribution]:
+        """
+        获取年代分布（基于内容的发行年份）
+        """
+        results = (
+            db.query(Item.year, func.count(UserItem.id).label("count"))
+            .join(UserItem, Item.id == UserItem.item_id)
+            .filter(UserItem.user_id == user_id)
+            .group_by(Item.year)
+            .order_by(Item.year)
+            .all()
+        )
+        
+        return [
+            YearDistribution(year=year, count=count)
+            for year, count in results
+        ]
+
+    @staticmethod
     def get_comprehensive_stats(
         db: Session, user_id: int, time_period: str = "month", months: int = 12
     ) -> ComprehensiveStats:
@@ -245,6 +347,9 @@ class StatsService:
         rating_distribution = StatsService.get_rating_distribution(db, user_id)
         time_trend = StatsService.get_time_trend(db, user_id, time_period, months)
         top_tags = StatsService.get_top_tags(db, user_id)
+        activity_heatmap = StatsService.get_activity_heatmap(db, user_id)
+        recent_activities = StatsService.get_recent_activities(db, user_id)
+        year_distribution = StatsService.get_year_distribution(db, user_id)
 
         return ComprehensiveStats(
             overview=overview,
@@ -253,5 +358,8 @@ class StatsService:
             rating_distribution=rating_distribution,
             time_trend=time_trend,
             top_tags=top_tags,
+            activity_heatmap=activity_heatmap,
+            recent_activities=recent_activities,
+            year_distribution=year_distribution,
         )
 

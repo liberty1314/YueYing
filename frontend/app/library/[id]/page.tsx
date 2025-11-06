@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { RatingBadge } from "@/components/common/RatingBadge";
 import { EditForm } from "@/components/library/EditForm";
 import { DeleteConfirmDialog } from "@/components/library/DeleteConfirmDialog";
 import { TagInput } from "@/components/tags/TagInput";
@@ -385,10 +386,7 @@ export default function ItemDetailPage() {
                     </Badge>
                     {item.year && <span className="text-sm text-muted-foreground">{item.year}</span>}
                     {item.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">{item.rating}/10</span>
-                      </div>
+                      <RatingBadge rating={item.rating} type="user" size="lg" showLabel />
                     )}
                   </div>
                 </div>

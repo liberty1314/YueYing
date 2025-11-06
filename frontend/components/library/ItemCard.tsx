@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Star, MoreVertical, Eye, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RatingBadge } from "@/components/common/RatingBadge";
 import type { UserItem } from "@/types/user-item";
 
 interface ItemCardProps {
@@ -65,11 +66,10 @@ export function ItemCard({ item, onDelete }: ItemCardProps) {
               </Badge>
             </div>
 
-            {/* 评分 */}
+            {/* 用户评分 */}
             {item.rating != null && (
-              <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/80 backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white shadow-lg">
-                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                <span>{item.rating}</span>
+              <div className="absolute top-2 right-2">
+                <RatingBadge rating={item.rating} type="user" />
               </div>
             )}
 

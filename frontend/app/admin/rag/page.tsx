@@ -36,13 +36,18 @@ export default function RAGAdminPage() {
   const loadStats = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get<VectorStoreStats>("/rag/stats");
+      const response = await api.get<VectorStoreStats>("/rag/stats", {
+        timeout: 60000, // 增加超时时间到60秒
+      });
       setStats(response.data);
     } catch (err: any) {
       console.error("Failed to load RAG stats:", err);
+      const errorMsg = err.code === 'ECONNABORTED' 
+        ? "请求超时，这可能是首次加载需要下载模型文件。请稍后再试。"
+        : err.response?.data?.detail || "无法加载向量存储统计信息";
       toast({
         title: "加载失败",
-        description: err.response?.data?.detail || "无法加载向量存储统计信息",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {

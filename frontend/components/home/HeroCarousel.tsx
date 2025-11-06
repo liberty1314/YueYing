@@ -18,9 +18,10 @@ interface HeroItem {
 interface HeroCarouselProps {
   items: HeroItem[];
   onItemClick?: (item: HeroItem) => void;
+  isLoading?: boolean;
 }
 
-export function HeroCarousel({ items, onItemClick }: HeroCarouselProps) {
+export function HeroCarousel({ items, onItemClick, isLoading = false }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
@@ -50,9 +51,48 @@ export function HeroCarousel({ items, onItemClick }: HeroCarouselProps) {
     setCurrentIndex(index);
   };
 
+  // 加载状态显示骨架屏
+  if (isLoading) {
+    return (
+      <div className="relative h-[650px] w-full overflow-hidden rounded-lg bg-muted animate-pulse">
+        <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted/80 to-muted/60" />
+        <div className="relative h-full flex items-center">
+          <div className="container px-8 max-w-7xl">
+            <div className="max-w-2xl space-y-4">
+              {/* 模拟标签和信息 */}
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-16 bg-muted-foreground/20 rounded" />
+                <div className="h-4 w-12 bg-muted-foreground/20 rounded" />
+                <div className="h-4 w-16 bg-muted-foreground/20 rounded" />
+              </div>
+              {/* 模拟标题 */}
+              <div className="space-y-2">
+                <div className="h-12 w-3/4 bg-muted-foreground/20 rounded" />
+                <div className="h-12 w-1/2 bg-muted-foreground/20 rounded" />
+              </div>
+              {/* 模拟简介 */}
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-muted-foreground/20 rounded" />
+                <div className="h-4 w-full bg-muted-foreground/20 rounded" />
+                <div className="h-4 w-3/4 bg-muted-foreground/20 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* 指示器占位 */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-1.5 w-1.5 bg-muted-foreground/20 rounded-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 没有数据时显示提示
   if (items.length === 0) {
     return (
-      <div className="relative h-[500px] w-full bg-muted flex items-center justify-center">
+      <div className="relative h-[650px] w-full bg-muted flex items-center justify-center rounded-lg">
         <p className="text-muted-foreground">暂无内容</p>
       </div>
     );

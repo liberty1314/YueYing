@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Star, Calendar, Globe, ExternalLink, X } from "lucide-react";
+import { Calendar, Globe, ExternalLink, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RatingBadge } from "@/components/common/RatingBadge";
 import { QuickAddForm } from "./QuickAddForm";
 import { cn } from "@/lib/utils";
 import type { SearchResult } from "@/app/explore/page";
@@ -118,12 +119,9 @@ export function ContentDetailDialog({
                     </div>
                   )}
 
-                  {hasRating && (
-                    <div className="flex items-center gap-1 text-sm">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">
-                        {result.rating.toFixed(1)}
-                      </span>
+                  {hasRating && result.rating !== undefined && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <RatingBadge rating={result.rating} type="platform" size="sm" />
                       {result.vote_count && (
                         <span className="text-muted-foreground">
                           ({result.vote_count})

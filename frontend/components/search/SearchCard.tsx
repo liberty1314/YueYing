@@ -1,9 +1,10 @@
 "use client";
 
-import { Star, Calendar, Plus, ExternalLink } from "lucide-react";
+import { Calendar, Plus, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RatingBadge } from "@/components/common/RatingBadge";
 import { cn } from "@/lib/utils";
 import type { SearchResult } from "@/app/explore/page";
 import Image from "next/image";
@@ -102,15 +103,14 @@ export function SearchCard({
 
               {/* 元数据 */}
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              {/* 评分 */}
-              {hasRating && result.rating !== undefined && (
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{result.rating.toFixed(1)}</span>
-                  {result.vote_count && (
-                    <span className="text-xs">({result.vote_count})</span>
-                  )}
-                </div>
+                {/* 平台评分 */}
+                {hasRating && result.rating !== undefined && (
+                  <div className="flex items-center gap-1">
+                    <RatingBadge rating={result.rating} type="platform" size="sm" />
+                    {result.vote_count && (
+                      <span className="text-xs">({result.vote_count})</span>
+                    )}
+                  </div>
                 )}
 
                 {/* 年份 */}

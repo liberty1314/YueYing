@@ -232,17 +232,28 @@ class VectorStore:
     def get_stats(self) -> Dict[str, Any]:
         """获取向量存储统计信息"""
         try:
-            count = self.collection.count()
+            self._ensure_initialized()
+            count = self.collection.count() if self.collection else 0
+            
+            # 获取embedding维度，但不强制加载模型
+            embedding_dim = 384  # 默认维度
+            if self.embedding_service._model is not None:
+                try:
+                    embedding_dim = self.embedding_service._model.get_sentence_embedding_dimension()
+                except:
+                    pass
+            
             return {
                 "total_items": count,
                 "collection_name": self.COLLECTION_NAME,
-                "embedding_dimension": self.embedding_service.embedding_dimension,
+                "embedding_dimension": embedding_dim,
             }
         except Exception as e:
-            logger.error(f"Failed to get vector store stats: {e}")
+            logger.error(f"Failed to get vector store stats: {e}", exc_info=True)
             return {
                 "total_items": 0,
-                "error": str(e)
+                "collection_name": self.COLLECTION_NAME,
+                "embedding_dimension": 384,
             }
     
     async def rebuild_index(self, db: Session, user_id: Optional[int] = None) -> Dict[str, Any]:

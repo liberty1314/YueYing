@@ -8,6 +8,7 @@ export interface OverviewStats {
   by_type: Record<string, number>;
   average_rating: number | null;
   total_rated: number;
+  this_month_added: number;
 }
 
 export interface TypeDistribution {
@@ -44,6 +45,27 @@ export interface TagStats {
   color: string | null;
 }
 
+export interface ActivityHeatmapData {
+  date: string;
+  count: number;
+}
+
+export interface RecentActivityItem {
+  id: number;
+  item_id: number;
+  title: string;
+  content_type: string;
+  poster_url: string | null;
+  status: string;
+  rating: number | null;
+  updated_at: string;
+}
+
+export interface YearDistribution {
+  year: number | null;
+  count: number;
+}
+
 export interface ComprehensiveStats {
   overview: OverviewStats;
   type_distribution: TypeDistribution[];
@@ -51,5 +73,8 @@ export interface ComprehensiveStats {
   rating_distribution: RatingDistribution[];
   time_trend: TimeTrend;
   top_tags: TagStats[];
+  activity_heatmap: ActivityHeatmapData[];
+  recent_activities: RecentActivityItem[];
+  year_distribution: YearDistribution[];
 }
 

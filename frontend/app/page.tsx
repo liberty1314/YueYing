@@ -158,6 +158,7 @@ export default function HomePage() {
         <HeroCarousel
           items={trendingToday.slice(0, 5)}
           onItemClick={handleItemClick}
+          isLoading={isLoading}
         />
       </div>
 
