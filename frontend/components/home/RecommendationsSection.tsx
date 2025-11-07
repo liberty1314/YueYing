@@ -15,10 +15,16 @@ export function RecommendationsSection() {
   const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 修复 Hydration 问题
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const loadRecommendations = async () => {
     // 未登录用户不加载推荐
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !isMounted) {
       setIsLoading(false);
       return;
     }
@@ -43,7 +49,18 @@ export function RecommendationsSection() {
   };
 
   useEffect(() => {
-    loadRecommendations();
+    // 等待组件挂载并确保已登录
+    if (isMounted) {
+      loadRecommendations();
+    }
+  }, [isAuthenticated, isMounted]);
+  
+  // 退出登录时清理数据
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRecommendations([]);
+      setIsLoading(false);
+    }
   }, [isAuthenticated]);
 
   const handleRefresh = () => {
@@ -51,8 +68,8 @@ export function RecommendationsSection() {
     loadRecommendations();
   };
 
-  // 未登录用户不显示推荐区域
-  if (!isAuthenticated) {
+  // 未挂载或未登录用户不显示推荐区域
+  if (!isMounted || !isAuthenticated) {
     return null;
   }
 

@@ -8,6 +8,16 @@ import { api } from "@/lib/api";
 import { Loader2, RefreshCw, Database, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface VectorStoreStats {
   total_items: number;
@@ -32,6 +42,7 @@ export default function RAGAdminPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showRebuildDialog, setShowRebuildDialog] = useState(false);
 
   const loadStats = async () => {
     setIsLoading(true);
@@ -60,11 +71,9 @@ export default function RAGAdminPage() {
   }, []);
 
   const handleRebuildIndex = async () => {
-    if (!confirm("确定要重建向量索引吗？这可能需要一些时间。")) {
-      return;
-    }
-
     setIsRebuilding(true);
+    setShowRebuildDialog(false);
+    
     try {
       const response = await api.post("/rag/rebuild-index", {});
       toast({
@@ -162,7 +171,7 @@ export default function RAGAdminPage() {
                   刷新统计
                 </Button>
                 <Button
-                  onClick={handleRebuildIndex}
+                  onClick={() => setShowRebuildDialog(true)}
                   variant="destructive"
                   size="sm"
                   disabled={isRebuilding}
@@ -255,6 +264,27 @@ export default function RAGAdminPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 重建索引确认对话框 */}
+      <AlertDialog open={showRebuildDialog} onOpenChange={setShowRebuildDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认重建向量索引</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要重建向量索引吗？此操作会花费一些时间。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRebuildIndex}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              确定
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

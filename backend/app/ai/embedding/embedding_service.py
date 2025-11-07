@@ -26,13 +26,34 @@ class EmbeddingService:
     
     def _load_model(self):
         """加载嵌入模型"""
+        import os
+        import shutil
+        
         try:
             model_name = settings.EMBEDDING_MODEL
             logger.info(f"Loading embedding model: {model_name}")
-            self._model = SentenceTransformer(model_name)
+            
+            # 检查并创建缓存目录
+            cache_dir = os.path.expanduser("~/.cache/huggingface/hub")
+            os.makedirs(cache_dir, exist_ok=True)
+            logger.info(f"Using HuggingFace cache directory: {cache_dir}")
+            
+            # 尝试加载模型，如果失败则重新下载
+            try:
+                self._model = SentenceTransformer(model_name)
+            except Exception as e:
+                logger.warning(f"First attempt to load model failed: {e}, trying to re-download...")
+                # 清除可能损坏的缓存
+                model_cache_path = os.path.join(cache_dir, f"models--{model_name.replace('/', '--')}")
+                if os.path.exists(model_cache_path):
+                    logger.info(f"Removing corrupted cache: {model_cache_path}")
+                    shutil.rmtree(model_cache_path, ignore_errors=True)
+                # 重新下载
+                self._model = SentenceTransformer(model_name)
+            
             logger.info(f"Embedding model loaded successfully, dimension: {self._model.get_sentence_embedding_dimension()}")
         except Exception as e:
-            logger.error(f"Failed to load embedding model: {e}")
+            logger.error(f"Failed to load embedding model: {e}", exc_info=True)
             raise
     
     @property
@@ -47,12 +68,13 @@ class EmbeddingService:
         """获取嵌入向量维度"""
         return self.model.get_sentence_embedding_dimension()
     
-    def embed_text(self, text: str) -> List[float]:
+    def embed_text(self, text: str, retry: bool = True) -> List[float]:
         """
         将单个文本转换为嵌入向量
         
         Args:
             text: 输入文本
+            retry: 是否在失败时尝试重新加载模型
             
         Returns:
             嵌入向量
@@ -65,8 +87,16 @@ class EmbeddingService:
             embedding = self.model.encode(text, convert_to_tensor=False)
             return embedding.tolist()
         except Exception as e:
-            logger.error(f"Failed to embed text: {e}")
-            return [0.0] * self.embedding_dimension
+            logger.error(f"Failed to embed text: {e}", exc_info=True)
+            # 尝试重新加载模型（只尝试一次）
+            if retry:
+                try:
+                    logger.info("Attempting to reload model...")
+                    self._model = None
+                    return self.embed_text(text, retry=False)  # 递归调用，但不再重试
+                except Exception as retry_error:
+                    logger.error(f"Failed to reload model: {retry_error}")
+            raise  # 抛出异常而不是返回零向量
     
     def embed_texts(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
         """

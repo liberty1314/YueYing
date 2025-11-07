@@ -51,6 +51,11 @@ class User(BaseModel):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    conversations = relationship(
+        "Conversation",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     def is_admin(self) -> bool:
         """检查是否为管理员"""

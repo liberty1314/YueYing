@@ -14,16 +14,12 @@ def setup_logging():
 
     # 根据环境配置日志格式
     if settings.LOG_FORMAT == "json":
-        # 生产环境使用 JSON 格式
+        # 生产环境使用 JSON 格式（简化以避免格式化冲突）
         log_format = (
-            "{{"
-            '"time": "{{time:YYYY-MM-DD HH:mm:ss.SSS}}", '
-            '"level": "{{level}}", '
-            '"message": "{{message}}", '
-            '"file": "{{file}}", '
-            '"function": "{{function}}", '
-            '"line": {{line}}'
-            "}}"
+            '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | '
+            '<level>{level: <8}</level> | '
+            '{name}:{function}:{line} | '
+            '<level>{message}</level>'
         )
     else:
         # 开发环境使用可读格式

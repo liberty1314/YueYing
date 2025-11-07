@@ -35,6 +35,15 @@ RUN pip install --upgrade pip && \
 # 复制应用代码
 COPY . .
 
+# 预下载 embedding 模型（可选，如果下载失败也不会影响镜像构建）
+RUN python -c "from sentence_transformers import SentenceTransformer; \
+    try: \
+        print('Downloading embedding model...'); \
+        SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'); \
+        print('Model downloaded successfully'); \
+    except Exception as e: \
+        print(f'Model download failed (will retry at runtime): {e}')" || true
+
 # 暴露端口
 EXPOSE 8000
 

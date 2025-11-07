@@ -16,6 +16,7 @@ export default function SystemSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [enableExplore, setEnableExplore] = useState(false);
+  const [allowUserAiTagSettings, setAllowUserAiTagSettings] = useState(true);
 
   // 加载系统设置
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function SystemSettingsPage() {
         const data = await systemSettingsApi.getSettings();
         setSettings(data);
         setEnableExplore(data.enable_explore);
+        setAllowUserAiTagSettings(data.allow_user_ai_tag_settings);
       } catch (err: any) {
         console.error("加载系统设置失败:", err);
         toast({
@@ -45,6 +47,7 @@ export default function SystemSettingsPage() {
     try {
       const updated = await systemSettingsApi.updateSettings({
         enable_explore: enableExplore,
+        allow_user_ai_tag_settings: allowUserAiTagSettings,
       });
       setSettings(updated);
       toast({
@@ -102,6 +105,24 @@ export default function SystemSettingsPage() {
               id="enable-explore"
               checked={enableExplore}
               onCheckedChange={setEnableExplore}
+            />
+          </div>
+
+          {/* 允许用户自行设置 AI 自动标签 */}
+          <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
+            <div className="flex-1 space-y-1">
+              <Label htmlFor="allow-user-ai-tag-settings" className="text-base font-semibold">
+                允许用户自行设置 AI 自动标签
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                启用后，用户可以在个人设置中控制是否自动生成 AI 标签。
+                禁用后，用户将无法看到该设置选项，系统将使用默认行为。
+              </p>
+            </div>
+            <Switch
+              id="allow-user-ai-tag-settings"
+              checked={allowUserAiTagSettings}
+              onCheckedChange={setAllowUserAiTagSettings}
             />
           </div>
 

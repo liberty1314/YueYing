@@ -5,7 +5,7 @@ import type { UserItem } from "@/types/user-item";
 
 interface GridViewProps {
   items: UserItem[];
-  onDelete: (id: number) => void;
+  onDelete: (id: number, title: string) => void;
 }
 
 export function GridView({ items, onDelete }: GridViewProps) {

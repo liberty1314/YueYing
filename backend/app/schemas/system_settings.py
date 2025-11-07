@@ -10,6 +10,10 @@ class SystemSettingsBase(BaseModel):
         default=False,
         description="启用探索/推荐功能"
     )
+    allow_user_ai_tag_settings: bool = Field(
+        default=True,
+        description="允许用户自行设置 AI 自动标签"
+    )
 
 
 class SystemSettingsUpdate(SystemSettingsBase):

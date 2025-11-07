@@ -20,7 +20,15 @@ class SystemSettings(BaseModel):
         server_default='false', 
         comment="启用探索/推荐功能"
     )
+    
+    allow_user_ai_tag_settings = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default='true',
+        comment="允许用户自行设置 AI 自动标签"
+    )
 
     def __repr__(self):
-        return f"<SystemSettings(id={self.id}, enable_explore={self.enable_explore})>"
+        return f"<SystemSettings(id={self.id}, enable_explore={self.enable_explore}, allow_user_ai_tag_settings={self.allow_user_ai_tag_settings})>"
 

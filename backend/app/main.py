@@ -99,6 +99,10 @@ app.include_router(recommendations.router, prefix="/api")
 from app.api.routes import rag
 app.include_router(rag.router, prefix="/api")
 
+# AI助手路由
+from app.api.routes import assistant
+app.include_router(assistant.router, prefix="/api")
+
 # 系统设置路由
 from app.api.routes import system_settings
 app.include_router(system_settings.router, prefix="/api")
@@ -167,6 +171,18 @@ async def startup_event():
             db.close()
     except Exception as e:
         logger.error(f"初始化配置失败: {e}")
+    
+    # 预加载 Embedding 模型
+    try:
+        logger.info("预加载 Embedding 模型...")
+        from app.ai.embedding.embedding_service import get_embedding_service
+        embedding_service = get_embedding_service()
+        # 触发模型加载
+        _ = embedding_service.embedding_dimension
+        logger.info("✅ Embedding 模型预加载成功")
+    except Exception as e:
+        logger.error(f"⚠️ Embedding 模型预加载失败（但不会阻止应用启动）: {e}")
+        logger.warning("RAG 和向量搜索功能可能无法正常工作，请检查网络连接或模型文件")
 
 
 # 关闭事件

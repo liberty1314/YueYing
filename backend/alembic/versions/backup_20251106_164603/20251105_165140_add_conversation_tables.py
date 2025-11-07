@@ -1,8 +1,8 @@
 """add conversation tables
 
-Revision ID: $(date +%s | tail -c 13)
-Revises: 
-Create Date: $(date +%Y-%m-%d\ %H:%M:%S)
+Revision ID: 20251105_165140
+Revises: add_training_config
+Create Date: 2025-11-05 16:51:40.000000
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '$(date +%s | tail -c 13)'
-down_revision = None
+revision = '20251105_165140'
+down_revision = 'add_training_config'
 branch_labels = None
 depends_on = None
 

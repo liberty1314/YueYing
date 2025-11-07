@@ -83,7 +83,7 @@ class UserItemService:
         return item
 
     @staticmethod
-    def create_user_item(
+    async def create_user_item(
         db: Session,
         user_id: int,
         user_item_data: UserItemCreate
@@ -153,21 +153,16 @@ class UserItemService:
         
         logger.info(f"Created UserItem: {user_item.id} for user {user_id}")
         
-        # 添加到向量存储
+        # 同步添加到向量存储（确保立即可用）
         try:
             from app.ai.rag.vector_store import get_vector_store
             vector_store = get_vector_store()
-            import asyncio
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
             
-            loop.run_until_complete(vector_store.add_user_item(db, user_item))
+            # 直接 await 异步调用
+            await vector_store.add_user_item(db, user_item)
             logger.info(f"Added user_item {user_item.id} to vector store")
         except Exception as e:
-            logger.error(f"Failed to add user_item {user_item.id} to vector store: {e}")
+            logger.error(f"Failed to add user_item {user_item.id} to vector store: {e}", exc_info=True)
         
         # 检查是否需要自动生成标签
         try:
@@ -227,7 +222,7 @@ class UserItemService:
         )
 
     @staticmethod
-    def update_user_item(
+    async def update_user_item(
         db: Session,
         user_id: int,
         user_item_id: int,
@@ -285,26 +280,21 @@ class UserItemService:
         
         logger.info(f"Updated UserItem: {user_item_id}")
         
-        # 更新向量存储
+        # 同步更新向量存储（确保立即可用）
         try:
             from app.ai.rag.vector_store import get_vector_store
             vector_store = get_vector_store()
-            import asyncio
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
             
-            loop.run_until_complete(vector_store.update_user_item(db, user_item))
+            # 直接 await 异步调用
+            await vector_store.update_user_item(db, user_item)
             logger.info(f"Updated user_item {user_item_id} in vector store")
         except Exception as e:
-            logger.error(f"Failed to update user_item {user_item_id} in vector store: {e}")
+            logger.error(f"Failed to update user_item {user_item_id} in vector store: {e}", exc_info=True)
         
         return user_item
 
     @staticmethod
-    def delete_user_item(
+    async def delete_user_item(
         db: Session,
         user_id: int,
         user_item_id: int
@@ -329,21 +319,16 @@ class UserItemService:
         
         logger.info(f"Deleted UserItem: {user_item_id}")
         
-        # 从向量存储中删除
+        # 同步从向量存储中删除
         try:
             from app.ai.rag.vector_store import get_vector_store
             vector_store = get_vector_store()
-            import asyncio
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
             
-            loop.run_until_complete(vector_store.delete_user_item(user_item_id))
+            # 直接 await 异步调用
+            await vector_store.delete_user_item(user_item_id)
             logger.info(f"Deleted user_item {user_item_id} from vector store")
         except Exception as e:
-            logger.error(f"Failed to delete user_item {user_item_id} from vector store: {e}")
+            logger.error(f"Failed to delete user_item {user_item_id} from vector store: {e}", exc_info=True)
         
         return True
 

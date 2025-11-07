@@ -18,7 +18,7 @@ import type { UserItem } from "@/types/user-item";
 
 interface ItemRowProps {
   item: UserItem;
-  onDelete: (id: number) => void;
+  onDelete: (id: number, title: string) => void;
 }
 
 const statusLabels = {
@@ -161,7 +161,7 @@ export function ItemRow({ item, onDelete }: ItemRowProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => onDelete(item.id)}
+                    onClick={() => onDelete(item.id, item.title)}
                     className="text-destructive"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />

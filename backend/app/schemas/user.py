@@ -36,6 +36,7 @@ class UserLogin(BaseModel):
 
     email: EmailStr = Field(..., description="邮箱地址")
     password: str = Field(..., description="密码")
+    remember_me: bool = Field(default=False, description="记住我（7天有效期）")
 
 
 class Token(BaseModel):

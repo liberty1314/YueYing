@@ -105,18 +105,27 @@ class AuthService:
         return user
 
     @staticmethod
-    def create_user_tokens(user: User) -> Token:
+    def create_user_tokens(user: User, remember_me: bool = False) -> Token:
         """
         为用户创建访问令牌和刷新令牌
 
         Args:
             user: 用户对象
+            remember_me: 是否启用"记住我"（7天有效期）
 
         Returns:
             包含 access_token 和 refresh_token 的 Token 对象
         """
+        # 根据 remember_me 设置不同的过期时间
+        if remember_me:
+            # 记住我：7天有效期
+            access_token_expires = timedelta(days=7)
+            logger.info(f"用户 {user.email} 启用了'记住我'功能，token有效期7天")
+        else:
+            # 默认：30分钟有效期
+            access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        
         # 创建 access token
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             data={"sub": str(user.id), "email": user.email},
             expires_delta=access_token_expires,

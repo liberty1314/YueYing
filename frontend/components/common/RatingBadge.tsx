@@ -52,11 +52,11 @@ export function RatingBadge({
         <Heart className={cn(sizeClasses[size].icon, "fill-white text-white")} />
       )}
       <span>{rating.toFixed(1)}</span>
-      {showLabel && (
+      {/* {showLabel && (
         <span className="text-[0.65rem] opacity-80 ml-0.5">
           {isPlatform ? "" : "我的"}
         </span>
-      )}
+      )} */}
     </div>
   );
 }

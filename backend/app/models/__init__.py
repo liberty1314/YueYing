@@ -11,6 +11,8 @@ from app.models.tag import Tag, TagType, ItemTag
 from app.models.collection import Collection, CollectionItem
 from app.models.llm_config import LLMConfig
 from app.models.system_settings import SystemSettings
+from app.models.user_settings import UserSettings
+from app.models.conversation import Conversation, ConversationMessage
 
 __all__ = [
     "BaseModel",
@@ -28,4 +30,7 @@ __all__ = [
     "CollectionItem",
     "LLMConfig",
     "SystemSettings",
+    "UserSettings",
+    "Conversation",
+    "ConversationMessage",
 ]

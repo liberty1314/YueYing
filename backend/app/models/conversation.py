@@ -31,7 +31,7 @@ class ConversationMessage(Base):
     conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False, index=True)
     role = Column(String(20), nullable=False)  # 'user' 或 'assistant'
     content = Column(Text, nullable=False)
-    metadata = Column(JSON, nullable=True)  # 存储额外信息（如检索的context）
+    message_metadata = Column(JSON, nullable=True)  # 存储额外信息（如检索的context）
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     # 关系

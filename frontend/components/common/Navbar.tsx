@@ -3,13 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Home, Library, X, BarChart3, Shield, Sparkles } from "lucide-react";
+import { Search, Home, Library, X, BarChart3, Shield, Sparkles, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import UserMenu from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/authStore";
 import { systemSettingsApi } from "@/lib/system-settings-api";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 const baseNavItems = [
   {
@@ -27,6 +28,11 @@ const baseNavItems = [
     href: "/stats",
     icon: BarChart3,
   },
+  {
+    label: "AI助手",
+    href: "/assistant",
+    icon: Bot,
+  },
 ];
 
 const exploreNavItem = {
@@ -42,9 +48,18 @@ export function Navbar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { isAuthenticated, isAdmin } = useAuthStore();
   const [navItems, setNavItems] = useState(baseNavItems);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 修复 Hydration 问题：确保组件在客户端完全挂载后再渲染依赖状态的内容
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // 加载系统设置
   useEffect(() => {
+    // 等待组件挂载后再加载设置
+    if (!isMounted) return;
+
     const loadSettings = async () => {
       // 只有已登录用户才需要加载系统设置
       if (!isAuthenticated) {
@@ -62,6 +77,7 @@ export function Navbar() {
             baseNavItems[1], // 我的记录
             exploreNavItem,  // 探索发现
             baseNavItems[2], // 统计
+            baseNavItems[3], // AI助手
           ];
           setNavItems(newNavItems);
         } else {
@@ -74,7 +90,7 @@ export function Navbar() {
     };
 
     loadSettings();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isMounted]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,12 +117,12 @@ export function Navbar() {
 
         {/* 导航链接 */}
         <nav className="hidden md:flex items-center space-x-1">
-          {navItems.map((item) => {
+          {isMounted && navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             
             return (
-              <Link key={item.href} href={item.href}>
+              <Link key={item.href} href={item.href} prefetch={true}>
                 <Button
                   variant={isActive ? "default" : "ghost"}
                   className={cn(
@@ -122,8 +138,8 @@ export function Navbar() {
           })}
           
           {/* 管理后台入口 - 仅管理员可见 */}
-          {isAdmin && (
-            <Link href="/admin">
+          {isMounted && isAdmin && (
+            <Link href="/admin" prefetch={true}>
               <Button
                 variant={pathname?.startsWith("/admin") ? "default" : "ghost"}
                 className={cn(
@@ -165,8 +181,9 @@ export function Navbar() {
           </div>
         </form>
 
-        {/* 用户菜单 */}
-        <div className="flex items-center">
+        {/* 主题切换和用户菜单 */}
+        <div className="flex items-center gap-2">
+          <AnimatedThemeToggler />
           <UserMenu />
         </div>
       </div>

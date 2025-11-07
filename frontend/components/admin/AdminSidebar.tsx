@@ -25,6 +25,11 @@ const menuItems = [
     icon: Bot,
   },
   {
+    title: "RAG 系统",
+    href: "/admin/rag",
+    icon: Brain,
+  },
+  {
     title: "用户管理",
     href: "/admin/users",
     icon: Users,
@@ -39,17 +44,12 @@ const menuItems = [
     href: "/admin/monitoring",
     icon: Activity,
   },
-    {
-      title: "系统设置",
-      href: "/admin/system",
-      icon: Settings,
-    },
-    {
-      title: "RAG 系统",
-      href: "/admin/rag",
-      icon: Brain,
-    },
-  ];
+  {
+    title: "系统设置",
+    href: "/admin/system",
+    icon: Settings,
+  },
+];
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -59,7 +59,7 @@ export function AdminSidebar() {
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-14 items-center border-b px-6">
-          <Link href="/admin" className="flex items-center gap-2 font-semibold">
+          <Link href="/admin" prefetch={true} className="flex items-center gap-2 font-semibold">
             <Bot className="h-6 w-6" />
             <span>阅影·log 管理</span>
           </Link>
@@ -75,6 +75,7 @@ export function AdminSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
@@ -93,6 +94,7 @@ export function AdminSidebar() {
         <div className="border-t p-4">
           <Link
             href="/"
+            prefetch={true}
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             返回首页

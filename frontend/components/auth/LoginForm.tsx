@@ -15,6 +15,7 @@ export default function LoginForm() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { setUser, setToken } = useAuthStore()
@@ -28,6 +29,7 @@ export default function LoginForm() {
       const result = await signIn('credentials', {
         email,
         password,
+        remember_me: rememberMe.toString(),
         redirect: false,
       })
 
@@ -115,6 +117,20 @@ export default function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            />
+            <label htmlFor="remember-me" className="ml-2 block text-sm">
+              记住我（7天有效期）
+            </label>
           </div>
         </div>
 

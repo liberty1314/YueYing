@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface User {
   id: string
@@ -14,9 +14,11 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   isAdmin: boolean
+  isLoading: boolean  // 新增：跟踪 auth 状态是否正在从 localStorage 加载
   setUser: (user: User | null) => void
   setToken: (token: string | null) => void
   logout: () => void
+  setIsLoading: (isLoading: boolean) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,6 +28,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isAdmin: false,
+      isLoading: true,  // 初始状态为 loading
       setUser: (user) =>
         set({ 
           user, 
@@ -35,9 +38,15 @@ export const useAuthStore = create<AuthState>()(
       setToken: (token) => set({ token }),
       logout: () =>
         set({ user: null, token: null, isAuthenticated: false, isAdmin: false }),
+      setIsLoading: (isLoading) => set({ isLoading }),
     }),
     {
       name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
+      // 当状态从 localStorage 恢复完成后，将 isLoading 设置为 false
+      onRehydrateStorage: () => (state) => {
+        state?.setIsLoading(false)
+      },
     }
   )
 )

@@ -51,7 +51,7 @@ async def create_user_item(
     - **completed_at**: 完成日期（可选）
     """
     try:
-        user_item = UserItemService.create_user_item(
+        user_item = await UserItemService.create_user_item(
             db=db,
             user_id=current_user.id,
             user_item_data=user_item_data,
@@ -177,7 +177,7 @@ async def update_user_item(
     """
     更新用户记录
     """
-    user_item = UserItemService.update_user_item(
+    user_item = await UserItemService.update_user_item(
         db=db,
         user_id=current_user.id,
         user_item_id=user_item_id,
@@ -236,7 +236,7 @@ async def delete_user_item(
     """
     删除用户记录
     """
-    success = UserItemService.delete_user_item(
+    success = await UserItemService.delete_user_item(
         db=db,
         user_id=current_user.id,
         user_item_id=user_item_id,

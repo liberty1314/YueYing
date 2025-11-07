@@ -104,6 +104,7 @@ class VectorStore:
             
             # 构建文档文本
             document_text = self._build_document_text(user_item, item, tags)
+            logger.info(f"Built document for user_item {user_item.id}: {document_text[:200]}...")
             
             # 生成嵌入
             self._ensure_initialized()
@@ -209,11 +210,10 @@ class VectorStore:
             if results and results["ids"] and results["ids"][0]:
                 for i, user_item_id in enumerate(results["ids"][0]):
                     distance = results["distances"][0][i]
-                    # ChromaDB使用L2距离，转换为0-1的相似度分数
-                    # 使用指数衰减: similarity = exp(-distance/2)
+                    # ChromaDB使用L2距离（欧氏距离的平方），转换为0-1的相似度分数
+                    # 使用更温和的转换公式: similarity = 1 / (1 + distance)
                     # 距离0 -> 相似度1, 距离越大相似度越小
-                    import math
-                    similarity = math.exp(-distance / 2.0)
+                    similarity = 1.0 / (1.0 + distance)
                     
                     formatted_results.append({
                         "user_item_id": int(user_item_id),

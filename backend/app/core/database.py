@@ -13,7 +13,7 @@ engine = create_engine(
     pool_pre_ping=True,  # 连接池预检查
     pool_size=10,  # 连接池大小
     max_overflow=20,  # 最大溢出连接数
-    echo=settings.DEBUG,  # 是否打印 SQL 语句
+    echo=False,  # 禁用 SQL echo 以避免与 loguru 格式化冲突
 )
 
 # 创建会话工厂

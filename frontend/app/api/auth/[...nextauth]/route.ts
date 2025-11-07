@@ -13,6 +13,7 @@ export const authOptions: AuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        remember_me: { label: 'Remember Me', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -24,6 +25,7 @@ export const authOptions: AuthOptions = {
           const tokenResponse = await login({
             email: credentials.email,
             password: credentials.password,
+            remember_me: credentials.remember_me === 'true',
           })
 
           // 获取用户信息

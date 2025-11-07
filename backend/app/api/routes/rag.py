@@ -27,7 +27,7 @@ class SearchRequest(BaseModel):
     query: str
     limit: int = 5
     content_type: Optional[str] = None
-    min_similarity: float = 0.001  # 降低默认阈值，因为使用exp衰减后相似度较小
+    min_similarity: float = 0.01  # 使用新的相似度计算后的合理阈值
 
 
 class SearchResult(BaseModel):

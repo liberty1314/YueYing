@@ -14,6 +14,7 @@ import { userItemsApi } from "@/lib/user-items-api";
 import { useToast } from "@/hooks/use-toast";
 import type { UserItemFilters, UserItemListResponse } from "@/types/user-item";
 import { Loader2, Search } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/library/DeleteConfirmDialog";
 
 export default function LibraryPage() {
   const router = useRouter();
@@ -50,6 +51,10 @@ export default function LibraryPage() {
   const [data, setData] = useState<UserItemListResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // 删除确认对话框状态
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: number; title: string } | null>(null);
 
   // 加载数据
   const loadData = async (currentFilters: UserItemFilters) => {
@@ -162,17 +167,25 @@ export default function LibraryPage() {
     updateURL(filters, mode);
   };
 
+  // 打开删除确认对话框
+  const openDeleteDialog = (id: number, title: string) => {
+    setItemToDelete({ id, title });
+    setDeleteDialogOpen(true);
+  };
+
   // 处理删除
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定要删除这条记录吗？")) return;
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return;
 
     try {
-      await userItemsApi.deleteUserItem(id);
+      await userItemsApi.deleteUserItem(itemToDelete.id);
       toast({
         title: "删除成功",
         description: "记录已删除",
       });
       loadData(filters); // 重新加载数据
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     } catch (err: any) {
       toast({
         title: "删除失败",
@@ -316,9 +329,9 @@ export default function LibraryPage() {
               <>
                 {/* 网格或列表视图 */}
                 {viewMode === "grid" ? (
-                  <GridView items={data.items} onDelete={handleDelete} />
+                  <GridView items={data.items} onDelete={openDeleteDialog} />
                 ) : (
-                  <ListView items={data.items} onDelete={handleDelete} />
+                  <ListView items={data.items} onDelete={openDeleteDialog} />
                 )}
 
                 {/* 分页 */}
@@ -343,6 +356,14 @@ export default function LibraryPage() {
           </div>
         )}
       </Container>
+
+      {/* 删除确认对话框 */}
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title={itemToDelete?.title || "此记录"}
+      />
     </div>
   );
 }

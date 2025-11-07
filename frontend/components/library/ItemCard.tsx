@@ -18,7 +18,7 @@ import type { UserItem } from "@/types/user-item";
 
 interface ItemCardProps {
   item: UserItem;
-  onDelete: (id: number) => void;
+  onDelete: (id: number, title: string) => void;
 }
 
 const statusLabels = {
@@ -91,7 +91,7 @@ export function ItemCard({ item, onDelete }: ItemCardProps) {
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.preventDefault();
-                      onDelete(item.id);
+                      onDelete(item.id, item.title);
                     }}
                     className="text-destructive"
                   >

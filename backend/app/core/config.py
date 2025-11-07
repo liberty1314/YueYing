@@ -166,6 +166,16 @@ class Settings(BaseSettings):
     # ====================================
     MAX_UPLOAD_SIZE_MB: int = Field(default=10, alias="MAX_UPLOAD_SIZE_MB")
 
+    # ====================================
+    # 系统设置配置
+    # ====================================
+    # 强制从环境变量读取系统设置并覆盖数据库
+    FORCE_READ_ENV_SETTINGS: bool = Field(default=False, alias="FORCE_READ_ENV_SETTINGS")
+    
+    # 系统设置默认值
+    DEFAULT_ENABLE_EXPLORE: bool = Field(default=False, alias="DEFAULT_ENABLE_EXPLORE")
+    DEFAULT_ALLOW_USER_AI_TAG_SETTINGS: bool = Field(default=True, alias="DEFAULT_ALLOW_USER_AI_TAG_SETTINGS")
+
 
 # 创建全局配置实例
 settings = Settings()

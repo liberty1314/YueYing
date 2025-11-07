@@ -30,7 +30,7 @@ class RAGRetriever:
         db: Session,
         limit: int = 5,
         content_type: Optional[str] = None,
-        min_similarity: float = 0.001,  # 降低默认阈值
+        min_similarity: float = 0.01,  # 使用新的相似度计算后的合理阈值
     ) -> List[Dict[str, Any]]:
         """
         检索与查询相关的用户记录
@@ -56,11 +56,18 @@ class RAGRetriever:
                 content_type=content_type
             )
             
+            # 记录相似度信息
+            logger.info(f"Search results count: {len(search_results)}")
+            for i, r in enumerate(search_results[:3]):  # 只记录前3个
+                logger.info(f"Result {i}: similarity={r.get('similarity', 0):.4f}, user_item_id={r.get('user_item_id')}")
+            
             # 过滤低相似度结果
             filtered_results = [
                 r for r in search_results
                 if r.get("similarity", 0) >= min_similarity
             ][:limit]
+            
+            logger.info(f"After filtering (min_similarity={min_similarity}): {len(filtered_results)} results")
             
             # 获取完整的用户记录信息
             enriched_results = []
@@ -70,10 +77,12 @@ class RAGRetriever:
                 # 查询完整记录
                 user_item = db.query(UserItem).filter(UserItem.id == user_item_id).first()
                 if not user_item:
+                    logger.warning(f"UserItem {user_item_id} not found in database")
                     continue
                 
                 item = db.query(Item).filter(Item.id == user_item.item_id).first()
                 if not item:
+                    logger.warning(f"Item {user_item.item_id} not found for user_item {user_item_id}")
                     continue
                 
                 # 查询标签 - 通过中间表查询实际的Tag对象

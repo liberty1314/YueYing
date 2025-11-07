@@ -2,19 +2,44 @@
  * 注册页面
  */
 
-import { Metadata } from 'next'
-import RegisterForm from '@/components/auth/RegisterForm'
+"use client";
 
-export const metadata: Metadata = {
-  title: '注册 - 阅影·log',
-  description: '创建你的阅影·log账户',
-}
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import RegisterForm from '@/components/auth/RegisterForm';
+import { Loading } from "@/components/ui/loading";
+import { useAuthStore } from "@/store/authStore";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
+
+  useEffect(() => {
+    // 等待 auth 状态加载完成
+    if (isAuthLoading) {
+      return;
+    }
+
+    // 如果已登录，重定向到首页
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, isAuthLoading, router]);
+
+  // Auth 状态加载中，显示 loading
+  if (isAuthLoading) {
+    return <Loading />;
+  }
+
+  // 已登录用户，在重定向期间显示 loading（避免闪烁）
+  if (isAuthenticated) {
+    return <Loading />;
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
       <RegisterForm />
     </div>
-  )
+  );
 }
 

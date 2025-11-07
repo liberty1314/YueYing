@@ -101,21 +101,11 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             error_msg = str(exc)
             error_type = type(exc).__name__
 
-            # 记录异常日志
-            logger.error(
-                "Request failed | {} {} | Error: {} | Time: {:.4f}s".format(
-                    method, url, error_msg, process_time
-                ),
-                extra={
-                    "request_id": request_id,
-                    "method": method,
-                    "url": url,
-                    "error": error_msg,
-                    "error_type": error_type,
-                    "traceback": exc_traceback,
-                    "process_time": process_time,
-                },
+            # 记录异常日志（使用.format()预先格式化，避免loguru的二次格式化）
+            log_message = "Request failed | {} {} | Error: {} | Time: {:.4f}s".format(
+                method, url, error_msg.replace('{', '{{').replace('}', '}}'), process_time
             )
+            logger.error(log_message)
 
             # 返回错误响应
             return JSONResponse(

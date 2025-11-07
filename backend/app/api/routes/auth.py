@@ -67,7 +67,7 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    tokens = auth_service.create_user_tokens(user)
+    tokens = auth_service.create_user_tokens(user, remember_me=login_data.remember_me)
     return tokens
 
 
