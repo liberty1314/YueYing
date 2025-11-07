@@ -6,15 +6,20 @@ import { useSession } from "next-auth/react";
 import { Container } from "@/components/common/Container";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Empty } from "@/components/ui/empty";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsSkeleton } from "@/components/stats/StatsSkeleton";
 import { NewOverviewCards } from "@/components/stats/NewOverviewCards";
 import { ActivityHeatmap } from "@/components/stats/ActivityHeatmap";
 import { RecentActivityCarousel } from "@/components/stats/RecentActivityCarousel";
 import { ConsumptionAnalysis } from "@/components/stats/ConsumptionAnalysis";
 import { AIInsights } from "@/components/stats/AIInsights";
+import { SummaryGeneratorDialog } from "@/components/stats/SummaryGeneratorDialog";
+import { SummaryHistory } from "@/components/stats/SummaryHistory";
 import { statsApi } from "@/lib/stats-api";
 import { useToast } from "@/hooks/use-toast";
 import type { ComprehensiveStats } from "@/types/stats";
+import { Sparkles } from "lucide-react";
 
 export default function StatsPage() {
   const router = useRouter();
@@ -24,6 +29,10 @@ export default function StatsPage() {
   const [stats, setStats] = useState<ComprehensiveStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // 智能总结相关状态
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [summaryRefresh, setSummaryRefresh] = useState(0);
 
   const loadStats = async () => {
     if (sessionStatus !== "authenticated") {
@@ -103,38 +112,68 @@ export default function StatsPage() {
   return (
     <div className="min-h-[calc(100vh-64px)] bg-background">
       <Container className="py-8">
-        <PageHeader
-          title="个人仪表盘"
-          description="可视化你的活动、偏好和个性化洞察"
-        />
-
-        <div className="mt-6 space-y-6">
-          {/* 模块一：数据总览 */}
-          <NewOverviewCards overview={stats.overview} />
-
-          {/* 模块二：活动日历热力图 */}
-          <ActivityHeatmap data={stats.activity_heatmap} />
-
-          {/* 模块三：最近浏览 */}
-          <RecentActivityCarousel activities={stats.recent_activities} />
-
-          {/* 双栏布局：消费分析 + AI洞察 */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* 模块四：消费分析（占2列） */}
-            <div className="lg:col-span-2">
-              <ConsumptionAnalysis
-                typeDistribution={stats.type_distribution}
-                tagStats={stats.top_tags}
-                yearDistribution={stats.year_distribution}
-              />
-            </div>
-
-            {/* 模块五：AI洞察（占1列） */}
-            <div className="lg:col-span-1">
-              <AIInsights stats={stats} />
-            </div>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <PageHeader
+            title="个人仪表盘"
+            description="可视化你的活动、偏好和个性化洞察"
+          />
+          <Button
+            onClick={() => setShowSummaryDialog(true)}
+            className="gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            生成总结
+          </Button>
         </div>
+
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="dashboard">数据统计</TabsTrigger>
+            <TabsTrigger value="summaries">历史总结</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* 模块一：数据总览 */}
+            <NewOverviewCards overview={stats.overview} />
+
+            {/* 模块二：活动日历热力图 */}
+            <ActivityHeatmap data={stats.activity_heatmap} />
+
+            {/* 模块三：最近浏览 */}
+            <RecentActivityCarousel activities={stats.recent_activities} />
+
+            {/* 双栏布局：消费分析 + AI洞察 */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* 模块四：消费分析（占2列） */}
+              <div className="lg:col-span-2">
+                <ConsumptionAnalysis
+                  typeDistribution={stats.type_distribution}
+                  tagStats={stats.top_tags}
+                  yearDistribution={stats.year_distribution}
+                />
+              </div>
+
+              {/* 模块五：AI洞察（占1列） */}
+              <div className="lg:col-span-1">
+                <AIInsights stats={stats} />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="summaries">
+            <SummaryHistory refresh={summaryRefresh} />
+          </TabsContent>
+        </Tabs>
+
+        {/* 总结生成对话框 */}
+        <SummaryGeneratorDialog
+          open={showSummaryDialog}
+          onOpenChange={setShowSummaryDialog}
+          onSummaryGenerated={() => {
+            // 刷新历史列表
+            setSummaryRefresh((prev) => prev + 1);
+          }}
+        />
       </Container>
     </div>
   );

@@ -13,6 +13,7 @@ from app.models.llm_config import LLMConfig
 from app.models.system_settings import SystemSettings
 from app.models.user_settings import UserSettings
 from app.models.conversation import Conversation, ConversationMessage
+from app.models.summary import Summary, PeriodType
 
 __all__ = [
     "BaseModel",
@@ -33,4 +34,6 @@ __all__ = [
     "UserSettings",
     "Conversation",
     "ConversationMessage",
+    "Summary",
+    "PeriodType",
 ]
