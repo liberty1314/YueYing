@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Container } from "@/components/common/Container";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
+import { HomeSkeleton } from "@/components/home/HomeSkeleton";
 import { ContentSection } from "@/components/home/ContentSection";
 import { RecommendationsSection } from "@/components/home/RecommendationsSection";
 import { ContentDetailDialog } from "@/components/content/ContentDetailDialog";
@@ -150,6 +151,11 @@ export default function HomePage() {
     { label: "周五", value: 5 },
     { label: "周六", value: 6 },
   ];
+
+  // 显示骨架屏当初始加载时
+  if (isLoading && trendingToday.length === 0) {
+    return <HomeSkeleton />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

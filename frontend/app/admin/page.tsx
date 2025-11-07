@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminDashboardSkeleton } from "@/components/admin/AdminDashboardSkeleton";
 import { Activity, Bot, Database, Users, CheckCircle2, XCircle } from "lucide-react";
 import { llmConfigApi } from "@/lib/llm-config-api";
 import type { LLMConfig } from "@/types/llm-config";
@@ -73,6 +74,11 @@ export default function AdminDashboardPage() {
   };
 
   const llmStatus = getLLMStatus();
+
+  // 显示骨架屏当加载中
+  if (llmLoading) {
+    return <AdminDashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-6 pb-8">

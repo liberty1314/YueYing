@@ -55,7 +55,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 border-r bg-card sticky top-0 h-screen">
+    <aside className="w-64 border-r bg-card fixed top-16 left-0 h-[calc(100vh-4rem)] z-40">
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-14 items-center border-b px-6">
@@ -66,7 +66,7 @@ export function AdminSidebar() {
         </div>
 
         {/* 导航菜单 */}
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, Home, Library, X, BarChart3, Shield, Sparkles, Bot } from "lucide-react";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import UserMenu from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/authStore";
-import { systemSettingsApi } from "@/lib/system-settings-api";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 const baseNavItems = [
@@ -46,51 +46,25 @@ export function Navbar() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isAuthenticated, isAdmin } = useAuthStore();
-  const [navItems, setNavItems] = useState(baseNavItems);
-  const [isMounted, setIsMounted] = useState(false);
+  const { isAdmin } = useAuthStore();
+  
+  // 使用全局缓存的系统设置 Hook
+  const { data: settings } = useSystemSettings();
 
-  // 修复 Hydration 问题：确保组件在客户端完全挂载后再渲染依赖状态的内容
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // 加载系统设置
-  useEffect(() => {
-    // 等待组件挂载后再加载设置
-    if (!isMounted) return;
-
-    const loadSettings = async () => {
-      // 只有已登录用户才需要加载系统设置
-      if (!isAuthenticated) {
-        setNavItems(baseNavItems);
-        return;
-      }
-
-      try {
-        const settings = await systemSettingsApi.getSettings();
-        
-        // 如果探索功能启用，在"我的记录"后插入"探索发现"
-        if (settings.enable_explore) {
-          const newNavItems = [
-            baseNavItems[0], // 首页
-            baseNavItems[1], // 我的记录
-            exploreNavItem,  // 探索发现
-            baseNavItems[2], // 统计
-            baseNavItems[3], // AI助手
-          ];
-          setNavItems(newNavItems);
-        } else {
-          setNavItems(baseNavItems);
-        }
-      } catch (err) {
-        console.error("加载系统设置失败:", err);
-        setNavItems(baseNavItems);
-      }
-    };
-
-    loadSettings();
-  }, [isAuthenticated, isMounted]);
+  // 使用 useMemo 计算导航项，只在相关依赖变化时重新计算
+  const navItems = useMemo(() => {
+    // 如果探索功能启用，在"我的记录"后插入"探索发现"
+    if (settings && settings.enable_explore) {
+      return [
+        baseNavItems[0], // 首页
+        baseNavItems[1], // 我的记录
+        exploreNavItem,  // 探索发现
+        baseNavItems[2], // 统计
+        baseNavItems[3], // AI助手
+      ];
+    }
+    return baseNavItems;
+  }, [settings]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +91,7 @@ export function Navbar() {
 
         {/* 导航链接 */}
         <nav className="hidden md:flex items-center space-x-1">
-          {isMounted && navItems.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             
@@ -138,7 +112,7 @@ export function Navbar() {
           })}
           
           {/* 管理后台入口 - 仅管理员可见 */}
-          {isMounted && isAdmin && (
+          {isAdmin && (
             <Link href="/admin" prefetch={true}>
               <Button
                 variant={pathname?.startsWith("/admin") ? "default" : "ghost"}

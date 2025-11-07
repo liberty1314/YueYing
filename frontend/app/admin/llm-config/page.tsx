@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LLMConfigForm } from "@/components/admin/LLMConfigForm";
+import { LLMConfigSkeleton } from "@/components/admin/LLMConfigSkeleton";
 import { llmConfigApi } from "@/lib/llm-config-api";
 import { useToast } from "@/hooks/use-toast";
-import { Loading } from "@/components/ui/loading";
 import type { LLMConfig } from "@/types/llm-config";
 
 export default function LLMConfigPage() {
@@ -40,7 +40,7 @@ export default function LLMConfigPage() {
   }, []);
 
   if (isLoading) {
-    return <Loading />;
+    return <LLMConfigSkeleton />;
   }
 
   return (

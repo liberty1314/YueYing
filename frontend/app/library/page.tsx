@@ -7,6 +7,7 @@ import { Container } from "@/components/common/Container";
 import { FilterPanel } from "@/components/library/FilterPanel";
 import { GridView } from "@/components/library/GridView";
 import { ListView } from "@/components/library/ListView";
+import { LibrarySkeleton } from "@/components/library/LibrarySkeleton";
 import { SearchPagination } from "@/components/search/SearchPagination";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -195,13 +196,9 @@ export default function LibraryPage() {
     }
   };
 
-  // 加载中或未登录时显示加载状态
-  if (status === "loading") {
-    return (
-      <div className="min-h-[calc(100vh-64px)] bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+  // 加载中或未登录时显示骨架屏
+  if (status === "loading" || (isLoading && !data)) {
+    return <LibrarySkeleton />;
   }
 
   // 如果未登录，不渲染内容（会被useEffect重定向）

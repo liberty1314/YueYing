@@ -41,17 +41,17 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <>
       {/* 侧边栏 */}
       <AdminSidebar />
 
-      {/* 主内容区 */}
-      <main className="flex-1 overflow-y-auto">
+      {/* 主内容区 - 添加左侧 margin 避开侧边栏 */}
+      <main className="ml-64 min-h-[calc(100vh-4rem)] bg-background">
         <div className="container mx-auto p-6 max-w-5xl">
           {children}
         </div>
       </main>
-    </div>
+    </>
   );
 }
 

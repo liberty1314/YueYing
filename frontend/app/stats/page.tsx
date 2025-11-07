@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { Container } from "@/components/common/Container";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Empty } from "@/components/ui/empty";
-import { Loading } from "@/components/ui/loading";
+import { StatsSkeleton } from "@/components/stats/StatsSkeleton";
 import { NewOverviewCards } from "@/components/stats/NewOverviewCards";
 import { ActivityHeatmap } from "@/components/stats/ActivityHeatmap";
 import { RecentActivityCarousel } from "@/components/stats/RecentActivityCarousel";
@@ -70,7 +70,7 @@ export default function StatsPage() {
   }, [sessionStatus]);
 
   if (sessionStatus === "loading" || isLoading) {
-    return <Loading />;
+    return <StatsSkeleton />;
   }
 
   if (sessionStatus === "unauthenticated") {
