@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from loguru import logger
 
 from app.core.database import get_db
-from app.api.dependencies.auth import get_current_user
+from app.api.dependencies.auth import get_current_user, get_current_admin
 from app.models.user import User
 from app.ai.rag.retriever import get_rag_retriever, RAGRetriever
 from app.ai.rag.vector_store import get_vector_store, VectorStore
@@ -151,23 +151,20 @@ def get_stats(
 )
 async def rebuild_index(
     request: RebuildIndexRequest = Body(...),
-    current_user: User = Depends(get_current_user),
+    current_admin: User = Depends(get_current_admin),  # 使用管理员权限检查
     db: Session = Depends(get_db),
     vector_store: VectorStore = Depends(get_vector_store),
 ):
     """
     重建向量索引
     
-    注意：这是一个重量级操作
+    注意：这是一个重量级操作，需要管理员权限
     """
     try:
-        # TODO: 添加管理员权限检查
-        # if not current_user.is_admin:
-        #     raise HTTPException(status_code=403, detail="需要管理员权限")
         
         result = await vector_store.rebuild_index(
             db=db,
-            user_id=request.user_id or current_user.id
+            user_id=request.user_id  # 管理员可以指定要重建的用户ID，或留空重建所有
         )
         return result
     except Exception as e:

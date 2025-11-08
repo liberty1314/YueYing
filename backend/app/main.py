@@ -107,6 +107,12 @@ app.include_router(assistant.router, prefix="/api")
 from app.api.routes import summary
 app.include_router(summary.router, prefix="/api")
 
+# 管理员路由
+from app.api.routes.admin import users as admin_users
+from app.api.routes.admin import stats as admin_stats
+app.include_router(admin_users.router, prefix="/api/admin")
+app.include_router(admin_stats.router, prefix="/api/admin")
+
 # 系统设置路由
 from app.api.routes import system_settings
 app.include_router(system_settings.router, prefix="/api")
