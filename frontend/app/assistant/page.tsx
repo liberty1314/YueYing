@@ -6,26 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { useAssistantStore, type Message, type Conversation } from "@/store/assistantStore";
 import { api } from "@/lib/api";
 import { Bot, Send, Loader2, Plus, MessageSquare, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { DeleteConfirmDialog } from "@/components/library/DeleteConfirmDialog";
-
-interface Message {
-  id?: number;
-  role: "user" | "assistant";
-  content: string;
-  created_at?: string;
-}
-
-interface Conversation {
-  id: number;
-  title: string;
-  created_at: string;
-  updated_at?: string;
-  message_count: number;
-}
 
 const QUICK_QUESTIONS = [
   "我最近看了什么电影？",
@@ -38,13 +24,23 @@ const QUICK_QUESTIONS = [
 
 export default function AssistantPage() {
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // 使用全局状态
+  const {
+    messages,
+    conversations,
+    currentConversationId,
+    isLoading,
+    setMessages,
+    setConversations,
+    setCurrentConversationId,
+    addMessage,
+    setLoading,
+    clearCurrentConversation,
+  } = useAssistantStore();
   
   // 删除确认对话框状态
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -76,6 +72,9 @@ export default function AssistantPage() {
       const { messages: conversationMessages } = response.data;
       setMessages(conversationMessages || []);
       setCurrentConversationId(conversationId);
+      
+      // 标记为已读
+      useAssistantStore.getState().setHasUnreadMessages(false);
     } catch (error) {
       console.error("Failed to load conversation:", error);
       toast({
@@ -95,9 +94,9 @@ export default function AssistantPage() {
       content: content.trim(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    addMessage(userMessage);
     setInput("");
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       const response = await api.post("/assistant/chat", {
@@ -118,7 +117,7 @@ export default function AssistantPage() {
         content: aiMessage,
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      addMessage(assistantMessage);
     } catch (error: any) {
       console.error("Failed to send message:", error);
       toast({
@@ -127,16 +126,15 @@ export default function AssistantPage() {
         variant: "destructive",
       });
       // 移除用户消息
-      setMessages((prev) => prev.slice(0, -1));
+      setMessages(messages.slice(0, -1));
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   // 创建新对话
   const startNewConversation = () => {
-    setMessages([]);
-    setCurrentConversationId(null);
+    clearCurrentConversation();
   };
 
   // 打开删除确认对话框
@@ -176,6 +174,9 @@ export default function AssistantPage() {
   // 初始加载
   useEffect(() => {
     loadConversations();
+    
+    // 当进入 AI 助手页面时，标记为已读
+    useAssistantStore.getState().setHasUnreadMessages(false);
   }, []);
 
   return (

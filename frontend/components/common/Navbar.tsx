@@ -7,8 +7,10 @@ import { Search, Home, Library, X, BarChart3, Shield, Sparkles, Bot } from "luci
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import UserMenu from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/authStore";
+import { useAssistantStore } from "@/store/assistantStore";
 import { useSystemSettings } from "@/hooks/use-system-settings";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
@@ -47,6 +49,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { isAdmin } = useAuthStore();
+  const { hasUnreadMessages } = useAssistantStore();
   
   // 使用全局缓存的系统设置 Hook
   const { data: settings } = useSystemSettings();
@@ -94,18 +97,28 @@ export function Navbar() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const isAssistant = item.href === "/assistant";
             
             return (
               <Link key={item.href} href={item.href} prefetch={true}>
                 <Button
                   variant={isActive ? "default" : "ghost"}
                   className={cn(
-                    "gap-2",
+                    "gap-2 relative",
                     isActive && "bg-primary text-primary-foreground"
                   )}
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
+                  {/* AI 助手徽章显示 */}
+                  {isAssistant && hasUnreadMessages && !isActive && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-2 w-2 p-0 rounded-full"
+                    >
+                      <span className="sr-only">新消息</span>
+                    </Badge>
+                  )}
                 </Button>
               </Link>
             );

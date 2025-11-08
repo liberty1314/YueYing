@@ -3,15 +3,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, TrendingUp, Clock, Award } from "lucide-react";
+import { Sparkles, TrendingUp, Clock, Award, ExternalLink } from "lucide-react";
 import { ComprehensiveStats } from "@/types/stats";
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 
 interface AIInsightsProps {
   stats: ComprehensiveStats;
 }
 
 export function AIInsights({ stats }: AIInsightsProps) {
+  const router = useRouter();
+  const { data: systemSettings } = useSystemSettings();
+  
   // 生成AI洞察
   const insights = useMemo(() => {
     const insights: Array<{
@@ -151,31 +156,25 @@ export function AIInsights({ stats }: AIInsightsProps) {
           </p>
         )}
 
-        {/* 生成报告按钮（占位，Phase 3.7实现） */}
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed bg-muted/30 p-6 text-center">
-          <Sparkles className="h-8 w-8 text-muted-foreground" />
-          <div>
-            <h4 className="font-medium">AI 年度报告</h4>
-            <p className="text-sm text-muted-foreground">
-              生成专属的个性化分析报告
+        {/* 推荐区域 - 根据系统设置控制显示 */}
+        {systemSettings?.enable_explore && (
+          <div className="space-y-2 rounded-lg border bg-gradient-to-r from-primary/5 to-transparent p-4 transition-all hover:shadow-md">
+            <h4 className="text-sm font-medium flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              基于你的偏好推荐
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              根据你的观看记录和评分，AI 可以为你推荐更多感兴趣的内容
             </p>
+            <Button 
+              variant="link" 
+              className="h-auto p-0 text-xs font-medium text-primary"
+              onClick={() => router.push('/discover')}
+            >
+              查看 AI 推荐 <ExternalLink className="ml-1 h-3 w-3" />
+            </Button>
           </div>
-          <Button variant="outline" className="mt-2" disabled>
-            <Sparkles className="mr-2 h-4 w-4" />
-            即将推出
-          </Button>
-        </div>
-
-        {/* 推荐区域（占位，连接Phase 3.7） */}
-        <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
-          <h4 className="text-sm font-medium">基于你的偏好推荐</h4>
-          <p className="text-xs text-muted-foreground">
-            根据你的观看记录和评分，AI 可以为你推荐更多感兴趣的内容
-          </p>
-          <Button variant="link" className="h-auto p-0 text-xs" disabled>
-            查看 AI 推荐 →
-          </Button>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -5,6 +5,7 @@ import { SessionProvider, useSession } from 'next-auth/react'
 import { ThemeProvider } from 'next-themes'
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { GlobalTaskNotifications } from '@/components/common/GlobalTaskNotifications'
 
 // 同步 NextAuth session 到 authStore
 function AuthSync() {
@@ -55,6 +56,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           defaultTheme="system"
           enableSystem
         >
+          {/* 全局任务通知 - 无论在哪个页面都能收到后台任务完成通知 */}
+          <GlobalTaskNotifications />
           {children}
         </ThemeProvider>
       </QueryClientProvider>

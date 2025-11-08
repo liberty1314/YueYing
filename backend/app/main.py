@@ -111,6 +111,10 @@ app.include_router(summary.router, prefix="/api")
 from app.api.routes import system_settings
 app.include_router(system_settings.router, prefix="/api")
 
+# WebSocket 路由
+from app.api.routes import websocket
+app.include_router(websocket.router, prefix="/api")
+
 
 # ====================================
 # 健康检查端点

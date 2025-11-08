@@ -14,6 +14,7 @@ from app.models.summary import Summary, PeriodType
 from app.models.user_item import UserItem, ItemStatus
 from app.models.tag import Tag, UserItemTag
 from app.models.item import Item
+from app.models.background_task import BackgroundTask, TaskStatus, TaskType
 from app.clients.llm.siliconflow import SiliconFlowClient
 from app.ai.prompts.summary import (
     SUMMARY_SYSTEM_PROMPT,
@@ -21,6 +22,8 @@ from app.ai.prompts.summary import (
     build_keyword_extraction_prompt
 )
 from app.models.llm_config import LLMConfig
+from app.core.task_manager import task_manager
+from app.core.websocket import ws_manager
 
 
 class SummaryService:
@@ -359,6 +362,133 @@ class SummaryService:
         
         logger.info(f"Successfully generated summary {summary.id} for user {user_id}")
         return summary
+    
+    async def generate_summary_background(
+        self,
+        db: Session,
+        task_id: str,
+        user_id: int,
+        period_type: str,
+        start_date: datetime,
+        end_date: datetime,
+        title: Optional[str] = None
+    ):
+        """
+        在后台生成用户总结（异步任务）
+        
+        Args:
+            db: 数据库会话
+            task_id: 任务ID
+            user_id: 用户ID
+            period_type: 时期类型
+            start_date: 开始日期
+            end_date: 结束日期
+            title: 自定义标题（可选）
+        """
+        try:
+            # 更新任务状态为处理中
+            task_manager.update_task_status(
+                db, task_id, TaskStatus.PROCESSING,
+                progress=10, progress_message="正在准备数据..."
+            )
+            await task_manager.notify_task_update(
+                task_manager.get_task(db, task_id)
+            )
+            
+            # 1. 准备数据
+            statistics = self._prepare_summary_data(db, user_id, start_date, end_date)
+            
+            if statistics["total_items"] == 0:
+                raise ValueError("所选时间范围内没有记录，无法生成总结")
+            
+            # 更新进度
+            task_manager.update_task_status(
+                db, task_id, TaskStatus.PROCESSING,
+                progress=30, progress_message="正在提取关键词..."
+            )
+            await task_manager.notify_task_update(
+                task_manager.get_task(db, task_id)
+            )
+            
+            # 2. 提取关键词
+            keywords = self._extract_keywords(db, user_id, start_date, end_date)
+            
+            # 更新进度
+            task_manager.update_task_status(
+                db, task_id, TaskStatus.PROCESSING,
+                progress=50, progress_message="正在生成总结文本..."
+            )
+            await task_manager.notify_task_update(
+                task_manager.get_task(db, task_id)
+            )
+            
+            # 3. 生成总结文本
+            summary_text = await self._generate_summary_text(
+                db, period_type, start_date, end_date, statistics
+            )
+            
+            # 更新进度
+            task_manager.update_task_status(
+                db, task_id, TaskStatus.PROCESSING,
+                progress=80, progress_message="正在保存总结..."
+            )
+            await task_manager.notify_task_update(
+                task_manager.get_task(db, task_id)
+            )
+            
+            # 4. 生成标题
+            if not title:
+                period_names = {
+                    "week": "本周",
+                    "month": "本月",
+                    "year": f"{start_date.year}年",
+                    "custom": f"{start_date.strftime('%m月%d日')}-{end_date.strftime('%m月%d日')}"
+                }
+                title = f"{period_names.get(period_type, '自定义')}的总结"
+            
+            # 5. 保存到数据库
+            summary = Summary(
+                user_id=user_id,
+                title=title,
+                period_type=PeriodType(period_type),
+                start_date=start_date,
+                end_date=end_date,
+                summary_text=summary_text,
+                keywords=keywords,
+                statistics=statistics
+            )
+            
+            db.add(summary)
+            db.commit()
+            db.refresh(summary)
+            
+            # 更新任务状态为完成
+            task_manager.update_task_status(
+                db, task_id, TaskStatus.COMPLETED,
+                progress=100, progress_message="总结生成完成",
+                result={"summary_id": summary.id}
+            )
+            
+            # 发送 WebSocket 通知
+            await task_manager.notify_task_update(
+                task_manager.get_task(db, task_id)
+            )
+            
+            logger.info(f"Successfully generated summary {summary.id} for user {user_id} in background")
+            
+        except Exception as e:
+            logger.error(f"Failed to generate summary in background: {e}")
+            
+            # 更新任务状态为失败
+            task_manager.update_task_status(
+                db, task_id, TaskStatus.FAILED,
+                error_message=str(e)
+            )
+            
+            # 发送 WebSocket 通知
+            await task_manager.notify_task_update(
+                task_manager.get_task(db, task_id)
+            )
     
     def get_user_summaries(
         self,

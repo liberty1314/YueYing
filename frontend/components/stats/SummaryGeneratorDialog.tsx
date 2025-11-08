@@ -46,26 +46,64 @@ export function SummaryGeneratorDialog({
   const getQuickDateRange = (type: "week" | "month" | "year"): [string, string] => {
     const now = new Date();
     let start: Date;
-    let end = now;
+    let end: Date;
 
     switch (type) {
       case "week":
+        // 本周：从周一到周日
+        const dayOfWeek = now.getDay(); // 0 (周日) 到 6 (周六)
+        const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 周日特殊处理
+        
+        // 本周周一
         start = new Date(now);
-        start.setDate(now.getDate() - 7);
+        start.setDate(now.getDate() - daysFromMonday);
+        start.setHours(0, 0, 0, 0);
+        
+        // 本周周日
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
         break;
+        
       case "month":
-        start = new Date(now);
-        start.setMonth(now.getMonth() - 1);
+        // 本月：当前月份的第一天到最后一天
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        
+        // 当前月第一天
+        start = new Date(currentYear, currentMonth, 1);
+        start.setHours(0, 0, 0, 0);
+        
+        // 当前月最后一天 (下个月的第0天就是当前月的最后一天)
+        end = new Date(currentYear, currentMonth + 1, 0);
+        end.setHours(23, 59, 59, 999);
         break;
+        
       case "year":
-        start = new Date(now.getFullYear(), 0, 1);
-        end = new Date(now.getFullYear(), 11, 31);
+        // 今年：当前年份的 1 月 1 日到 12 月 31 日
+        const year = now.getFullYear();
+        
+        // 今年第一天
+        start = new Date(year, 0, 1);
+        start.setHours(0, 0, 0, 0);
+        
+        // 今年最后一天
+        end = new Date(year, 11, 31);
+        end.setHours(23, 59, 59, 999);
         break;
     }
 
+    // 使用本地日期格式化，避免时区转换问题
+    const formatDate = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     return [
-      start.toISOString().split("T")[0],
-      end.toISOString().split("T")[0],
+      formatDate(start),
+      formatDate(end),
     ];
   };
 
@@ -77,7 +115,7 @@ export function SummaryGeneratorDialog({
     setEndDate(end);
   };
 
-  // 生成总结
+  // 生成总结（异步任务）
   const handleGenerate = async () => {
     // 验证输入
     if (!startDate || !endDate) {
@@ -101,28 +139,33 @@ export function SummaryGeneratorDialog({
     setIsGenerating(true);
 
     try {
-      const summary = await summaryApi.generateSummary({
+      // 创建后台任务
+      const taskResponse = await summaryApi.generateSummary({
         period_type: periodType,
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
         title: customTitle || undefined,
       });
 
-      setGeneratedSummary(summary);
+      // 立即关闭对话框
+      handleClose();
       
+      // 显示任务创建成功的提示
       toast({
-        title: "总结生成成功",
-        description: "您的个性化总结已生成",
+        title: "正在生成总结",
+        description: "总结正在后台生成中，完成后会通知您",
       });
 
+      // 触发刷新（当任务完成时，通过 WebSocket 通知会再次触发）
       if (onSummaryGenerated) {
-        onSummaryGenerated(summary);
+        // 不传递 summary，因为还未生成
+        // onSummaryGenerated(null);
       }
     } catch (error: any) {
-      console.error("Failed to generate summary:", error);
+      console.error("Failed to create summary task:", error);
       toast({
-        title: "生成失败",
-        description: error.response?.data?.detail || "生成总结时发生错误",
+        title: "创建任务失败",
+        description: error.response?.data?.detail || "创建总结任务时发生错误",
         variant: "destructive",
       });
     } finally {

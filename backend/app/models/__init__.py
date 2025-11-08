@@ -14,6 +14,7 @@ from app.models.system_settings import SystemSettings
 from app.models.user_settings import UserSettings
 from app.models.conversation import Conversation, ConversationMessage
 from app.models.summary import Summary, PeriodType
+from app.models.background_task import BackgroundTask, TaskStatus, TaskType
 
 __all__ = [
     "BaseModel",
@@ -36,4 +37,7 @@ __all__ = [
     "ConversationMessage",
     "Summary",
     "PeriodType",
+    "BackgroundTask",
+    "TaskStatus",
+    "TaskType",
 ]

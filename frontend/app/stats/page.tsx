@@ -18,6 +18,7 @@ import { SummaryGeneratorDialog } from "@/components/stats/SummaryGeneratorDialo
 import { SummaryHistory } from "@/components/stats/SummaryHistory";
 import { statsApi } from "@/lib/stats-api";
 import { useToast } from "@/hooks/use-toast";
+import { eventBus, Events } from "@/lib/events";
 import type { ComprehensiveStats } from "@/types/stats";
 import { Sparkles } from "lucide-react";
 
@@ -77,6 +78,25 @@ export default function StatsPage() {
       loadStats();
     }
   }, [sessionStatus]);
+  
+  // 监听全局事件 - 当总结生成完成时刷新历史列表
+  // 注意：通知已经在全局组件中统一处理了，这里只负责刷新本页面的历史列表
+  useEffect(() => {
+    const unsubscribeGenerated = eventBus.on(Events.SUMMARY_GENERATED, () => {
+      // 刷新历史列表
+      setSummaryRefresh((prev) => prev + 1);
+    });
+    
+    const unsubscribeFailed = eventBus.on(Events.SUMMARY_FAILED, () => {
+      // 失败时也可能需要刷新列表（如果有失败记录的话）
+      setSummaryRefresh((prev) => prev + 1);
+    });
+    
+    return () => {
+      unsubscribeGenerated();
+      unsubscribeFailed();
+    };
+  }, []);
 
   if (sessionStatus === "loading" || isLoading) {
     return <StatsSkeleton />;
