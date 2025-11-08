@@ -22,7 +22,7 @@ from app.schemas.tag import (
 from app.services.tag_service import TagService
 
 
-router = APIRouter(prefix="/tags", tags=["Tags"])
+router = APIRouter(prefix="/tags", tags=["标签管理"])
 
 
 @router.post(

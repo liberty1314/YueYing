@@ -22,7 +22,7 @@ from app.schemas.bangumi import (
     SubjectSearchRequest,
 )
 
-router = APIRouter(prefix="/bangumi", tags=["Bangumi"])
+router = APIRouter(prefix="/bangumi", tags=["Bangumi 番组"])
 
 
 # ==================== 搜索功能 ====================

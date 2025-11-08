@@ -14,7 +14,7 @@ from app.ai.rag.retriever import get_rag_retriever, RAGRetriever
 from app.ai.rag.vector_store import get_vector_store, VectorStore
 
 
-router = APIRouter(prefix="/rag", tags=["RAG"])
+router = APIRouter(prefix="/rag", tags=["RAG 检索"])
 
 
 # ====================================

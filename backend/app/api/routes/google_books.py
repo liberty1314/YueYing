@@ -20,7 +20,7 @@ from app.schemas.google_books import (
     CategorySearchRequest,
 )
 
-router = APIRouter(prefix="/google-books", tags=["Google Books"])
+router = APIRouter(prefix="/google-books", tags=["Google 图书"])
 
 
 # ==================== 书籍搜索 ====================

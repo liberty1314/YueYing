@@ -11,6 +11,7 @@ import {
   Database,
   Activity,
   Brain,
+  Key,
 } from "lucide-react";
 
 const menuItems = [
@@ -33,6 +34,11 @@ const menuItems = [
     title: "用户管理",
     href: "/admin/users",
     icon: Users,
+  },
+  {
+    title: "API 密钥",
+    href: "/admin/api-keys",
+    icon: Key,
   },
   {
     title: "数据管理",

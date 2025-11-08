@@ -14,7 +14,7 @@ from app.ai.tag_generator import TagGenerator
 from app.core.exceptions import NotFoundError
 
 
-router = APIRouter(prefix="/ai", tags=["AI Tags"])
+router = APIRouter(prefix="/ai", tags=["AI 标签"])
 
 
 # ====================================

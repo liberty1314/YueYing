@@ -19,7 +19,7 @@ from app.services.llm_config_service import LLMConfigService
 from app.core.exceptions import NotFoundError
 
 
-router = APIRouter(prefix="/llm-config", tags=["LLM Config"])
+router = APIRouter(prefix="/llm-config", tags=["LLM 配置"])
 
 
 @router.get(
@@ -34,32 +34,35 @@ async def get_llm_config(
 ):
     """获取 LLM 配置"""
     try:
-        config = LLMConfigService.get_config(db)
-        if not config:
+        # 获取解密后的配置（统一加载逻辑）
+        config_dict = LLMConfigService.get_config(db)
+        if not config_dict:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="LLM 配置不存在",
             )
 
-        # 返回完整配置（包括明文 API 密钥）
-        # 注意：这是管理端点，需要认证，所以显示明文密钥是合理的
-        config_dict = {
-            "id": config.id,
-            "provider": config.provider.value,
-            "api_key": config.api_key,  # 明文显示 API 密钥
-            "base_url": config.base_url,
-            "default_model": config.default_model,
-            "temperature": config.temperature,
-            "max_tokens": config.max_tokens,
-            "top_p": config.top_p,
-            "enabled": config.enabled,
-            "auto_tag_enabled": config.auto_tag_enabled,
-            "description": config.description,
-            "created_at": config.created_at.isoformat(),
-            "updated_at": config.updated_at.isoformat(),
+        # 获取数据库对象（用于 id、created_at、updated_at）
+        db_config = LLMConfigService.get_config_from_db(db)
+        
+        # 合并数据：使用解密后的配置 + 数据库的元数据
+        response_dict = {
+            "id": db_config.id if db_config else 0,
+            "provider": config_dict.get("provider"),
+            "api_key": config_dict.get("api_key"),  # 已解密的明文密钥
+            "base_url": config_dict.get("base_url"),
+            "default_model": config_dict.get("default_model"),
+            "temperature": config_dict.get("temperature"),
+            "max_tokens": config_dict.get("max_tokens"),
+            "top_p": config_dict.get("top_p"),
+            "enabled": config_dict.get("enabled"),
+            "auto_tag_enabled": config_dict.get("auto_tag_enabled"),
+            "description": config_dict.get("description"),
+            "created_at": db_config.created_at.isoformat() if db_config else None,
+            "updated_at": db_config.updated_at.isoformat() if db_config else None,
         }
 
-        return LLMConfigResponse(**config_dict)
+        return LLMConfigResponse(**response_dict)
 
     except HTTPException:
         # 重新抛出 HTTPException（如 404），不要转换为 500
@@ -86,13 +89,18 @@ async def create_llm_config(
 ):
     """创建 LLM 配置"""
     try:
+        # 创建配置（会自动加密存储）
         config = LLMConfigService.create_config(db, config_data)
 
         # 返回完整配置（包括明文 API 密钥）
+        # 注意：config.api_key 是加密的，需要解密
+        from app.core.encryption import encryption_service
+        decrypted_api_key = encryption_service.decrypt(config.api_key)
+        
         config_dict = {
             "id": config.id,
             "provider": config.provider.value,
-            "api_key": config.api_key,  # 明文显示 API 密钥
+            "api_key": decrypted_api_key,  # 解密后的明文密钥
             "base_url": config.base_url,
             "default_model": config.default_model,
             "temperature": config.temperature,
@@ -128,15 +136,20 @@ async def update_llm_config(
 ):
     """更新 LLM 配置"""
     try:
+        # 更新配置（会自动加密存储）
         config = LLMConfigService.update_config(
             db, update_data.model_dump(exclude_unset=True)
         )
 
         # 返回完整配置（包括明文 API 密钥）
+        # 注意：config.api_key 是加密的，需要解密
+        from app.core.encryption import encryption_service
+        decrypted_api_key = encryption_service.decrypt(config.api_key)
+        
         config_dict = {
             "id": config.id,
             "provider": config.provider.value,
-            "api_key": config.api_key,  # 明文显示 API 密钥
+            "api_key": decrypted_api_key,  # 解密后的明文密钥
             "base_url": config.base_url,
             "default_model": config.default_model,
             "temperature": config.temperature,

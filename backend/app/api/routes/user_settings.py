@@ -12,7 +12,7 @@ from app.schemas.user_settings import UserSettingsResponse, UserSettingsUpdate
 from app.services.user_settings_service import UserSettingsService
 
 
-router = APIRouter(prefix="/settings", tags=["User Settings"])
+router = APIRouter(prefix="/settings", tags=["用户设置"])
 
 
 @router.get(

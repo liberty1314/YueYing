@@ -110,8 +110,10 @@ app.include_router(summary.router, prefix="/api")
 # 管理员路由
 from app.api.routes.admin import users as admin_users
 from app.api.routes.admin import stats as admin_stats
+from app.api.routes.admin import api_keys as admin_api_keys
 app.include_router(admin_users.router, prefix="/api/admin")
 app.include_router(admin_stats.router, prefix="/api/admin")
+app.include_router(admin_api_keys.router, prefix="/api/admin")
 
 # 系统设置路由
 from app.api.routes import system_settings
@@ -127,7 +129,7 @@ app.include_router(websocket.router, prefix="/api")
 # ====================================
 @app.get(
     "/health",
-    tags=["health"],
+    tags=["健康检查"],
     summary="健康检查",
     description="检查服务运行状态"
 )
@@ -145,7 +147,7 @@ async def health_check():
 # 根路径
 @app.get(
     "/",
-    tags=["root"],
+    tags=["根路径"],
     summary="API 根路径",
     description="欢迎页面，提供 API 基本信息和文档链接"
 )
@@ -172,12 +174,16 @@ async def startup_event():
     try:
         from app.core.database import SessionLocal
         from app.services.llm_config_service import LLMConfigService
+        from app.services.api_key_service import api_key_service
         from app.services.auth import AuthService
         
         db = SessionLocal()
         try:
             # 初始化 LLM 配置（从环境变量）
             LLMConfigService.initialize_from_env(db)
+            
+            # 初始化 API 密钥配置（从环境变量）
+            api_key_service.initialize_from_env(db)
             
             # 初始化管理员账户（从环境变量）
             AuthService.initialize_admin(db)

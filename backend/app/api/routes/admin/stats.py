@@ -10,10 +10,10 @@ from app.models.user import User
 from app.services.admin_service import admin_service
 
 
-router = APIRouter(prefix="/stats", tags=["Admin - Stats"])
+router = APIRouter(prefix="/stats", tags=["管理员 - 统计"])
 
 
-@router.get("")
+@router.get("", summary="获取管理后台统计")
 def get_admin_stats(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)

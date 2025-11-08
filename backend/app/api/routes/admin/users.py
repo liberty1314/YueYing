@@ -13,7 +13,7 @@ from app.models.user import User
 from app.services.admin_service import admin_service
 
 
-router = APIRouter(prefix="/users", tags=["Admin - Users"])
+router = APIRouter(prefix="/users", tags=["管理员 - 用户"])
 
 
 # ========== 请求/响应模型 ==========
@@ -62,7 +62,7 @@ class CreateAdminRequest(BaseModel):
 
 # ========== API 端点 ==========
 
-@router.get("", response_model=UserListResponse)
+@router.get("", response_model=UserListResponse, summary="获取用户列表")
 def list_users(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -106,7 +106,7 @@ def list_users(
     )
 
 
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=UserResponse, summary="获取用户详情")
 def get_user_detail(
     user_id: int,
     current_admin: User = Depends(get_current_admin),
@@ -128,7 +128,7 @@ def get_user_detail(
     return UserResponse.model_validate(user)
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}", response_model=UserResponse, summary="更新用户")
 def update_user(
     user_id: int,
     update_data: UserUpdateRequest,
@@ -173,7 +173,7 @@ def update_user(
         )
 
 
-@router.post("/{user_id}/toggle-status", response_model=UserResponse)
+@router.post("/{user_id}/toggle-status", response_model=UserResponse, summary="切换用户状态")
 def toggle_user_status(
     user_id: int,
     current_admin: User = Depends(get_current_admin),
@@ -202,7 +202,7 @@ def toggle_user_status(
         )
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, summary="删除用户")
 def delete_user(
     user_id: int,
     hard_delete: bool = Query(False, description="是否硬删除"),
@@ -233,7 +233,7 @@ def delete_user(
     return None
 
 
-@router.post("/create-admin", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/create-admin", response_model=UserResponse, status_code=status.HTTP_201_CREATED, summary="创建管理员")
 def create_admin_user(
     admin_data: CreateAdminRequest,
     current_admin: User = Depends(get_current_admin),

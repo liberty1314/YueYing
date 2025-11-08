@@ -17,7 +17,7 @@ from app.schemas.tmdb import (
 )
 from loguru import logger
 
-router = APIRouter(prefix="/tmdb", tags=["tmdb"])
+router = APIRouter(prefix="/tmdb", tags=["TMDB 影视"])
 
 
 # ==================== 电影相关路由 ====================

@@ -14,7 +14,7 @@ from app.models.user import User
 from app.ai.assistant.assistant_service import get_assistant_service, AssistantService
 
 
-router = APIRouter(prefix="/assistant", tags=["AI Assistant"])
+router = APIRouter(prefix="/assistant", tags=["AI 助手"])
 
 
 # ====================================

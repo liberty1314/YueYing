@@ -20,7 +20,7 @@ from app.services.llm_service import LLMService
 from app.core.exceptions import ConfigurationError, APIError
 
 
-router = APIRouter(prefix="/llm", tags=["LLM"])
+router = APIRouter(prefix="/llm", tags=["LLM 服务"])
 
 
 @router.post(

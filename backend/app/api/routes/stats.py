@@ -21,7 +21,7 @@ from app.schemas.stats import (
 from app.services.stats_service import StatsService
 
 
-router = APIRouter(prefix="/stats", tags=["Statistics"])
+router = APIRouter(prefix="/stats", tags=["用户统计"])
 
 
 @router.get(

@@ -19,7 +19,7 @@ from app.core.task_manager import task_manager
 
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/summary", tags=["summary"])
+router = APIRouter(prefix="/summary", tags=["智能总结"])
 
 
 # ========== 请求/响应模型 ==========
@@ -78,7 +78,7 @@ class TaskResponse(BaseModel):
 
 # ========== API 端点 ==========
 
-@router.post("/generate", response_model=TaskResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/generate", response_model=TaskResponse, status_code=status.HTTP_202_ACCEPTED, summary="生成智能总结")
 async def generate_summary(
     request: GenerateSummaryRequest,
     background_tasks: BackgroundTasks,
@@ -184,7 +184,7 @@ async def generate_summary(
         )
 
 
-@router.get("/tasks/{task_id}", response_model=TaskResponse)
+@router.get("/tasks/{task_id}", response_model=TaskResponse, summary="获取任务状态")
 def get_task_status(
     task_id: str,
     current_user: User = Depends(get_current_user),
@@ -221,7 +221,7 @@ def get_task_status(
     )
 
 
-@router.get("", response_model=SummaryListResponse)
+@router.get("", response_model=SummaryListResponse, summary="获取总结列表")
 def get_summaries(
     page: int = 1,
     page_size: int = 20,
@@ -279,7 +279,7 @@ def get_summaries(
     )
 
 
-@router.get("/{summary_id}", response_model=SummaryResponse)
+@router.get("/{summary_id}", response_model=SummaryResponse, summary="获取总结详情")
 def get_summary_detail(
     summary_id: int,
     current_user: User = Depends(get_current_user),
@@ -325,7 +325,7 @@ def get_summary_detail(
     )
 
 
-@router.delete("/{summary_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{summary_id}", status_code=status.HTTP_204_NO_CONTENT, summary="删除总结")
 def delete_summary(
     summary_id: int,
     current_user: User = Depends(get_current_user),

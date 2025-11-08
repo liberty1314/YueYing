@@ -22,7 +22,7 @@ from app.schemas.user_item import (
 )
 
 
-router = APIRouter(prefix="/user-items", tags=["User Items"])
+router = APIRouter(prefix="/user-items", tags=["用户条目"])
 
 
 @router.post(

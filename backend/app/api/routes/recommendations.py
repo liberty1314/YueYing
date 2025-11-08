@@ -19,7 +19,7 @@ from app.schemas.recommendation import (
 )
 
 
-router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
+router = APIRouter(prefix="/recommendations", tags=["智能推荐"])
 
 
 # ====================================

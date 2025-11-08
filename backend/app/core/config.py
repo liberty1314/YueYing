@@ -167,6 +167,17 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = Field(default=10, alias="MAX_UPLOAD_SIZE_MB")
 
     # ====================================
+    # 密钥管理配置
+    # ====================================
+    # 加密主密钥（用于加密存储 API 密钥等敏感信息）
+    # 如果不设置，将使用 SECRET_KEY 派生
+    ENCRYPTION_KEY: Optional[str] = Field(default=None, alias="ENCRYPTION_KEY")
+    
+    # 强制从环境变量读取配置并覆盖数据库
+    # 当此选项为 True 时，即使数据库有配置，也会使用 .env 的值
+    FORCE_ENV_SETTINGS: bool = Field(default=False, alias="FORCE_ENV_SETTINGS")
+    
+    # ====================================
     # 系统设置配置
     # ====================================
     # 强制从环境变量读取系统设置并覆盖数据库

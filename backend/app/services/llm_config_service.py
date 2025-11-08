@@ -1,5 +1,5 @@
 """
-LLM 配置服务层
+LLM 配置服务层（统一配置管理）
 """
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
@@ -10,12 +10,39 @@ from app.models.llm_config import LLMConfig, LLMProvider
 from app.schemas.llm import LLMConfigCreate, LLMConfigUpdate
 from app.core.exceptions import NotFoundError
 from app.core.config import settings
+from app.core.encryption import encryption_service
 from app.clients.llm.siliconflow import SiliconFlowClient
 from app.clients.llm.openai_compatible import OpenAICompatibleClient
 
 
+class LLMConfigCache:
+    """LLM 配置内存缓存"""
+    _cache: Optional[Dict[str, Any]] = None
+    _last_update: float = 0
+    _cache_ttl: int = 300  # 缓存 5 分钟
+    
+    @classmethod
+    def get(cls) -> Optional[Dict[str, Any]]:
+        """获取缓存的配置"""
+        if cls._cache and (time.time() - cls._last_update < cls._cache_ttl):
+            return cls._cache.copy()
+        return None
+    
+    @classmethod
+    def set(cls, config: Dict[str, Any]):
+        """设置缓存"""
+        cls._cache = config.copy()
+        cls._last_update = time.time()
+    
+    @classmethod
+    def clear(cls):
+        """清除缓存"""
+        cls._cache = None
+        cls._last_update = 0
+
+
 class LLMConfigService:
-    """LLM 配置服务类"""
+    """LLM 配置服务类（统一配置管理）"""
 
     @staticmethod
     def get_provider_presets() -> Dict[str, Dict[str, Any]]:
@@ -50,6 +77,75 @@ class LLMConfigService:
         }
 
     @staticmethod
+    def _load_config_with_priority(db: Session) -> Dict[str, Any]:
+        """
+        统一配置加载逻辑：
+        1. 检查是否强制使用环境变量
+        2. 从数据库加载（如果存在且未强制使用环境变量）
+        3. 从环境变量加载（作为默认值或强制覆盖）
+        4. 解密密钥
+        
+        Returns:
+            配置字典（包含解密后的密钥）
+        """
+        # 检查缓存
+        cached_config = LLMConfigCache.get()
+        if cached_config:
+            logger.debug("从缓存加载 LLM 配置")
+            return cached_config
+        
+        config_dict = None
+        
+        # 步骤 1: 检查是否强制使用环境变量
+        force_env = settings.FORCE_ENV_SETTINGS
+        
+        # 步骤 2: 如果不强制使用环境变量，尝试从数据库加载
+        if not force_env:
+            db_config = db.query(LLMConfig).first()
+            if db_config:
+                logger.info("从数据库加载 LLM 配置")
+                config_dict = {
+                    "provider": db_config.provider.value,
+                    "api_key": encryption_service.decrypt(db_config.api_key),  # 解密
+                    "base_url": db_config.base_url,
+                    "default_model": db_config.default_model,
+                    "temperature": db_config.temperature,
+                    "max_tokens": db_config.max_tokens,
+                    "top_p": db_config.top_p,
+                    "enabled": db_config.enabled,
+                    "auto_tag_enabled": db_config.auto_tag_enabled,
+                    "description": db_config.description,
+                }
+        
+        # 步骤 3: 如果数据库没有配置或强制使用环境变量，从 .env 加载
+        if config_dict is None or force_env:
+            provider = settings.DEFAULT_LLM_PROVIDER.lower()
+            presets = LLMConfigService.get_provider_presets()
+            
+            if provider in presets:
+                preset = presets[provider]
+                config_dict = {
+                    "provider": provider,
+                    "api_key": preset["api_key"],  # 环境变量中的密钥是明文
+                    "base_url": preset["base_url"],
+                    "default_model": preset.get("default_model", settings.DEFAULT_LLM_MODEL),
+                    "temperature": 0.7,
+                    "max_tokens": None,
+                    "top_p": 1.0,
+                    "enabled": True,
+                    "auto_tag_enabled": False,
+                    "description": preset.get("description", ""),
+                }
+                log_msg = "强制从环境变量加载 LLM 配置" if force_env else "从环境变量加载 LLM 配置（数据库无配置）"
+                logger.info(f"{log_msg}: provider={provider}")
+        
+        # 步骤 4: 缓存配置
+        if config_dict:
+            LLMConfigCache.set(config_dict)
+        
+        return config_dict
+
+    @staticmethod
     def initialize_from_env(db: Session) -> Optional[LLMConfig]:
         """
         从环境变量初始化 LLM 配置
@@ -76,11 +172,11 @@ class LLMConfigService:
             logger.warning(f"未配置 {provider.upper()} 的 API 密钥，跳过初始化")
             return None
 
-        # 创建配置
+        # 创建配置（加密密钥）
         try:
             config_data = LLMConfigCreate(
                 provider=provider,
-                api_key=preset["api_key"],
+                api_key=preset["api_key"],  # 将在 create_config 中加密
                 base_url=preset["base_url"],
                 default_model=preset.get("default_model", settings.DEFAULT_LLM_MODEL),
                 temperature=0.7,
@@ -91,10 +187,28 @@ class LLMConfigService:
                 description=preset.get("description", ""),
             )
             
-            config = LLMConfig(**config_data.model_dump())
+            # 加密 API 密钥
+            encrypted_api_key = encryption_service.encrypt(config_data.api_key)
+            
+            config = LLMConfig(
+                provider=LLMProvider(config_data.provider),
+                api_key=encrypted_api_key,  # 存储加密后的密钥
+                base_url=config_data.base_url,
+                default_model=config_data.default_model,
+                temperature=config_data.temperature,
+                max_tokens=config_data.max_tokens,
+                top_p=config_data.top_p,
+                enabled=config_data.enabled,
+                auto_tag_enabled=config_data.auto_tag_enabled,
+                description=config_data.description,
+            )
+            
             db.add(config)
             db.commit()
             db.refresh(config)
+            
+            # 清除缓存
+            LLMConfigCache.clear()
             
             logger.info(f"✅ 从环境变量初始化 LLM 配置: provider={provider}")
             return config
@@ -105,17 +219,30 @@ class LLMConfigService:
             return None
 
     @staticmethod
-    def get_config(db: Session) -> Optional[LLMConfig]:
+    def get_config(db: Session) -> Optional[Dict[str, Any]]:
         """
-        获取当前 LLM 配置（单例）
+        获取当前 LLM 配置（使用统一加载逻辑）
+        
+        Returns:
+            配置字典（包含解密后的密钥）
         """
-        config = db.query(LLMConfig).first()
-        return config
+        return LLMConfigService._load_config_with_priority(db)
+    
+    @staticmethod
+    def get_config_from_db(db: Session) -> Optional[LLMConfig]:
+        """
+        直接从数据库获取 LLM 配置对象（不解密）
+        用于需要访问 id、created_at、updated_at 等字段的场景
+        
+        Returns:
+            LLMConfig ORM 对象
+        """
+        return db.query(LLMConfig).first()
 
     @staticmethod
     def create_config(db: Session, config_data: LLMConfigCreate) -> LLMConfig:
         """
-        创建 LLM 配置
+        创建 LLM 配置（加密存储密钥）
         """
         # 检查是否已存在配置
         existing_config = db.query(LLMConfig).first()
@@ -123,17 +250,36 @@ class LLMConfigService:
             # 如果存在，则更新而不是创建
             return LLMConfigService.update_config(db, config_data.model_dump())
 
-        config = LLMConfig(**config_data.model_dump())
+        # 加密 API 密钥
+        encrypted_api_key = encryption_service.encrypt(config_data.api_key)
+        
+        config = LLMConfig(
+            provider=LLMProvider(config_data.provider),
+            api_key=encrypted_api_key,  # 存储加密后的密钥
+            base_url=config_data.base_url,
+            default_model=config_data.default_model,
+            temperature=config_data.temperature,
+            max_tokens=config_data.max_tokens,
+            top_p=config_data.top_p,
+            enabled=config_data.enabled,
+            auto_tag_enabled=config_data.auto_tag_enabled,
+            description=config_data.description,
+        )
+        
         db.add(config)
         db.commit()
         db.refresh(config)
+        
+        # 清除缓存
+        LLMConfigCache.clear()
+        
         logger.info(f"Created LLM config: provider={config.provider}")
         return config
 
     @staticmethod
     def update_config(db: Session, update_data: dict) -> LLMConfig:
         """
-        更新 LLM 配置
+        更新 LLM 配置（加密存储密钥）
         """
         config = db.query(LLMConfig).first()
         if not config:
@@ -141,12 +287,23 @@ class LLMConfigService:
 
         # 更新字段
         for key, value in update_data.items():
-            if value is not None and hasattr(config, key):
+            # 跳过空值和不存在的字段
+            if not hasattr(config, key):
+                continue
+            # 对于 api_key，空字符串表示不更新
+            if key == "api_key":
+                if value:  # 只有非空时才更新
+                    setattr(config, key, encryption_service.encrypt(value))
+            elif value is not None:
                 setattr(config, key, value)
 
         db.add(config)
         db.commit()
         db.refresh(config)
+        
+        # 清除缓存
+        LLMConfigCache.clear()
+        
         logger.info(f"Updated LLM config: provider={config.provider}")
         return config
 
@@ -161,6 +318,10 @@ class LLMConfigService:
 
         db.delete(config)
         db.commit()
+        
+        # 清除缓存
+        LLMConfigCache.clear()
+        
         logger.info("Deleted LLM config")
         return True
 
@@ -169,9 +330,7 @@ class LLMConfigService:
         """
         脱敏 API 密钥
         """
-        if not api_key or len(api_key) < 8:
-            return None
-        return f"{api_key[:4]}{'*' * (len(api_key) - 8)}{api_key[-4:]}"
+        return encryption_service.mask(api_key)
 
     @staticmethod
     async def test_connection(
@@ -258,4 +417,3 @@ class LLMConfigService:
                 return False, "连接超时", None
             else:
                 return False, f"连接失败: {error_msg}", None
-

@@ -15,6 +15,7 @@ from app.models.user_settings import UserSettings
 from app.models.conversation import Conversation, ConversationMessage
 from app.models.summary import Summary, PeriodType
 from app.models.background_task import BackgroundTask, TaskStatus, TaskType
+from app.models.api_key_config import ApiKeyConfig, ApiKeyService, TestStatus
 
 __all__ = [
     "BaseModel",
@@ -40,4 +41,7 @@ __all__ = [
     "BackgroundTask",
     "TaskStatus",
     "TaskType",
+    "ApiKeyConfig",
+    "ApiKeyService",
+    "TestStatus",
 ]

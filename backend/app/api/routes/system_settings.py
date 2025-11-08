@@ -16,7 +16,7 @@ from app.services.system_settings_service import SystemSettingsService
 from app.core.exceptions import NotFoundError
 
 
-router = APIRouter(prefix="/system-settings", tags=["System Settings"])
+router = APIRouter(prefix="/system-settings", tags=["系统设置"])
 
 
 @router.get(

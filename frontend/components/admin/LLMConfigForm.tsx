@@ -26,12 +26,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { llmConfigApi } from "@/lib/llm-config-api";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import type { LLMConfig } from "@/types/llm-config";
 
 const formSchema = z.object({
   provider: z.enum(["siliconflow", "deepseek", "openai", "claude"]),
-  api_key: z.string().min(1, "请输入 API 密钥"),
+  api_key: z.string(), // 允许空值（编辑时表示保持不变）
   base_url: z.string().optional(),
   default_model: z.string().optional(),
   temperature: z.number().min(0).max(2),
@@ -49,17 +49,27 @@ interface LLMConfigFormProps {
   onSuccess: () => void;
 }
 
+// 脱敏显示密钥（显示前后各4个字符）
+function maskApiKey(apiKey: string | null | undefined): string {
+  if (!apiKey || apiKey.length < 8) return "****";
+  return `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}`;
+}
+
 export function LLMConfigForm({ config, onSuccess }: LLMConfigFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isLoadingKey, setIsLoadingKey] = useState(false);
   const [presets, setPresets] = useState<Record<string, any>>({});
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [hasKey] = useState(!!config?.api_key); // 是否已有密钥
+  const [keyPreview] = useState(config?.api_key ? maskApiKey(config.api_key) : ""); // 密钥预览
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       provider: config?.provider || "siliconflow",
-      api_key: config?.api_key || "",
+      api_key: "", // 初始为空，点击眼睛图标时加载
       base_url: config?.base_url || "https://api.siliconflow.cn/v1",
       default_model: config?.default_model || "deepseek-ai/DeepSeek-V3",
       temperature: config?.temperature || 0.7,
@@ -84,17 +94,62 @@ export function LLMConfigForm({ config, onSuccess }: LLMConfigFormProps) {
     loadPresets();
   }, []);
 
+  // 切换密钥显示
+  const handleToggleKey = async () => {
+    const currentValue = form.getValues("api_key");
+    
+    if (!showApiKey && hasKey && !currentValue) {
+      // 需要显示密钥，但还没有加载，先获取完整密钥
+      setIsLoadingKey(true);
+      try {
+        const fullConfig = await llmConfigApi.getConfig();
+        if (fullConfig?.api_key) {
+          form.setValue("api_key", fullConfig.api_key);
+          setShowApiKey(true);
+        }
+      } catch (error: any) {
+        console.error("获取密钥失败:", error);
+        toast({
+          title: "获取失败",
+          description: error.response?.data?.detail || "无法获取完整密钥",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingKey(false);
+      }
+    } else {
+      // 直接切换显示状态
+      setShowApiKey(!showApiKey);
+    }
+  };
+
   const onSubmit = async (data: FormValues) => {
+    // 验证：创建时必须提供 API 密钥
+    if (!config && !data.api_key) {
+      toast({
+        title: "验证失败",
+        description: "请输入 API 密钥",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // 如果 api_key 为空（编辑模式下），则不提交该字段（保持不变）
+    const submitData = { ...data };
+    if (config && !submitData.api_key) {
+      delete (submitData as any).api_key;
+    }
+
     setIsSubmitting(true);
     try {
       if (config) {
-        await llmConfigApi.updateConfig(data);
+        await llmConfigApi.updateConfig(submitData);
         toast({
           title: "更新成功",
           description: "LLM 配置已更新",
         });
       } else {
-        await llmConfigApi.createConfig(data);
+        await llmConfigApi.createConfig(submitData);
         toast({
           title: "创建成功",
           description: "LLM 配置已创建",
@@ -268,11 +323,31 @@ export function LLMConfigForm({ config, onSuccess }: LLMConfigFormProps) {
             <FormItem>
               <FormLabel>API 密钥</FormLabel>
               <FormControl>
-                <Input
-                  type="text"
-                  placeholder="sk-..."
-                  {...field}
-                />
+                <div className="relative">
+                  <Input
+                    type={showApiKey ? "text" : "password"}
+                    placeholder={hasKey ? keyPreview : "sk-..."}
+                    {...field}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={handleToggleKey}
+                    disabled={isLoadingKey}
+                    tabIndex={-1}
+                  >
+                    {isLoadingKey ? (
+                      <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+                    ) : showApiKey ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
               </FormControl>
               <FormDescription>
                 请妥善保管您的 API 密钥

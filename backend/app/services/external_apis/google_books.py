@@ -8,6 +8,7 @@ Google Books API 集成
 import httpx
 from typing import Optional, Dict, Any, List
 from loguru import logger
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.cache import async_cached
@@ -19,14 +20,31 @@ class GoogleBooksClient:
 
     BASE_URL = "https://www.googleapis.com/books/v1"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, db: Optional[Session] = None):
         """
         初始化 Google Books 客户端
 
         Args:
             api_key: Google Books API 密钥，如果不提供则从配置中读取
+            db: 数据库会话，用于从数据库读取密钥配置
         """
-        self.api_key = api_key or settings.GOOGLE_BOOKS_API_KEY
+        # 优先级：传入的 api_key > 数据库配置 > 环境变量
+        if api_key:
+            self.api_key = api_key
+        elif db:
+            # 尝试从数据库读取
+            try:
+                from app.services.api_key_service import api_key_service
+                from app.models.api_key_config import ApiKeyService
+                self.api_key = api_key_service.get_decrypted_key(db, ApiKeyService.GOOGLE_BOOKS)
+                if self.api_key:
+                    logger.debug("Google Books: 使用数据库中的 API 密钥")
+            except Exception as e:
+                logger.warning(f"Google Books: 从数据库读取密钥失败: {e}")
+                self.api_key = settings.GOOGLE_BOOKS_API_KEY
+        else:
+            self.api_key = settings.GOOGLE_BOOKS_API_KEY
+        
         if not self.api_key:
             logger.warning("Google Books API key not configured")
 
