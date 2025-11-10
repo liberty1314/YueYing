@@ -111,9 +111,13 @@ app.include_router(summary.router, prefix="/api")
 from app.api.routes.admin import users as admin_users
 from app.api.routes.admin import stats as admin_stats
 from app.api.routes.admin import api_keys as admin_api_keys
+from app.api.routes.admin import logs as admin_logs
+from app.api.routes.admin import websocket_logs as admin_websocket_logs
 app.include_router(admin_users.router, prefix="/api/admin")
 app.include_router(admin_stats.router, prefix="/api/admin")
 app.include_router(admin_api_keys.router, prefix="/api/admin")
+app.include_router(admin_logs.router, prefix="/api/admin")
+app.include_router(admin_websocket_logs.router, prefix="/api/admin")
 
 # 系统设置路由
 from app.api.routes import system_settings

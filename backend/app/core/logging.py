@@ -38,16 +38,19 @@ def setup_logging():
         colorize=settings.LOG_FORMAT != "json",
     )
 
-    # 添加文件输出（如果是生产环境）
-    if not settings.DEBUG:
-        logger.add(
-            "logs/app.log",
-            format=log_format,
-            level=settings.LOG_LEVEL,
-            rotation="500 MB",  # 文件大小达到 500MB 时轮转
-            retention="10 days",  # 保留 10 天的日志
-            compression="zip",  # 压缩旧日志
-        )
+    # 添加文件输出（开发和生产环境都写入）
+    # 确保 logs 目录存在
+    import os
+    os.makedirs("logs", exist_ok=True)
+    
+    logger.add(
+        "logs/app.log",
+        format=log_format,
+        level=settings.LOG_LEVEL,
+        rotation="500 MB" if not settings.DEBUG else "100 MB",  # 开发环境使用较小的轮转大小
+        retention="10 days" if not settings.DEBUG else "3 days",  # 开发环境保留较短时间
+        compression="zip" if not settings.DEBUG else None,  # 开发环境不压缩
+    )
 
     return logger
 

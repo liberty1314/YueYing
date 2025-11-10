@@ -12,6 +12,7 @@ import {
   Activity,
   Brain,
   Key,
+  FileText,
 } from "lucide-react";
 
 const menuItems = [
@@ -39,6 +40,11 @@ const menuItems = [
     title: "API 密钥",
     href: "/admin/api-keys",
     icon: Key,
+  },
+  {
+    title: "系统日志",
+    href: "/admin/logs",
+    icon: FileText,
   },
   {
     title: "数据管理",
