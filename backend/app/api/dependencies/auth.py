@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
 
 from app.core.database import get_db
 from app.models.user import User, UserRole
@@ -54,6 +55,13 @@ def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="用户已被禁用",
         )
+
+    # 更新最后登录时间（避免过于频繁的数据库写入）
+    # 只有当用户上次登录时间超过5分钟时才更新
+    now = datetime.utcnow()
+    if not user.last_login_at or (now - user.last_login_at) > timedelta(minutes=5):
+        user.last_login_at = now
+        db.commit()
 
     return user
 
@@ -109,6 +117,12 @@ def get_optional_current_user(
         user = auth_service.get_user_by_id(db, user_id=token_data.user_id)
 
         if user and user.is_active:
+            # 更新最后登录时间（避免过于频繁的数据库写入）
+            # 只有当用户上次登录时间超过5分钟时才更新
+            now = datetime.utcnow()
+            if not user.last_login_at or (now - user.last_login_at) > timedelta(minutes=5):
+                user.last_login_at = now
+                db.commit()
             return user
     except HTTPException:
         return None

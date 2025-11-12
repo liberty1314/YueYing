@@ -6,6 +6,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from loguru import logger
+from datetime import datetime
 
 from app.core.database import get_db
 from app.schemas.user import (
@@ -67,6 +68,9 @@ def login(
             detail="邮箱或密码错误",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # 注意：last_login_at 将在后续的 API 调用中通过 get_current_user 依赖自动更新
+    # 这里不需要手动更新，以避免重复写入
 
     tokens = auth_service.create_user_tokens(user, remember_me=login_data.remember_me)
     return tokens

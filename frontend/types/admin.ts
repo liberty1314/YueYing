@@ -53,3 +53,74 @@ export interface CreateAdminData {
   full_name?: string;
 }
 
+// 仪表盘相关类型
+
+// 核心指标
+export interface CoreMetrics {
+  dau: number;              // 日活跃用户
+  mau: number;              // 月活跃用户
+  user_stickiness: number;  // 用户粘性 (DAU/MAU %)
+  today_new_users: number;  // 今日新增用户
+}
+
+// DAU趋势数据点
+export interface DauTrendPoint {
+  date: string;
+  dau: number;
+}
+
+// 用户留存率趋势数据点
+export interface RetentionTrendPoint {
+  date: string;
+  cohort_size: number;
+  day_1: number;   // 次日留存率
+  day_7: number;   // 第7日留存率
+  day_14: number;  // 第14日留存率
+  day_30: number;  // 第30日留存率
+}
+
+// 系统健康状态
+export interface SystemHealthStatus {
+  status: string;
+  details: string;
+}
+
+export interface SystemHealth {
+  llm_api: SystemHealthStatus;
+  rag_index: SystemHealthStatus;
+  redis_cache: SystemHealthStatus;
+  database: SystemHealthStatus;
+}
+
+// 最近用户
+export interface RecentUser {
+  id: number;
+  username: string | null;
+  email: string;
+  created_at: string;
+}
+
+// 系统事件
+export interface SystemEvent {
+  id: number;
+  task_type: string;
+  status: string;
+  created_at: string;
+  description: string;
+}
+
+// 最近活动
+export interface RecentActivity {
+  recent_users: RecentUser[];
+  system_events: SystemEvent[];
+}
+
+// 仪表盘统计数据
+export interface DashboardStats {
+  core_metrics: CoreMetrics;
+  dau_trend: DauTrendPoint[];
+  retention_trends: RetentionTrendPoint[];
+  system_health: SystemHealth;
+  timestamp: string;
+}
+

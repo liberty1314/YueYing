@@ -169,11 +169,11 @@ export default function HomePage() {
 
         {/* 趋势 */}
         <div>
-          <h2 className="text-3xl font-bold mb-6">🔥 热门趋势</h2>
+          <h2 className="text-3xl font-bold mb-6">🔥 热门影视</h2>
           <Tabs defaultValue="today" className="w-full">
             <TabsList className="mb-6">
-              <TabsTrigger value="today">今日趋势</TabsTrigger>
-              <TabsTrigger value="week">本周趋势</TabsTrigger>
+              <TabsTrigger value="today">今日热门</TabsTrigger>
+              <TabsTrigger value="week">本周热门</TabsTrigger>
             </TabsList>
             <TabsContent value="today" className="mt-0">
               <ContentSection

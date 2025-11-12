@@ -1,7 +1,8 @@
 """
 用户模型
 """
-from sqlalchemy import Column, String, Boolean, Integer, Enum as SQLEnum
+from sqlalchemy import Column, String, Boolean, Integer, Enum as SQLEnum, DateTime
+from datetime import datetime
 from sqlalchemy.orm import relationship
 import enum
 
@@ -28,6 +29,7 @@ class User(BaseModel):
     is_active = Column(Boolean, default=True, nullable=False, comment="是否激活")
     is_verified = Column(Boolean, default=False, nullable=False, comment="是否已验证邮箱")
     role = Column(SQLEnum(UserRole, values_callable=lambda x: [e.value for e in x]), nullable=False, default=UserRole.USER, index=True, comment="用户角色")
+    last_login_at = Column(DateTime, nullable=True, comment="最后登录时间")
 
     # 关系
     user_items = relationship(
