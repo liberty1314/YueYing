@@ -21,7 +21,7 @@ from app.ai.prompts.summary import (
     build_summary_prompt,
     build_keyword_extraction_prompt
 )
-from app.models.llm_config import LLMConfig
+from app.services.llm_config_service import LLMConfigService
 from app.core.task_manager import task_manager
 from app.core.websocket import ws_manager
 
@@ -36,14 +36,15 @@ class SummaryService:
     def _ensure_llm_initialized(self, db: Session):
         """确保LLM客户端已初始化"""
         if self.llm_client is None:
-            config = db.query(LLMConfig).filter(LLMConfig.enabled == True).first()
-            if config:
+            # 使用 LLMConfigService 获取解密后的配置
+            config = LLMConfigService.get_config(db)
+            if config and config.get("enabled"):
                 self.llm_client = SiliconFlowClient(
-                    api_key=config.api_key,
-                    base_url=config.base_url
+                    api_key=config["api_key"],  # 已解密的密钥
+                    base_url=config["base_url"]
                 )
-                self.default_model = config.default_model
-                logger.info(f"Initialized LLM client for summary generation: {config.provider}")
+                self.default_model = config["default_model"]
+                logger.info(f"Initialized LLM client for summary generation: {config['provider']}")
             else:
                 logger.warning("No active LLM config found for summary generation")
                 raise ValueError("未配置可用的 LLM 服务")

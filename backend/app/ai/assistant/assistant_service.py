@@ -27,19 +27,19 @@ class AssistantService:
         if self.llm_client is None:
             # 获取LLM配置并初始化客户端
             from app.core.database import SessionLocal
-            from app.models.llm_config import LLMConfig
+            from app.services.llm_config_service import LLMConfigService
             db = SessionLocal()
             try:
-                # 查询第一个可用的配置
-                config = db.query(LLMConfig).filter(LLMConfig.enabled == True).first()
-                if config:
+                # 使用 LLMConfigService 获取解密后的配置
+                config = LLMConfigService.get_config(db)
+                if config and config.get("enabled"):
                     self.llm_client = SiliconFlowClient(
-                        api_key=config.api_key,
-                        base_url=config.base_url
+                        api_key=config["api_key"],  # 已解密的密钥
+                        base_url=config["base_url"]
                     )
                     # 保存默认模型以便后续使用
-                    self.default_model = config.default_model
-                    logger.info(f"Initialized LLM client with provider: {config.provider}, model: {config.default_model}")
+                    self.default_model = config["default_model"]
+                    logger.info(f"Initialized LLM client with provider: {config['provider']}, model: {config['default_model']}")
                 else:
                     logger.warning("No active LLM config found")
                     self.llm_client = None
