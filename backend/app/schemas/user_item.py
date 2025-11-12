@@ -94,6 +94,9 @@ class UserItemResponse(UserItemBase):
     class Config:
         from_attributes = True
         use_enum_values = True
+        # 性能优化
+        validate_assignment = True  # 允许赋值验证
+        arbitrary_types_allowed = True  # 允许任意类型
 
 
 class UserItemListResponse(BaseModel):
@@ -108,6 +111,20 @@ class UserItemListResponse(BaseModel):
         from_attributes = True
 
 
+class CursorPaginationResponse(BaseModel):
+    """游标分页响应 Schema"""
+    items: list[UserItemResponse] = Field(..., description="记录列表")
+    next_cursor: Optional[str] = Field(None, description="下一页游标")
+    has_more: bool = Field(..., description="是否还有更多数据")
+    total_count: Optional[int] = Field(None, description="总数（可选，用于显示）")
+
+    class Config:
+        from_attributes = True
+        # 性能优化
+        validate_assignment = True
+        arbitrary_types_allowed = True
+
+
 class UserItemFilters(BaseModel):
     """用户记录筛选 Schema"""
     status: Optional[WatchStatus] = Field(None, description="按状态筛选")
@@ -117,7 +134,7 @@ class UserItemFilters(BaseModel):
     year_from: Optional[int] = Field(None, description="年份起始")
     year_to: Optional[int] = Field(None, description="年份结束")
     search: Optional[str] = Field(None, description="搜索关键词（标题）")
-    
+
     # 排序
     sort_by: Optional[str] = Field(
         "updated_at",
@@ -127,10 +144,14 @@ class UserItemFilters(BaseModel):
         "desc",
         description="排序顺序（asc/desc）"
     )
-    
+
     # 分页
     page: int = Field(1, ge=1, description="页码")
     page_size: int = Field(20, ge=1, le=100, description="每页数量")
+
+    # 游标分页
+    cursor: Optional[str] = Field(None, description="游标（用于游标分页）")
+    limit: int = Field(20, ge=1, le=100, description="游标分页每页数量")
 
     class Config:
         use_enum_values = True
@@ -156,4 +177,10 @@ class UserItemFilters(BaseModel):
         if v not in allowed_fields:
             raise ValueError(f"sort_by must be one of {allowed_fields}")
         return v
+
+    class Config:
+        use_enum_values = True
+        # 性能优化
+        validate_assignment = True
+        arbitrary_types_allowed = True
 

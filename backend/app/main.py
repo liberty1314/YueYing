@@ -6,9 +6,32 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
+# 配置高性能JSON编码器
+try:
+    import orjson
+    from fastapi.encoders import jsonable_encoder
+
+    def orjson_dumps(obj, *, default=None, **kwargs):
+        """使用orjson进行JSON序列化"""
+        return orjson.dumps(obj, default=default, **kwargs).decode('utf-8')
+
+    # 自定义JSON响应类使用orjson
+    class ORJSONResponse(JSONResponse):
+        def render(self, content) -> bytes:
+            return orjson.dumps(
+                content,
+                option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SERIALIZE_NUMPY
+            )
+
+except ImportError:
+    # 如果orjson不可用，使用默认的JSON响应
+    ORJSONResponse = JSONResponse
+    orjson_dumps = None
+
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.middleware.logging_middleware import LoggingMiddleware
+from app.middleware.http_cache_middleware import HTTPCacheMiddleware
 from app.api.routes import auth
 
 # 设置日志
@@ -22,6 +45,7 @@ app = FastAPI(
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
     openapi_url="/openapi.json" if settings.DEBUG else None,
+    default_response_class=ORJSONResponse,  # 使用高性能JSON响应
 )
 
 # CORS 中间件
@@ -35,6 +59,9 @@ app.add_middleware(
 
 # 日志中间件（记录所有请求/响应）
 app.add_middleware(LoggingMiddleware)
+
+# HTTP缓存中间件
+app.add_middleware(HTTPCacheMiddleware)
 
 # Gzip 压缩中间件
 app.add_middleware(GZipMiddleware, minimum_size=1000)
