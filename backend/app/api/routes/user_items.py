@@ -11,6 +11,7 @@ from app.core.database import get_db
 from app.api.dependencies.auth import get_current_user
 from app.models.user import User
 from app.services.user_item_service import UserItemService
+from app.services.user_items_cache import user_items_cache_service
 from app.schemas.user_item import (
     UserItemCreate,
     UserItemUpdate,
@@ -59,6 +60,9 @@ async def create_user_item(
         
         # 手动加载关联的 item
         db.refresh(user_item)
+        
+        # 清除用户记录缓存
+        await user_items_cache_service.clear_user_cache(current_user.id)
         
         logger.info(
             f"User {current_user.id} created user_item {user_item.id}"
@@ -190,6 +194,9 @@ async def update_user_item(
             detail="记录不存在",
         )
     
+    # 清除用户记录缓存
+    await user_items_cache_service.clear_user_cache(current_user.id)
+    
     logger.info(f"User {current_user.id} updated user_item {user_item_id}")
     
     # 手动构建响应
@@ -247,6 +254,9 @@ async def delete_user_item(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="记录不存在",
         )
+    
+    # 清除用户记录缓存
+    await user_items_cache_service.clear_user_cache(current_user.id)
     
     logger.info(f"User {current_user.id} deleted user_item {user_item_id}")
     return None
@@ -309,43 +319,80 @@ async def get_user_items(
             detail=f"无效的筛选参数: {str(e)}",
         )
     
-    items, total = UserItemService.get_user_items(
-        db=db,
+    # 构建缓存键的筛选参数
+    filter_dict = {
+        "status": watch_status.value if watch_status else None,
+        "content_type": content_type.value if content_type else None,
+        "min_rating": min_rating,
+        "max_rating": max_rating,
+        "year_from": year_from,
+        "year_to": year_to,
+        "search": search,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+        "page": page,
+        "page_size": page_size,
+    }
+    
+    # 尝试从缓存获取
+    cached_result = await user_items_cache_service.get_cached_items(
         user_id=current_user.id,
-        filters=filters,
+        filters=filter_dict
     )
     
-    total_pages = (total + page_size - 1) // page_size
+    if cached_result:
+        # 缓存命中，直接返回
+        items_data, total = cached_result
+        items_response = [UserItemResponse(**item) for item in items_data]
+    else:
+        # 缓存未命中，从数据库查询
+        items, total = UserItemService.get_user_items(
+            db=db,
+            user_id=current_user.id,
+            filters=filters,
+        )
+        
+        # 手动构建响应列表
+        items_response = []
+        items_data = []
+        for user_item in items:
+            response_data = {
+                "id": user_item.id,
+                "user_id": user_item.user_id,
+                "item_id": user_item.item_id,
+                "status": user_item.status,
+                "rating": user_item.rating,
+                "notes": user_item.notes,
+                "started_at": user_item.started_at,
+                "completed_at": user_item.completed_at,
+                "progress": user_item.progress,
+                "created_at": user_item.created_at,
+                "updated_at": user_item.updated_at,
+                "external_id": user_item.item.external_id,
+                "source": user_item.item.source,
+                "content_type": user_item.item.content_type,
+                "title": user_item.item.title,
+                "original_title": user_item.item.original_title,
+                "description": user_item.item.description,
+                "poster_url": user_item.item.poster_url,
+                "backdrop_url": user_item.item.backdrop_url,
+                "release_date": user_item.item.release_date,
+                "year": user_item.item.year,
+                "language": user_item.item.language,
+                "metadata": user_item.item.extra_data,
+            }
+            items_response.append(UserItemResponse(**response_data))
+            items_data.append(response_data)
+        
+        # 缓存查询结果
+        await user_items_cache_service.cache_items(
+            user_id=current_user.id,
+            items=items_data,
+            total=total,
+            filters=filter_dict
+        )
     
-    # 手动构建响应列表
-    items_response = []
-    for user_item in items:
-        response_data = {
-            "id": user_item.id,
-            "user_id": user_item.user_id,
-            "item_id": user_item.item_id,
-            "status": user_item.status,
-            "rating": user_item.rating,
-            "notes": user_item.notes,
-            "started_at": user_item.started_at,
-            "completed_at": user_item.completed_at,
-            "progress": user_item.progress,
-            "created_at": user_item.created_at,
-            "updated_at": user_item.updated_at,
-            "external_id": user_item.item.external_id,
-            "source": user_item.item.source,
-            "content_type": user_item.item.content_type,
-            "title": user_item.item.title,
-            "original_title": user_item.item.original_title,
-            "description": user_item.item.description,
-            "poster_url": user_item.item.poster_url,
-            "backdrop_url": user_item.item.backdrop_url,
-            "release_date": user_item.item.release_date,
-            "year": user_item.item.year,
-            "language": user_item.item.language,
-            "metadata": user_item.item.extra_data,
-        }
-        items_response.append(UserItemResponse(**response_data))
+    total_pages = (total + page_size - 1) // page_size
     
     return UserItemListResponse(
         total=total,

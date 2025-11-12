@@ -17,6 +17,7 @@ from app.schemas.user import (
     PasswordChange,
 )
 from app.services.auth import auth_service
+from app.services.user_items_cache import user_items_cache_service
 from app.api.dependencies.auth import get_current_active_user
 from app.models.user import User
 
@@ -147,7 +148,7 @@ def change_password(
     summary="退出登录",
     description="退出登录（客户端应删除本地存储的 token）"
 )
-def logout(
+async def logout(
     current_user: User = Depends(get_current_active_user),
 ):
     """
@@ -155,8 +156,14 @@ def logout(
 
     注意：由于使用 JWT，服务端无法真正注销 token
     客户端应该删除本地存储的 token
+    
+    退出时会清除用户的记录缓存
     """
     logger.info(f"用户 {current_user.email} 退出登录")
+    
+    # 清除用户记录缓存
+    await user_items_cache_service.clear_user_cache(current_user.id)
+    logger.debug(f"已清除用户 {current_user.id} 的记录缓存")
 
     return {
         "message": "退出登录成功",

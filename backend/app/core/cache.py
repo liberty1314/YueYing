@@ -16,13 +16,14 @@ class CacheKeyGenerator:
     """缓存键生成器"""
 
     @staticmethod
-    def generate_key(prefix: str, *args, **kwargs) -> str:
+    def generate_key(prefix: str, *args, skip_first: bool = False, **kwargs) -> str:
         """
         生成缓存键
 
         Args:
             prefix: 缓存键前缀
             *args: 位置参数
+            skip_first: 是否跳过第一个参数（用于跳过实例方法的 self）
             **kwargs: 关键字参数
 
         Returns:
@@ -31,8 +32,9 @@ class CacheKeyGenerator:
         # 将参数转换为字符串
         key_parts = [prefix]
 
-        # 处理位置参数
-        for arg in args:
+        # 处理位置参数（如果是实例方法，跳过 self）
+        args_to_use = args[1:] if skip_first and args else args
+        for arg in args_to_use:
             key_parts.append(str(arg))
 
         # 处理关键字参数（按键排序以保证一致性）
@@ -413,11 +415,17 @@ def cached(
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            # 检测是否是实例方法（第一个参数是对象实例）
+            skip_first = False
+            if args and hasattr(args[0], '__dict__') and hasattr(func, '__name__'):
+                # 检查第一个参数是否是一个实例对象
+                skip_first = True
+            
             # 生成缓存键
             if key_builder:
                 cache_key = key_builder(*args, **kwargs)
             else:
-                cache_key = CacheKeyGenerator.generate_key(prefix, *args, **kwargs)
+                cache_key = CacheKeyGenerator.generate_key(prefix, *args, skip_first=skip_first, **kwargs)
 
             # 尝试从缓存获取
             cached_value = cache_manager.get(cache_key)
@@ -438,10 +446,15 @@ def cached(
         # 添加缓存失效方法
         def invalidate(*args, **kwargs):
             """使缓存失效"""
+            # 检测是否是实例方法
+            skip_first = False
+            if args and hasattr(args[0], '__dict__') and hasattr(func, '__name__'):
+                skip_first = True
+                
             if key_builder:
                 cache_key = key_builder(*args, **kwargs)
             else:
-                cache_key = CacheKeyGenerator.generate_key(prefix, *args, **kwargs)
+                cache_key = CacheKeyGenerator.generate_key(prefix, *args, skip_first=skip_first, **kwargs)
             cache_manager.delete(cache_key)
 
         def invalidate_all():
@@ -482,11 +495,17 @@ def async_cached(
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
+            # 检测是否是实例方法（第一个参数是对象实例）
+            skip_first = False
+            if args and hasattr(args[0], '__dict__') and hasattr(func, '__name__'):
+                # 检查第一个参数是否是一个实例对象
+                skip_first = True
+            
             # 生成缓存键
             if key_builder:
                 cache_key = key_builder(*args, **kwargs)
             else:
-                cache_key = CacheKeyGenerator.generate_key(prefix, *args, **kwargs)
+                cache_key = CacheKeyGenerator.generate_key(prefix, *args, skip_first=skip_first, **kwargs)
 
             # 尝试从缓存获取
             cached_value = await async_cache_manager.get(cache_key)
@@ -507,10 +526,15 @@ def async_cached(
         # 添加缓存失效方法
         async def invalidate(*args, **kwargs):
             """使缓存失效"""
+            # 检测是否是实例方法
+            skip_first = False
+            if args and hasattr(args[0], '__dict__') and hasattr(func, '__name__'):
+                skip_first = True
+                
             if key_builder:
                 cache_key = key_builder(*args, **kwargs)
             else:
-                cache_key = CacheKeyGenerator.generate_key(prefix, *args, **kwargs)
+                cache_key = CacheKeyGenerator.generate_key(prefix, *args, skip_first=skip_first, **kwargs)
             await async_cache_manager.delete(cache_key)
 
         async def invalidate_all():
