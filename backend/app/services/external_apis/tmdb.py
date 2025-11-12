@@ -242,6 +242,7 @@ class TMDBClient:
         page: int = 1,
         language: str = "zh-CN",
         region: Optional[str] = None,
+        year: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         获取高分电影
@@ -250,16 +251,33 @@ class TMDBClient:
             page: 页码
             language: 语言
             region: 地区代码
+            year: 年份过滤
 
         Returns:
             高分电影列表
         """
-        params = {"page": page, "language": language}
-        if region:
-            params["region"] = region
+        if year:
+            # 如果指定了年份，使用discover API来筛选
+            params = {
+                "page": page,
+                "language": language,
+                "sort_by": "vote_average.desc",
+                "vote_count.gte": 100,  # 至少100个投票
+                "primary_release_year": year,
+            }
+            if region:
+                params["region"] = region
 
-        logger.info(f"Fetching top rated movies: page={page}, region={region}")
-        return await self._request("GET", "/movie/top_rated", params=params)
+            logger.info(f"Fetching top rated movies by year: page={page}, region={region}, year={year}")
+            return await self._request("GET", "/discover/movie", params=params)
+        else:
+            # 如果没有指定年份，使用top_rated API
+            params = {"page": page, "language": language}
+            if region:
+                params["region"] = region
+
+            logger.info(f"Fetching top rated movies: page={page}, region={region}")
+            return await self._request("GET", "/movie/top_rated", params=params)
 
     # ==================== 剧集相关 API ====================
 
@@ -384,6 +402,7 @@ class TMDBClient:
         self,
         page: int = 1,
         language: str = "zh-CN",
+        first_air_date_year: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         获取高分剧集
@@ -391,13 +410,29 @@ class TMDBClient:
         Args:
             page: 页码
             language: 语言
+            first_air_date_year: 首播年份过滤
 
         Returns:
             高分剧集列表
         """
-        params = {"page": page, "language": language}
-        logger.info(f"Fetching top rated TV shows: page={page}")
-        return await self._request("GET", "/tv/top_rated", params=params)
+        if first_air_date_year:
+            # 如果指定了年份，使用discover API来筛选
+            params = {
+                "page": page,
+                "language": language,
+                "sort_by": "vote_average.desc",
+                "vote_count.gte": 100,  # 至少100个投票
+                "first_air_date_year": first_air_date_year,
+            }
+
+            logger.info(f"Fetching top rated TV shows by year: page={page}, first_air_date_year={first_air_date_year}")
+            return await self._request("GET", "/discover/tv", params=params)
+        else:
+            # 如果没有指定年份，使用top_rated API
+            params = {"page": page, "language": language}
+
+            logger.info(f"Fetching top rated TV shows: page={page}")
+            return await self._request("GET", "/tv/top_rated", params=params)
 
     # ==================== 趋势相关 API ====================
 

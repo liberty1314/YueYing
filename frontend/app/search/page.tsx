@@ -54,6 +54,7 @@ export default function SearchPage() {
   const query = searchParams.get("q") || "";
   const contentType = (searchParams.get("type") || "all") as ContentType;
   const page = parseInt(searchParams.get("page") || "1", 10);
+  const browseMode = searchParams.get("browse") || ""; // 浏览模式：top-rated
 
   const [searchQuery, setSearchQuery] = useState(query);
   const [selectedType, setSelectedType] = useState<ContentType>(contentType);
@@ -110,10 +111,11 @@ export default function SearchPage() {
     };
   };
 
-  // 执行搜索（支持请求取消）
+  // 执行搜索或浏览（支持请求取消）
   const performSearch = useCallback(
-    async (q: string, type: ContentType, p: number) => {
-      if (!q.trim()) {
+    async (q: string, type: ContentType, p: number, browse: string = "") => {
+      // 浏览模式：如果是top-rated浏览，不需要查询关键词
+      if (!browse && !q.trim()) {
         setSearchResults(null);
         setFilteredResults(null);
         return;
@@ -132,15 +134,64 @@ export default function SearchPage() {
       setError(null);
 
       try {
-        const response = await api.get("/search", {
-          params: {
-            q: q.trim(),
-            type,
-            page: p,
-            page_size: 20,
-          },
-          signal: abortController.signal,
-        });
+        let response;
+
+        // 浏览模式：调用TMDB的top-rated API
+        if (browse === "top-rated" && (type === "movie" || type === "tv")) {
+          const endpoint = type === "movie" ? "/tmdb/movies/top-rated" : "/tmdb/tv/top-rated";
+          const tmdbResponse = await api.get(endpoint, {
+            params: {
+              page: p,
+            },
+            signal: abortController.signal,
+          });
+
+          // 转换TMDB响应为统一搜索格式
+          const results = tmdbResponse.data.results?.map((item: any) => ({
+            id: String(item.id),
+            external_id: String(item.id),
+            source: "tmdb",
+            content_type: type,
+            title: item.title || item.name || "",
+            original_title: item.original_title || item.original_name,
+            description: item.overview,
+            poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : undefined,
+            backdrop_url: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : undefined,
+            release_date: item.release_date || item.first_air_date,
+            year: item.release_date
+              ? String(new Date(item.release_date).getFullYear())
+              : item.first_air_date
+              ? String(new Date(item.first_air_date).getFullYear())
+              : undefined,
+            rating: item.vote_average,
+            vote_count: item.vote_count,
+            popularity: item.popularity,
+            language: item.original_language,
+          })) || [];
+
+          response = {
+            data: {
+              query: browse === "top-rated" ? "高分" + (type === "movie" ? "电影" : "剧集") : "",
+              content_type: type,
+              total: tmdbResponse.data.total_results || 0,
+              page: tmdbResponse.data.page || p,
+              page_size: 20,
+              total_pages: tmdbResponse.data.total_pages || 1,
+              results: results,
+            }
+          };
+        } else {
+          // 搜索模式
+          response = await api.get("/search", {
+            params: {
+              q: q.trim(),
+              type,
+              page: p,
+              page_size: 20,
+            },
+            signal: abortController.signal,
+          });
+        }
 
         // 检查请求是否被取消
         if (abortController.signal.aborted) {
@@ -174,11 +225,12 @@ export default function SearchPage() {
   );
 
   // 更新 URL 参数
-  const updateURL = (q: string, type: ContentType, p: number) => {
+  const updateURL = (q: string, type: ContentType, p: number, browse: string = "") => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (type !== "all") params.set("type", type);
     if (p > 1) params.set("page", p.toString());
+    if (browse) params.set("browse", browse);
 
     const newURL = params.toString() ? `/search?${params.toString()}` : "/search";
     router.push(newURL, { scroll: false });
@@ -189,7 +241,7 @@ export default function SearchPage() {
   const handleTypeChange = (type: ContentType) => {
     setSelectedType(type);
     setCurrentPage(1);
-    updateURL(searchQuery, type, 1);
+    updateURL(searchQuery, type, 1, browseMode);
   };
 
   // 处理筛选变化
@@ -204,7 +256,7 @@ export default function SearchPage() {
   // 处理分页
   const handlePageChange = (p: number) => {
     setCurrentPage(p);
-    updateURL(searchQuery, selectedType, p);
+    updateURL(searchQuery, selectedType, p, browseMode);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -238,20 +290,20 @@ export default function SearchPage() {
       return;
     }
 
-    // 如果已登录，但没有搜索查询，跳转到首页
-    if (status === "authenticated" && !query) {
+    // 如果已登录，但没有搜索查询且不是浏览模式，跳转到首页
+    if (status === "authenticated" && !query && !browseMode) {
       router.push("/");
     }
-  }, [status, query, router]);
+  }, [status, query, browseMode, router]);
 
   // URL 参数变化时执行搜索（带防抖）
   useEffect(() => {
-    // 只有在已登录且有搜索查询时才执行搜索
-    if (status !== "authenticated" || !query) return;
+    // 只有在已登录且（有搜索查询或处于浏览模式）时才执行搜索
+    if (status !== "authenticated" || (!query && !browseMode)) return;
 
     // 防抖处理
     const debounceTimer = setTimeout(() => {
-      performSearch(query, contentType, page);
+      performSearch(query, contentType, page, browseMode);
     }, 300);
 
     return () => {
@@ -261,7 +313,7 @@ export default function SearchPage() {
         abortControllerRef.current.abort();
       }
     };
-  }, [status, query, contentType, page, performSearch]);
+  }, [status, query, contentType, page, browseMode, performSearch]);
 
   // 加载中显示加载状态
   if (status === "loading") {
@@ -272,8 +324,8 @@ export default function SearchPage() {
     );
   }
 
-  // 如果未登录或没有搜索查询，不渲染内容（会被useEffect重定向）
-  if (status === "unauthenticated" || !query) {
+  // 如果未登录或（没有搜索查询且不是浏览模式），不渲染内容（会被useEffect重定向）
+  if (status === "unauthenticated" || (!query && !browseMode)) {
     return null;
   }
 

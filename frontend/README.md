@@ -245,11 +245,15 @@ shadcn/ui 组件使用 CSS 变量进行主题定制，可在 `app/globals.css` �
 
 ```bash
 # API 配置
+# 注意：NEXT_PUBLIC_API_URL 必须包含 /api 后缀
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
 
 # NextAuth 配置
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key-here
+
+# WebSocket URL (可选，默认会从 NEXT_PUBLIC_API_URL 自动推导)
+# NEXT_PUBLIC_WS_URL=ws://localhost:8000
 ```
 
 ## 部署

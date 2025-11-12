@@ -22,17 +22,15 @@ const contentTypes = [
   { value: "book" as ContentType, label: "书籍" },
 ];
 
-// 动态生成年份范围
+// 动态生成年份范围 - 近五年
 const currentYear = new Date().getFullYear();
 const yearRanges = [
   { label: "全部", from: undefined, to: undefined },
-  { label: currentYear.toString(), from: currentYear, to: currentYear },
-  { label: (currentYear - 1).toString(), from: currentYear - 1, to: currentYear - 1 },
-  { label: (currentYear - 2).toString(), from: currentYear - 2, to: currentYear - 2 },
-  { label: "2020年代", from: 2020, to: 2029 },
-  { label: "2010年代", from: 2010, to: 2019 },
-  { label: "2000年代", from: 2000, to: 2009 },
-  { label: "90年代", from: 1990, to: 1999 },
+  // 动态生成近五年的选项
+  ...Array.from({ length: 5 }, (_, i) => {
+    const year = currentYear - i;
+    return { label: year.toString(), from: year, to: year };
+  }),
 ];
 
 

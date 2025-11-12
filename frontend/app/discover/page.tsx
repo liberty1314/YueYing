@@ -7,6 +7,7 @@ import { Container } from "@/components/common/Container";
 import { RecommendationList } from "@/components/recommendations/RecommendationList";
 import { DiscoverSkeleton } from "@/components/discover/DiscoverSkeleton";
 import { recommendationsApi } from "@/lib/recommendations-api";
+import { systemSettingsApi } from "@/lib/system-settings-api";
 import type { RecommendationItem } from "@/types/recommendation";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -46,18 +47,43 @@ export default function DiscoverPage() {
     }
   };
 
-  // 检查登录状态
+  // 检查登录状态和访问权限
   useEffect(() => {
-    if (status === "unauthenticated") {
-      // 未登录，提示并重定向到登录页面
-      toast({
-        title: "需要登录",
-        description: "请先登录才能访问探索发现页面",
-        variant: "default",
-      });
-      router.push("/login");
-    }
-  }, [status, router]);
+    const checkAccess = async () => {
+      // 如果未登录，提示并跳转到登录页
+      if (status === "unauthenticated") {
+        toast({
+          title: "需要登录",
+          description: "请先登录才能访问探索发现页面",
+          variant: "default",
+        });
+        router.push("/login");
+        return;
+      }
+
+      // 如果已登录，检查探索功能是否启用
+      if (status === "authenticated") {
+        try {
+          const settings = await systemSettingsApi.getSettings();
+          if (!settings.enable_explore) {
+            // 探索功能未启用，重定向到首页
+            toast({
+              title: "功能未启用",
+              description: "探索功能当前未启用",
+              variant: "default",
+            });
+            router.push("/");
+            return;
+          }
+        } catch (err) {
+          console.error("检查系统设置失败:", err);
+          router.push("/");
+        }
+      }
+    };
+
+    checkAccess();
+  }, [status, router, toast]);
 
   useEffect(() => {
     if (status === "authenticated") {

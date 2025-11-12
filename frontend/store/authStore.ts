@@ -21,6 +21,20 @@ interface AuthState {
   setIsLoading: (isLoading: boolean) => void
 }
 
+// 安全的存储实现：在服务器端使用内存存储，客户端使用 localStorage
+const getStorage = () => {
+  if (typeof window === 'undefined') {
+    // 服务器端：返回一个简单的内存存储实现
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    }
+  }
+  // 客户端：使用 localStorage
+  return localStorage
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -42,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => getStorage()),
       // 当状态从 localStorage 恢复完成后，将 isLoading 设置为 false
       onRehydrateStorage: () => (state) => {
         state?.setIsLoading(false)

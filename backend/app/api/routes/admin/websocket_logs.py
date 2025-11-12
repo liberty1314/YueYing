@@ -4,13 +4,16 @@
 """
 import asyncio
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, HTTPException, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, HTTPException, status, Depends
 from typing import Set
 from pathlib import Path
 from loguru import logger
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from app.core.security import decode_token
+from app.core.database import get_db
+from app.models.user import User, UserRole
 from app.services.log_service import log_service
 
 
@@ -153,13 +156,14 @@ manager = ConnectionManager()
 @router.websocket("/ws/logs")
 async def websocket_logs(
     websocket: WebSocket,
-    token: str = Query(..., description="认证 token")
+    token: str = Query(..., description="认证 token"),
+    db: Session = Depends(get_db)
 ):
     """
     WebSocket 日志实时推送
-    
+
     **认证**: 需要在查询参数中提供管理员 token
-    
+
     **消息格式**:
     ```json
     {
@@ -179,20 +183,33 @@ async def websocket_logs(
     try:
         payload = decode_token(token)
         if not payload:
+            logger.warning("WebSocket authentication failed: Invalid token")
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-        
+
         user_id = payload.get("sub")
-        role = payload.get("role")
-        
-        if not user_id or role != "admin":
+        if not user_id:
+            logger.warning("WebSocket authentication failed: No user_id in token")
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-        
-        admin_id = int(user_id)
-        
+
+        # 从数据库查询用户并验证角色
+        user = db.query(User).filter(User.id == int(user_id)).first()
+        if not user:
+            logger.warning(f"WebSocket authentication failed: User {user_id} not found")
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+
+        if user.role != UserRole.ADMIN:
+            logger.warning(f"WebSocket authentication failed: User {user_id} is not admin (role: {user.role})")
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+
+        admin_id = user.id
+        logger.info(f"WebSocket authentication successful: Admin {admin_id} ({user.email})")
+
     except Exception as e:
-        logger.error(f"WebSocket authentication failed: {e}")
+        logger.error(f"WebSocket authentication failed with exception: {e}")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
     

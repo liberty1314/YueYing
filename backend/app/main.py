@@ -207,6 +207,27 @@ async def startup_event():
     except Exception as e:
         logger.error(f"⚠️ Embedding 模型预加载失败（但不会阻止应用启动）: {e}")
         logger.warning("RAG 和向量搜索功能可能无法正常工作，请检查网络连接或模型文件")
+    
+    # 启动定时任务调度器
+    try:
+        logger.info("启动定时任务调度器...")
+        from app.core.scheduler import task_scheduler
+        task_scheduler.start()
+        logger.info("✅ 定时任务调度器启动成功")
+    except Exception as e:
+        logger.error(f"⚠️ 定时任务调度器启动失败: {e}")
+    
+    # 预加载首页数据到 Redis
+    try:
+        logger.info("预加载首页数据到 Redis...")
+        from app.services.home_cache import home_cache_service
+        await home_cache_service.refresh_all_home_data(
+            expire=settings.HOME_DATA_CACHE_EXPIRE
+        )
+        logger.info("✅ 首页数据预加载成功")
+    except Exception as e:
+        logger.error(f"⚠️ 首页数据预加载失败（但不会阻止应用启动）: {e}")
+        logger.warning("首页数据将在首次访问时加载")
 
 
 # 关闭事件
@@ -214,6 +235,14 @@ async def startup_event():
 async def shutdown_event():
     """应用关闭时执行"""
     logger.info(f"👋 {settings.PROJECT_NAME} 正在关闭...")
+    
+    # 关闭定时任务调度器
+    try:
+        from app.core.scheduler import task_scheduler
+        task_scheduler.shutdown(wait=True)
+        logger.info("✅ 定时任务调度器已关闭")
+    except Exception as e:
+        logger.error(f"⚠️ 关闭定时任务调度器失败: {e}")
 
 
 if __name__ == "__main__":

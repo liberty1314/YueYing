@@ -92,24 +92,26 @@ async def get_popular_movies(
     "/movies/top-rated",
     response_model=TMDBMovieSearchResponse,
     summary="获取高分电影",
-    description="获取评分最高的电影列表"
+    description="获取评分最高的电影列表，支持年份筛选"
 )
 async def get_top_rated_movies(
     page: int = Query(1, ge=1, le=500, description="页码"),
     language: str = Query("zh-CN", description="语言"),
     region: Optional[str] = Query(None, description="地区代码"),
+    year: Optional[int] = Query(None, description="年份过滤"),
 ):
     """
     获取高分电影
-    
-    获取评分最高的电影列表
+
+    获取评分最高的电影列表，支持年份筛选
     """
     try:
-        logger.info(f"Fetching top rated movies: page={page}, region={region}")
+        logger.info(f"Fetching top rated movies: page={page}, region={region}, year={year}")
         result = await tmdb_client.get_top_rated_movies(
             page=page,
             language=language,
             region=region,
+            year=year,
         )
         return result
     except Exception as e:
@@ -285,22 +287,24 @@ async def get_popular_tv_shows(
     "/tv/top-rated",
     response_model=TMDBTVShowSearchResponse,
     summary="获取高分剧集",
-    description="获取评分最高的剧集列表"
+    description="获取评分最高的剧集列表，支持年份筛选"
 )
 async def get_top_rated_tv_shows(
     page: int = Query(1, ge=1, le=500, description="页码"),
     language: str = Query("zh-CN", description="语言"),
+    first_air_date_year: Optional[int] = Query(None, description="首播年份过滤"),
 ):
     """
     获取高分剧集
-    
-    获取评分最高的剧集列表
+
+    获取评分最高的剧集列表，支持年份筛选
     """
     try:
-        logger.info(f"Fetching top rated TV shows: page={page}")
+        logger.info(f"Fetching top rated TV shows: page={page}, first_air_date_year={first_air_date_year}")
         result = await tmdb_client.get_top_rated_tv_shows(
             page=page,
             language=language,
+            first_air_date_year=first_air_date_year,
         )
         return result
     except Exception as e:

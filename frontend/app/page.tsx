@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Container } from "@/components/common/Container";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
 import { ContentSection } from "@/components/home/ContentSection";
+import { ContentSectionWithYearTabs } from "@/components/home/ContentSectionWithYearTabs";
 import { RecommendationsSection } from "@/components/home/RecommendationsSection";
 import { ContentDetailDialog } from "@/components/content/ContentDetailDialog";
 import { api } from "@/lib/api";
@@ -26,11 +28,10 @@ interface ContentItem {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const { toast } = useToast();
   const [trendingToday, setTrendingToday] = useState<ContentItem[]>([]);
   const [trendingWeek, setTrendingWeek] = useState<ContentItem[]>([]);
-  const [topMovies, setTopMovies] = useState<ContentItem[]>([]);
-  const [topTVShows, setTopTVShows] = useState<ContentItem[]>([]);
   const [animeCalendarData, setAnimeCalendarData] = useState<any[]>([]); // 完整calendar数据
   const [selectedWeekday, setSelectedWeekday] = useState<number>(new Date().getDay()); // 0-6, 默认今天
   const [isLoading, setIsLoading] = useState(true);
@@ -48,14 +49,10 @@ export default function HomePage() {
       const [
         trendingTodayRes,
         trendingWeekRes,
-        topMoviesRes,
-        topTVRes,
         animeRes,
       ] = await Promise.all([
         api.get("/tmdb/trending/all/day").catch(() => ({ data: { results: [] } })),
         api.get("/tmdb/trending/all/week").catch(() => ({ data: { results: [] } })),
-        api.get("/tmdb/movies/top-rated", { params: { page: 1 } }).catch(() => ({ data: { results: [] } })),
-        api.get("/tmdb/tv/top-rated", { params: { page: 1 } }).catch(() => ({ data: { results: [] } })),
         api.get("/bangumi/calendar").catch(() => ({ data: [] })),
       ]);
 
@@ -67,8 +64,6 @@ export default function HomePage() {
 
       setTrendingToday(trendingTodayRes.data.results?.map(formatItem) || []);
       setTrendingWeek(trendingWeekRes.data.results?.map(formatItem) || []);
-      setTopMovies(topMoviesRes.data.results?.map(formatItem) || []);
-      setTopTVShows(topTVRes.data.results?.map(formatItem) || []);
 
       // 处理Bangumi数据 - 保存完整的calendar数据
       if (Array.isArray(animeRes.data)) {
@@ -246,19 +241,19 @@ export default function HomePage() {
         )}
 
         {/* 高分电影 */}
-        <ContentSection
+        <ContentSectionWithYearTabs
           title="🎬 高分电影"
-          items={topMovies}
-          isLoading={isLoading}
+          contentType="movie"
           onItemClick={handleItemClick}
+          onViewMore={(year) => router.push(`/explore?browse=top-rated&type=movie&year=${year}`)}
         />
 
         {/* 高分剧集 */}
-        <ContentSection
+        <ContentSectionWithYearTabs
           title="📺 高分剧集"
-          items={topTVShows}
-          isLoading={isLoading}
+          contentType="tv"
           onItemClick={handleItemClick}
+          onViewMore={(year) => router.push(`/explore?browse=top-rated&type=tv&year=${year}`)}
         />
       </Container>
 

@@ -6,7 +6,26 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { LogEntry, LogWebSocketMessage, ConnectionStatus } from '@/types/log';
 import { useAuthStore } from '@/store/authStore';
 
-const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+/**
+ * 获取 WebSocket 基础 URL
+ * 与 frontend/lib/websocket.ts 保持一致的逻辑
+ */
+function getWebSocketBaseUrl(): string {
+  // 检查是否在浏览器环境中
+  if (typeof window === 'undefined') {
+    return 'ws://localhost:8000';
+  }
+
+  // 根据当前环境自动确定
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+  // 从 API URL 中提取 host 和 port（移除 protocol 和 path）
+  const urlParts = apiUrl.replace(/^https?:\/\//, '').split('/');
+  const host = urlParts[0]; // 只取第一部分（host:port）
+
+  return `${protocol}//${host}`;
+}
 
 export function useLogWebSocket(enabled: boolean = false) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -45,11 +64,15 @@ export function useLogWebSocket(enabled: boolean = false) {
     setError(null);
 
     try {
-      const ws = new WebSocket(`${WS_BASE_URL}/api/admin/ws/logs?token=${token}`);
+      const wsBaseUrl = getWebSocketBaseUrl();
+      const wsUrl = `${wsBaseUrl}/api/admin/ws/logs?token=${encodeURIComponent(token)}`;
+      console.log('[LogWebSocket] Connecting to:', wsUrl.replace(/token=[^&]+/, 'token=***'));
+
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('[LogWebSocket] Connected successfully');
         setStatus('connected');
         setError(null);
         reconnectAttempts.current = 0;
@@ -58,25 +81,28 @@ export function useLogWebSocket(enabled: boolean = false) {
       ws.onmessage = (event) => {
         try {
           const message: LogWebSocketMessage = JSON.parse(event.data);
-          
+          console.log('[LogWebSocket] Received message:', message.type);
+
           if (message.type === 'new_log' && message.data) {
             setLogs((prev) => [...prev, message.data!]);
           } else if (message.type === 'connected') {
-            console.log('WebSocket handshake complete:', message.message);
+            console.log('[LogWebSocket] Handshake complete:', message.message);
+          } else if (message.type === 'pong') {
+            console.log('[LogWebSocket] Pong received');
           }
         } catch (err) {
-          console.error('Failed to parse WebSocket message:', err);
+          console.error('[LogWebSocket] Failed to parse message:', err);
         }
       };
 
       ws.onerror = (event) => {
-        console.error('WebSocket error:', event);
+        console.error('[LogWebSocket] Error occurred:', event);
         setError('WebSocket 连接错误');
         setStatus('error');
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket closed:', event.code, event.reason);
+        console.log('[LogWebSocket] Connection closed. Code:', event.code, 'Reason:', event.reason || 'No reason provided');
         setStatus('disconnected');
         wsRef.current = null;
 

@@ -187,6 +187,14 @@ class Settings(BaseSettings):
     DEFAULT_ENABLE_EXPLORE: bool = Field(default=False, alias="DEFAULT_ENABLE_EXPLORE")
     DEFAULT_ALLOW_USER_AI_TAG_SETTINGS: bool = Field(default=True, alias="DEFAULT_ALLOW_USER_AI_TAG_SETTINGS")
 
+    # ====================================
+    # 首页数据缓存配置
+    # ====================================
+    # 首页数据刷新时间（格式：HH:MM，例如 "01:00" 表示凌晨1点）
+    HOME_DATA_REFRESH_TIME: str = Field(default="01:00", alias="HOME_DATA_REFRESH_TIME")
+    # 首页数据缓存过期时间（秒），默认 25 小时
+    HOME_DATA_CACHE_EXPIRE: int = Field(default=90000, alias="HOME_DATA_CACHE_EXPIRE")
+
 
 # 创建全局配置实例
 settings = Settings()
