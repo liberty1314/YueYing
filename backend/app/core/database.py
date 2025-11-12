@@ -7,13 +7,24 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
 
-# 创建数据库引擎
+# 创建数据库引擎（优化连接池配置）
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True,  # 连接池预检查
-    pool_size=10,  # 连接池大小
-    max_overflow=20,  # 最大溢出连接数
+    # 连接池配置优化
+    pool_pre_ping=True,  # 连接池预检查，避免使用失效连接
+    pool_size=15,  # 连接池大小，增加以支持更多并发
+    max_overflow=30,  # 最大溢出连接数，增加以应对突发负载
+    pool_timeout=30,  # 获取连接的超时时间（秒）
+    pool_recycle=3600,  # 连接回收时间（1小时），避免长时间连接失效
+
+    # 连接配置优化
     echo=False,  # 禁用 SQL echo 以避免与 loguru 格式化冲突
+
+    # 数据库连接参数优化
+    connect_args={
+        "connect_timeout": 10,  # 连接超时时间
+        "options": "-c statement_timeout=30000",  # 语句执行超时30秒
+    }
 )
 
 # 创建会话工厂

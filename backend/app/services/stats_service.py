@@ -23,20 +23,34 @@ from app.schemas.stats import (
     RecentActivityItem,
     YearDistribution,
 )
+from app.core.cache import cached, async_cached
 
 
 class StatsService:
     """统计服务类"""
 
     @staticmethod
+    @cached(prefix="stats_overview", expire=300)  # 缓存5分钟
     def get_overview_stats(db: Session, user_id: int) -> OverviewStats:
         """
-        获取概览统计
+        获取概览统计（优化版本，减少查询次数，带缓存）
         """
-        # 总记录数
-        total_items = db.query(UserItem).filter(UserItem.user_id == user_id).count()
+        # 总记录数和平均评分（单个查询）
+        basic_stats = db.query(
+            func.count(UserItem.id).label('total_items'),
+            func.avg(UserItem.rating).label('avg_rating'),
+            func.count(func.case((UserItem.rating.isnot(None), 1))).label('total_rated')
+        ).filter(UserItem.user_id == user_id).first()
 
-        # 按状态统计
+        # 本月新增
+        now = datetime.now()
+        first_day_of_month = datetime(now.year, now.month, 1)
+        this_month_added = db.query(func.count(UserItem.id)).filter(
+            UserItem.user_id == user_id,
+            UserItem.created_at >= first_day_of_month
+        ).scalar()
+
+        # 按状态统计（单个查询）
         by_status_query = (
             db.query(UserItem.status, func.count(UserItem.id))
             .filter(UserItem.user_id == user_id)
@@ -45,7 +59,7 @@ class StatsService:
         )
         by_status = {status: count for status, count in by_status_query}
 
-        # 按类型统计
+        # 按类型统计（单个查询，带JOIN）
         by_type_query = (
             db.query(Item.content_type, func.count(UserItem.id))
             .join(UserItem, Item.id == UserItem.item_id)
@@ -55,45 +69,20 @@ class StatsService:
         )
         by_type = {content_type: count for content_type, count in by_type_query}
 
-        # 平均评分
-        avg_rating = (
-            db.query(func.avg(UserItem.rating))
-            .filter(UserItem.user_id == user_id, UserItem.rating.isnot(None))
-            .scalar()
-        )
-
-        # 已评分数量
-        total_rated = (
-            db.query(UserItem)
-            .filter(UserItem.user_id == user_id, UserItem.rating.isnot(None))
-            .count()
-        )
-
-        # 本月新增
-        now = datetime.now()
-        first_day_of_month = datetime(now.year, now.month, 1)
-        this_month_added = (
-            db.query(UserItem)
-            .filter(
-                UserItem.user_id == user_id,
-                UserItem.created_at >= first_day_of_month
-            )
-            .count()
-        )
-
         return OverviewStats(
-            total_items=total_items,
+            total_items=basic_stats.total_items,
             by_status=by_status,
             by_type=by_type,
-            average_rating=round(avg_rating, 2) if avg_rating else None,
-            total_rated=total_rated,
+            average_rating=round(basic_stats.avg_rating, 2) if basic_stats.avg_rating else None,
+            total_rated=basic_stats.total_rated,
             this_month_added=this_month_added,
         )
 
     @staticmethod
+    @cached(prefix="stats_type_dist", expire=600)  # 缓存10分钟
     def get_type_distribution(db: Session, user_id: int) -> List[TypeDistribution]:
         """
-        获取类型分布
+        获取类型分布（带缓存）
         """
         total = db.query(UserItem).filter(UserItem.user_id == user_id).count()
 
@@ -123,9 +112,10 @@ class StatsService:
         return distribution
 
     @staticmethod
+    @cached(prefix="stats_status_dist", expire=600)  # 缓存10分钟
     def get_status_distribution(db: Session, user_id: int) -> List[StatusDistribution]:
         """
-        获取状态分布
+        获取状态分布（带缓存）
         """
         total = db.query(UserItem).filter(UserItem.user_id == user_id).count()
 
@@ -154,9 +144,10 @@ class StatsService:
         return distribution
 
     @staticmethod
+    @cached(prefix="stats_rating_dist", expire=600)  # 缓存10分钟
     def get_rating_distribution(db: Session, user_id: int) -> List[RatingDistribution]:
         """
-        获取评分分布（0-10分）
+        获取评分分布（0-10分，带缓存）
         """
         results = (
             db.query(UserItem.rating, func.count(UserItem.id).label("count"))
@@ -222,9 +213,10 @@ class StatsService:
         return TimeTrend(period=period, data=data)
 
     @staticmethod
+    @cached(prefix="stats_top_tags", expire=600)  # 缓存10分钟
     def get_top_tags(db: Session, user_id: int, limit: int = 10) -> List[TagStats]:
         """
-        获取热门标签统计
+        获取热门标签统计（带缓存）
         """
         results = (
             db.query(
@@ -314,9 +306,10 @@ class StatsService:
         return activities
 
     @staticmethod
+    @cached(prefix="stats_year_dist", expire=600)  # 缓存10分钟
     def get_year_distribution(db: Session, user_id: int) -> List[YearDistribution]:
         """
-        获取年代分布（基于内容的发行年份）
+        获取年代分布（基于内容的发行年份，带缓存）
         """
         results = (
             db.query(Item.year, func.count(UserItem.id).label("count"))
