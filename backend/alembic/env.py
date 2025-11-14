@@ -18,7 +18,6 @@ from app.models.user import User, UserRole
 from app.models.item import Item, ItemType
 from app.models.user_item import UserItem, ItemStatus
 from app.models.tag import Tag, TagType, ItemTag
-from app.models.collection import Collection, CollectionItem
 from app.models.llm_config import LLMConfig
 
 # Alembic Config 对象

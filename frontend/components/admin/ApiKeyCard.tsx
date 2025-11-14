@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { NeumorphicSwitch } from "@/components/ui/neumorphic-switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Save, TestTube2, Film, Book, Tv, Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
@@ -251,7 +251,7 @@ export function ApiKeyCard({ config, serviceInfo, onUpdate }: ApiKeyCardProps) {
               {enabled ? "服务已启用" : "服务已禁用"}
             </p>
           </div>
-          <Switch
+          <NeumorphicSwitch
             id={`${serviceInfo.service}-enabled`}
             checked={enabled}
             onCheckedChange={setEnabled}

@@ -68,17 +68,6 @@ export interface Tag {
   isAuto: boolean
 }
 
-// 收藏集
-export interface Collection {
-  id: string
-  userId: string
-  name: string
-  description?: string
-  items?: UserItem[]
-  createdAt: string
-  updatedAt: string
-}
-
 // API 响应类型
 export interface ApiResponse<T = any> {
   data: T

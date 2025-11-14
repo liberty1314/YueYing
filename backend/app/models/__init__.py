@@ -8,7 +8,6 @@ from app.models.user import User, UserRole
 from app.models.item import Item, ItemType
 from app.models.user_item import UserItem, ItemStatus
 from app.models.tag import Tag, TagType, ItemTag
-from app.models.collection import Collection, CollectionItem
 from app.models.llm_config import LLMConfig
 from app.models.system_settings import SystemSettings
 from app.models.user_settings import UserSettings
@@ -29,8 +28,6 @@ __all__ = [
     "Tag",
     "TagType",
     "ItemTag",
-    "Collection",
-    "CollectionItem",
     "LLMConfig",
     "SystemSettings",
     "UserSettings",

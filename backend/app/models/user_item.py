@@ -57,11 +57,6 @@ class UserItem(BaseModel):
     # 关系
     user = relationship("User", back_populates="user_items")
     item = relationship("Item", back_populates="user_items")
-    collection_items = relationship(
-        "CollectionItem",
-        back_populates="user_item",
-        cascade="all, delete-orphan",
-    )
     tags = relationship(
         "UserItemTag",
         back_populates="user_item",

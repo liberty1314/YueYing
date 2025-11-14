@@ -37,11 +37,6 @@ class User(BaseModel):
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    collections = relationship(
-        "Collection",
-        back_populates="user",
-        cascade="all, delete-orphan",
-    )
     tags = relationship(
         "Tag",
         back_populates="user",

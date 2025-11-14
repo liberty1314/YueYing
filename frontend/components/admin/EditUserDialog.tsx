@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { NeumorphicSwitch } from "@/components/ui/neumorphic-switch";
 import { Loader2 } from "lucide-react";
 import { adminApi } from "@/lib/admin-api";
 import { useToast } from "@/hooks/use-toast";
@@ -245,7 +245,7 @@ export function EditUserDialog({
                     )}
                   </div>
                   <FormControl>
-                    <Switch
+                    <NeumorphicSwitch
                       checked={field.value}
                       onCheckedChange={field.onChange}
                       disabled={isCurrentUser}

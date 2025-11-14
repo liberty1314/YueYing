@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { NeumorphicSwitch } from "@/components/ui/neumorphic-switch";
 import { Search, X } from "lucide-react";
 import type { LogFilter, LogLevel } from "@/types/log";
 
@@ -131,7 +131,7 @@ export function LogFilterBar({
             消息显示
           </Label>
           <div className="flex items-center space-x-2">
-            <Switch
+            <NeumorphicSwitch
               id="message-display"
               checked={messageDisplayMode === 'full'}
               onCheckedChange={(checked) => onMessageDisplayModeChange?.(checked ? 'full' : 'truncate')}

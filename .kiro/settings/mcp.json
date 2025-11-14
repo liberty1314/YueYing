@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "time": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-time"
+      ],
+      "disabled": true,
+      "autoApprove": [
+        "get_current_time",
+        "get_timezone"
+      ],
+      "disabledTools": [
+        "get_current_time",
+        "convert_time"
+      ]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "fetch"
+      ],
+      "disabledTools": [
+        "fetch"
+      ]
+    }
+  }
+}

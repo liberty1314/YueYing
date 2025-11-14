@@ -54,8 +54,27 @@ export default function RegisterForm() {
       // 注册成功，跳转到登录页
       router.push('/login?registered=true')
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.detail || err.message || '注册失败'
+      // 处理错误信息，确保是字符串
+      let errorMessage = '注册失败'
+      
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail
+        // 如果 detail 是数组（FastAPI 验证错误）
+        if (Array.isArray(detail)) {
+          errorMessage = detail.map((e: any) => e.msg || e.message).join(', ')
+        } 
+        // 如果 detail 是对象
+        else if (typeof detail === 'object') {
+          errorMessage = JSON.stringify(detail)
+        }
+        // 如果 detail 是字符串
+        else {
+          errorMessage = String(detail)
+        }
+      } else if (err.message) {
+        errorMessage = err.message
+      }
+      
       setError(errorMessage)
     } finally {
       setIsLoading(false)
