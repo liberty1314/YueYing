@@ -25,12 +25,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base as development
 
 # 复制依赖文件
-COPY requirements.txt requirements-dev.txt ./
+COPY requirements.txt ./
 
-# 安装Python依赖（包括开发依赖）
+# 安装Python依赖
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt && \
-    pip install -r requirements-dev.txt
+    pip install -r requirements.txt
 
 # 复制应用代码
 COPY . .

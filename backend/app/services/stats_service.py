@@ -3,7 +3,7 @@
 """
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, case
 from datetime import datetime, timedelta, date
 from loguru import logger
 
@@ -39,7 +39,7 @@ class StatsService:
         basic_stats = db.query(
             func.count(UserItem.id).label('total_items'),
             func.avg(UserItem.rating).label('avg_rating'),
-            func.count(func.case((UserItem.rating.isnot(None), 1))).label('total_rated')
+            func.count(case((UserItem.rating.isnot(None), 1))).label('total_rated')
         ).filter(UserItem.user_id == user_id).first()
 
         # 本月新增
