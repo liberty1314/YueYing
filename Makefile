@@ -80,16 +80,27 @@ init:
 	@echo "${BLUE}初始化项目...${NC}"
 	@if [ ! -f .env ]; then \
 		cp .env.example .env; \
-		echo "${GREEN}✓ 创建 .env 文件${NC}"; \
-		echo "${YELLOW}⚠ 请编辑 .env 文件并填写必要的配置${NC}"; \
+		echo "${GREEN}✓ 创建根目录 .env 文件${NC}"; \
+		echo "${YELLOW}⚠ 请编辑 .env 文件并填写必要的配置（API Keys 等）${NC}"; \
 	else \
-		echo "${YELLOW}.env 文件已存在，跳过${NC}"; \
+		echo "${YELLOW}根目录 .env 文件已存在，跳过${NC}"; \
 	fi
-	@echo "${BLUE}启动服务...${NC}"
+	@echo ""
+	@echo "${BLUE}配置说明：${NC}"
+	@echo "  - Docker 环境（推荐）：只需配置根目录的 .env 文件"
+	@echo "  - 本地开发环境：需要额外配置 backend/.env 和 frontend/.env.local"
+	@echo "  - 详细说明请查看：docs/环境变量配置说明.md"
+	@echo ""
+	@echo "${BLUE}启动基础服务...${NC}"
 	docker-compose up -d postgres redis minio
 	@echo "${BLUE}等待数据库启动...${NC}"
 	sleep 10
 	@echo "${GREEN}✓ 项目初始化完成${NC}"
+	@echo ""
+	@echo "${BLUE}下一步：${NC}"
+	@echo "  1. 编辑 .env 文件，填写必要的配置"
+	@echo "  2. 运行 'make up' 启动所有服务"
+	@echo "  3. 运行 'make migrate' 初始化数据库"
 
 ## migrate: 运行数据库迁移
 migrate:

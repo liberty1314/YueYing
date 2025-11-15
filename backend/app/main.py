@@ -140,11 +140,15 @@ from app.api.routes.admin import stats as admin_stats
 from app.api.routes.admin import api_keys as admin_api_keys
 from app.api.routes.admin import logs as admin_logs
 from app.api.routes.admin import websocket_logs as admin_websocket_logs
+from app.api.routes.admin import cache_warming as admin_cache_warming
+from app.api.routes.admin import cache_management as admin_cache_management
 app.include_router(admin_users.router, prefix="/api/admin")
 app.include_router(admin_stats.router, prefix="/api/admin")
 app.include_router(admin_api_keys.router, prefix="/api/admin")
 app.include_router(admin_logs.router, prefix="/api/admin")
 app.include_router(admin_websocket_logs.router, prefix="/api/admin")
+app.include_router(admin_cache_warming.router, prefix="/api/admin/cache-warming", tags=["管理员 - 缓存预热"])
+app.include_router(admin_cache_management.router, prefix="/api/admin/cache", tags=["管理员 - 缓存管理"])
 
 # 系统设置路由
 from app.api.routes import system_settings
@@ -255,6 +259,30 @@ async def startup_event():
     except Exception as e:
         logger.error(f"⚠️ 首页数据预加载失败（但不会阻止应用启动）: {e}")
         logger.warning("首页数据将在首次访问时加载")
+    
+    # 缓存预热
+    try:
+        from app.core.cache_config import cache_config_manager
+        from app.services.cache_warming import cache_warming_service
+        
+        config = cache_config_manager.get_config()
+        
+        if config.warming_enabled and config.warming_on_startup:
+            logger.info("开始启动时缓存预热...")
+            results = cache_warming_service.warm_all()
+            
+            total_items = sum(r.items_warmed for r in results)
+            total_duration = sum(r.duration_seconds for r in results)
+            
+            logger.info(
+                f"✅ 缓存预热完成: {len(results)} 个策略, "
+                f"{total_items} 个项目, 耗时 {total_duration:.2f}s"
+            )
+        else:
+            logger.info("缓存预热已禁用")
+    except Exception as e:
+        logger.error(f"⚠️ 缓存预热失败（但不会阻止应用启动）: {e}")
+        logger.warning("缓存将在首次访问时填充")
 
 
 # 关闭事件

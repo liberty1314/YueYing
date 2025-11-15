@@ -77,10 +77,31 @@ frontend/
 └── config/             # 配置文件
 ```
 
+## 环境变量配置
+
+```bash
+# 复制环境变量模板
+cp .env.example .env.local
+
+# 编辑 .env.local 并填写必要的配置
+```
+
+**必需配置：**
+- `NEXT_PUBLIC_API_URL` - 后端 API 地址
+- `NEXTAUTH_URL` - NextAuth URL
+- `NEXTAUTH_SECRET` - NextAuth 密钥
+
+> **📖 详细配置说明**：
+> - Docker 环境：使用根目录的 `.env` 文件（推荐）
+> - 本地开发：配置 `frontend/.env.local` 文件
+> - 完整文档：[环境变量配置说明](../docs/环境变量配置说明.md)
+
 ## 开发命令
 
 ```bash
-# 安装依赖
+# 安装依赖（推荐使用 pnpm）
+pnpm install
+# 或
 npm install
 
 # 启动开发服务器

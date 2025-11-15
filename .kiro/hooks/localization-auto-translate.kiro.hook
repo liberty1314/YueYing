@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "name": "Auto-Translate Localization Files",
+  "description": "Monitors changes to localization files (JSON, YAML, etc.) and automatically generates translations for all configured target languages when new or modified text is detected",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.json",
+      "**/*.yaml",
+      "**/*.yml",
+      "**/locales/**/*",
+      "**/i18n/**/*",
+      "**/translations/**/*",
+      "**/lang/**/*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A localization file has been modified. Please:\n\n1. Analyze the changed file to identify new or modified text entries\n2. Determine the source language from the file path or content\n3. Identify all target languages that need translations (check for existing locale files or configuration)\n4. For each new or modified text entry:\n   - Generate accurate translations maintaining the original meaning and context\n   - Preserve any placeholders, variables, or formatting tokens (e.g., {variable}, %s, {{key}})\n   - Apply locale-specific conventions (date formats, number formats, cultural adaptations)\n   - Maintain consistent terminology across all translations\n5. Update or create the corresponding translation files for each target language\n6. Ensure the JSON/YAML structure and formatting matches the source file\n7. Add comments if any translation requires cultural context or has multiple valid interpretations\n\nImportant considerations:\n- Preserve technical terms, brand names, and proper nouns appropriately\n- Handle pluralization rules specific to each language\n- Consider right-to-left (RTL) languages if applicable\n- Maintain consistent tone and style across all translations\n- Flag any ambiguous text that may need human review"
+  }
+}

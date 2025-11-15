@@ -161,7 +161,7 @@ function LogItem({ log, index, messageDisplayMode, columnWidths }: {
 
         {/* 时间戳 */}
         <div className="flex-shrink-0 text-sm text-muted-foreground font-mono" style={{ width: `${columnWidths.timestamp}px` }}>
-          {format(new Date(log.timestamp), "yyyy-MM-dd HH:mm:ss.SSS", { locale: zhCN })}
+          {format(new Date(log.timestamp.endsWith('Z') ? log.timestamp : log.timestamp + 'Z'), "yyyy-MM-dd HH:mm:ss.SSS", { locale: zhCN })}
         </div>
 
         {/* 日志级别徽章 */}

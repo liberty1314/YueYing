@@ -23,14 +23,14 @@ from app.schemas.stats import (
     RecentActivityItem,
     YearDistribution,
 )
-from app.core.cache import cached, async_cached
+from app.core.cache import multi_level_cached
 
 
 class StatsService:
     """统计服务类"""
 
     @staticmethod
-    @cached(prefix="stats_overview", expire=300)  # 缓存5分钟
+    @multi_level_cached(prefix="stats_overview", l1_ttl=300, l2_ttl=3600)
     def get_overview_stats(db: Session, user_id: int) -> OverviewStats:
         """
         获取概览统计（优化版本，减少查询次数，带缓存）
@@ -79,7 +79,7 @@ class StatsService:
         )
 
     @staticmethod
-    @cached(prefix="stats_type_dist", expire=600)  # 缓存10分钟
+    @multi_level_cached(prefix="stats_type_dist", l1_ttl=300, l2_ttl=3600)
     def get_type_distribution(db: Session, user_id: int) -> List[TypeDistribution]:
         """
         获取类型分布（带缓存）
@@ -112,7 +112,7 @@ class StatsService:
         return distribution
 
     @staticmethod
-    @cached(prefix="stats_status_dist", expire=600)  # 缓存10分钟
+    @multi_level_cached(prefix="stats_status_dist", l1_ttl=300, l2_ttl=3600)
     def get_status_distribution(db: Session, user_id: int) -> List[StatusDistribution]:
         """
         获取状态分布（带缓存）
@@ -144,7 +144,7 @@ class StatsService:
         return distribution
 
     @staticmethod
-    @cached(prefix="stats_rating_dist", expire=600)  # 缓存10分钟
+    @multi_level_cached(prefix="stats_rating_dist", l1_ttl=300, l2_ttl=3600)
     def get_rating_distribution(db: Session, user_id: int) -> List[RatingDistribution]:
         """
         获取评分分布（0-10分，带缓存）
@@ -213,7 +213,7 @@ class StatsService:
         return TimeTrend(period=period, data=data)
 
     @staticmethod
-    @cached(prefix="stats_top_tags", expire=600)  # 缓存10分钟
+    @multi_level_cached(prefix="stats_top_tags", l1_ttl=300, l2_ttl=3600)
     def get_top_tags(db: Session, user_id: int, limit: int = 10) -> List[TagStats]:
         """
         获取热门标签统计（带缓存）
@@ -306,7 +306,7 @@ class StatsService:
         return activities
 
     @staticmethod
-    @cached(prefix="stats_year_dist", expire=600)  # 缓存10分钟
+    @multi_level_cached(prefix="stats_year_dist", l1_ttl=300, l2_ttl=3600)
     def get_year_distribution(db: Session, user_id: int) -> List[YearDistribution]:
         """
         获取年代分布（基于内容的发行年份，带缓存）

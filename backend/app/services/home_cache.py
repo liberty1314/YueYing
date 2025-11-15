@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 import asyncio
 
-from app.core.cache import AsyncCacheManager, CacheKeyGenerator
+from app.core.cache import AsyncMultiLevelCacheManager, CacheKeyGenerator
 from app.core.logging import logger
 from app.services.external_apis.tmdb import tmdb_client
 from app.services.external_apis.bangumi import bangumi_client
@@ -28,8 +28,14 @@ class HomeDataCacheService:
         "top_tv": "top_rated:tv",
     }
     
+    # 缓存 TTL 配置
+    # L1: 5 分钟（内存缓存）
+    # L2: 1 小时（Redis 缓存）
+    L1_TTL = 300
+    L2_TTL = 3600
+    
     def __init__(self):
-        self.cache = AsyncCacheManager()
+        self.cache = AsyncMultiLevelCacheManager()
         
     def _get_cache_key(self, data_type: str, **params) -> str:
         """
@@ -166,12 +172,12 @@ class HomeDataCacheService:
         **params
     ) -> bool:
         """
-        缓存数据
+        缓存数据到多级缓存
         
         Args:
             data_type: 数据类型
             data: 要缓存的数据
-            expire: 过期时间（秒）
+            expire: L2 过期时间（秒），None 使用默认值
             **params: 附加参数
         
         Returns:
@@ -179,20 +185,20 @@ class HomeDataCacheService:
         """
         try:
             cache_key = self._get_cache_key(data_type, **params)
-            success = await self.cache.set(cache_key, data, expire=expire)
+            l2_ttl = expire if expire is not None else self.L2_TTL
+            await self.cache.set(cache_key, data, l1_ttl=self.L1_TTL, l2_ttl=l2_ttl)
             
-            if success:
-                await self._set_last_update(data_type)
-                logger.info(f"Cached {data_type} data successfully")
+            await self._set_last_update(data_type)
+            logger.info(f"Cached {data_type} data to multi-level cache")
             
-            return success
+            return True
         except Exception as e:
             logger.error(f"Failed to cache {data_type}: {e}")
             return False
     
     async def get_cached_data(self, data_type: str, **params) -> Optional[Any]:
         """
-        获取缓存数据
+        从多级缓存获取数据
         
         Args:
             data_type: 数据类型
@@ -206,9 +212,9 @@ class HomeDataCacheService:
             data = await self.cache.get(cache_key)
             
             if data:
-                logger.debug(f"Cache hit for {data_type}")
+                logger.debug(f"Multi-level cache hit for {data_type}")
             else:
-                logger.debug(f"Cache miss for {data_type}")
+                logger.debug(f"Multi-level cache miss for {data_type}")
             
             return data
         except Exception as e:

@@ -35,6 +35,11 @@ cp .env.example .env
 # 编辑 .env 并填写必要的配置
 ```
 
+> **📖 详细配置说明**：
+> - Docker 环境：使用根目录的 `.env` 文件（推荐）
+> - 本地开发：配置 `backend/.env` 文件
+> - 完整文档：[环境变量配置说明](../docs/环境变量配置说明.md)
+
 ### 运行开发服务器
 
 ```bash
@@ -87,6 +92,41 @@ pytest -m unit
 # 运行集成测试
 pytest -m integration
 ```
+
+#### 缓存系统测试
+
+项目包含完整的缓存系统测试套件（123+ 个测试，覆盖率 95%+）：
+
+```bash
+# 运行所有缓存测试（推荐）
+./scripts/run_all_cache_tests.sh
+
+# 或使用 Python 脚本
+python scripts/run_cache_tests.py
+
+# 只运行单元测试
+./scripts/run_all_cache_tests.sh --unit
+
+# 只运行集成测试
+./scripts/run_all_cache_tests.sh --integration
+
+# 只运行性能测试
+./scripts/run_all_cache_tests.sh --performance
+
+# 生成覆盖率报告
+./scripts/run_all_cache_tests.sh --coverage
+```
+
+**测试覆盖**:
+- ✅ 缓存统计测试 (17个测试，100%覆盖率)
+- ✅ 内存缓存测试 (28个测试，100%覆盖率)
+- ✅ 多级缓存测试 (21个测试，100%覆盖率)
+- ✅ 缓存配置测试 (26个测试，100%覆盖率)
+- ✅ 缓存预热测试 (13个测试，85%覆盖率)
+- ✅ 端到端集成测试 (15+个测试)
+- ✅ 性能测试 (15+个测试)
+
+**详细文档**: [缓存测试指南](docs/CACHE_TESTING_GUIDE.md)
 
 ### 代码质量
 
@@ -173,8 +213,174 @@ docker-compose up backend
 4. **测试覆盖率**: 目标 >80%
 5. **提交信息**: 使用语义化提交
 
+## 缓存系统
+
+项目实现了双层缓存架构：
+
+- **L1 缓存（内存 LRU）**: 进程内高速缓存，访问延迟 < 1ms
+- **L2 缓存（Redis）**: 分布式缓存，支持多实例共享
+
+### 缓存管理 API
+
+系统提供了完整的缓存管理接口（需要管理员权限）：
+
+**缓存统计**：
+- `GET /api/admin/cache/stats` - 获取 L1 和 L2 缓存统计（命中率、延迟、内存使用等）
+- `GET /api/admin/cache/stats/top-keys` - 获取访问频率最高的缓存键
+- `GET /api/admin/cache/info` - 获取缓存系统概览信息
+
+**缓存配置**：
+- `GET /api/admin/cache/config` - 获取当前缓存配置
+- `PUT /api/admin/cache/config` - 更新缓存配置（TTL、预热设置等）
+
+**缓存操作**：
+- `DELETE /api/admin/cache/clear` - 清理缓存（支持模式匹配和分层清理）
+
+**测试脚本**：
+
+项目提供了便捷的测试脚本 `scripts/test_cache_api.sh` 用于测试缓存管理 API：
+
+```bash
+# 1. 登录获取 token
+./scripts/test_cache_api.sh login
+
+# 2. 设置 token
+export TOKEN="your_token_here"
+
+# 3. 获取缓存统计
+./scripts/test_cache_api.sh stats
+
+# 4. 获取热门键
+./scripts/test_cache_api.sh top-keys 20
+
+# 5. 获取缓存配置
+./scripts/test_cache_api.sh config
+
+# 6. 清理特定模式的缓存
+./scripts/test_cache_api.sh clear-pattern "tmdb:*"
+
+# 7. 查看所有可用命令
+./scripts/test_cache_api.sh help
+```
+
+### 缓存预热
+
+系统提供了缓存预热功能，可以在应用启动或定期执行时预加载热点数据：
+
+**预热策略**：
+- `user_items`: 预热活跃用户的内容记录
+- `popular_content`: 预热热门内容
+
+**预热时机**：
+- **启动时预热**: 应用启动时自动执行（可通过 `CACHE_WARMING_ON_STARTUP` 环境变量控制）
+- **定时预热**: 每小时自动执行一次（由 APScheduler 调度）
+- **手动预热**: 管理员可通过 API 端点随时触发
+
+**预热管理接口**（需要管理员权限）：
+- `POST /api/admin/cache-warming/warm` - 手动触发预热
+- `GET /api/admin/cache-warming/status` - 获取预热状态
+- `GET /api/admin/cache-warming/history` - 获取预热历史
+- `GET /api/admin/cache-warming/strategies` - 获取所有预热策略
+
+**环境变量配置**：
+- `CACHE_WARMING_ENABLED`: 是否启用缓存预热（默认: true）
+- `CACHE_WARMING_ON_STARTUP`: 是否在启动时预热（默认: true）
+- `CACHE_WARMING_BATCH_SIZE`: 预热批次大小（默认: 100）
+
+### 多级缓存迁移
+
+✅ **所有核心服务已完成多级缓存迁移** (2025-11-15)
+
+**已迁移服务**：
+
+1. **外部 API 服务**：
+   - ✅ TMDB API（电影、剧集搜索和详情）
+   - ✅ Google Books API（书籍搜索和详情）
+   - ✅ Bangumi API（动漫、游戏搜索和详情）
+   - 配置：详情 L1=5分钟/L2=24小时，搜索 L1=5分钟/L2=1小时
+
+2. **用户数据服务**：
+   - ✅ 用户项目缓存服务（L1=5分钟/L2=30分钟）
+   - ✅ 首页数据缓存服务（L1=5分钟/L2=1小时）
+   - 支持自动缓存失效和预热
+
+3. **统计服务**：
+   - ✅ 概览统计、类型分布、状态分布
+   - ✅ 评分分布、热门标签、年代分布
+   - 配置：L1=5分钟/L2=1小时
+
+**性能提升**：
+- L1 命中响应: < 1ms（内存访问）
+- L2 命中响应: < 10ms（Redis 访问）
+- 预期总命中率: 75-95%
+- API 调用减少: 80-95%
+
+**测试验证**：
+```bash
+# 运行多级缓存集成测试
+python scripts/test_multi_level_cache_services.py
+```
+
+**详细文档**：
+- [缓存优化文档](docs/CACHE_OPTIMIZATION.md) - 双层缓存架构、使用指南和最佳实践
+- [多级缓存迁移报告](docs/MULTI_LEVEL_CACHE_MIGRATION.md) - 迁移详情和配置说明
+- [任务 10 完成总结](docs/TASK_10_COMPLETION_SUMMARY.md) - 详细的迁移说明和配置
+
+## 定时任务
+
+系统使用 APScheduler 管理定时任务，在应用启动时自动启动调度器。
+
+### 已配置的定时任务
+
+1. **首页数据刷新** (`refresh_home_data`)
+   - 执行时间：每天凌晨 1:00（可通过 `HOME_DATA_REFRESH_TIME` 环境变量配置）
+   - 功能：刷新首页展示的热门内容和推荐数据
+   - 缓存时间：由 `HOME_DATA_CACHE_EXPIRE` 环境变量控制
+
+2. **缓存预热** (`cache_warming`)
+   - 执行时间：每小时执行一次
+   - 功能：预加载热点数据到缓存，提升访问性能
+   - 配置：通过 `CACHE_WARMING_ENABLED` 环境变量控制是否启用
+
+### 任务管理
+
+调度器提供了以下管理方法（可通过代码调用）：
+
+```python
+from app.core.scheduler import task_scheduler
+
+# 获取所有任务
+jobs = task_scheduler.get_jobs()
+
+# 暂停任务
+task_scheduler.pause_job("cache_warming")
+
+# 恢复任务
+task_scheduler.resume_job("cache_warming")
+
+# 立即执行任务
+await task_scheduler.run_job_now("cache_warming")
+```
+
 ## 相关文档
 
+### 项目文档
+
+**缓存系统**：
+- [缓存快速参考](docs/CACHE_QUICK_REFERENCE.md) - 常用命令和配置速查 ⭐
+- [缓存优化文档](docs/CACHE_OPTIMIZATION.md) - 双层缓存架构、使用指南和最佳实践
+- [多级缓存实现](docs/MULTI_LEVEL_CACHE_IMPLEMENTATION.md) - 技术实现细节
+- [多级缓存迁移报告](docs/MULTI_LEVEL_CACHE_MIGRATION.md) - 服务迁移详情
+- [缓存迁移总结](docs/CACHE_MIGRATION_SUMMARY.md) - 迁移状态一览
+- [缓存管理 API](docs/CACHE_MANAGEMENT_API.md) - 管理接口文档
+- [缓存失效指南](docs/CACHE_INVALIDATION_GUIDE.md) - 失效策略和最佳实践
+- [Redis 配置文档](docs/REDIS_CONFIGURATION.md) - Redis 配置、监控和故障排查
+
+**性能优化**：
+- [数据库优化报告](docs/DATABASE_OPTIMIZATION_REPORT.md) - 数据库性能优化记录
+- [性能测试结果](docs/PERFORMANCE_TEST_RESULTS.md) - 性能测试基准和结果
+
+### 外部文档
 - [FastAPI 文档](https://fastapi.tiangolo.com/)
 - [SQLAlchemy 文档](https://docs.sqlalchemy.org/)
 - [Alembic 文档](https://alembic.sqlalchemy.org/)

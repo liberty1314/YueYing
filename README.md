@@ -37,7 +37,7 @@
 
 ### 数据库与缓存
 - **数据库**: PostgreSQL 16
-- **缓存**: Redis 7
+- **缓存**: Redis 7 (LRU驱逐策略，支持自定义配置)
 - **对象存储**: MinIO
 
 ### AI能力
@@ -67,16 +67,27 @@ cd yueying
 ### 2️⃣ 配置环境变量
 
 ```bash
-# 复制环境变量模板
+# 使用 Makefile 快速初始化（推荐）
+make init
+
+# 或手动复制环境变量模板
 cp .env.example .env
 
 # 编辑 .env 文件，填写必要的配置
-# 至少需要配置：
-# - SECRET_KEY
-# - NEXTAUTH_SECRET
-# - 第三方API密钥（TMDB、Google Books等）
-# - LLM API密钥（DeepSeek/OpenAI/Claude）
+vim .env
 ```
+
+**必需配置：**
+- `SECRET_KEY` - 应用密钥
+- `JWT_SECRET_KEY` - JWT 密钥
+- `NEXTAUTH_SECRET` - NextAuth 密钥
+- 数据库密码（`POSTGRES_PASSWORD`、`REDIS_PASSWORD`、`MINIO_ROOT_PASSWORD`）
+
+**可选配置（启用更多功能）：**
+- 第三方 API 密钥（TMDB、Google Books、Bangumi）
+- LLM API 密钥（用于 AI 功能）
+
+📚 **详细配置说明：** [docs/环境变量配置说明.md](docs/环境变量配置说明.md)
 
 ### 3️⃣ 启动所有服务
 
@@ -121,7 +132,7 @@ python scripts/seed_data.py
 | frontend | 3000 | Next.js前端应用 |
 | backend | 8000 | FastAPI后端服务 |
 | postgres | 5432 | PostgreSQL数据库 |
-| redis | 6379 | Redis缓存 |
+| redis | 6379 | Redis缓存（支持LRU驱逐和自定义配置） |
 | minio | 9000, 9001 | MinIO对象存储 |
 | nginx | 80, 443 | Nginx反向代理 |
 
@@ -308,20 +319,40 @@ docker-compose exec postgres psql -U yueying -d yueying -c "SELECT 1;"
 
 ## 📝 环境变量说明
 
-详细的环境变量配置请参考 `.env.example` 文件。
+### 配置方式
+
+**Docker 环境（推荐）：** 只需配置根目录的 `.env` 文件
+
+**本地开发环境：** 需要分别配置 `backend/.env` 和 `frontend/.env.local`
 
 ### 必需的环境变量
 
 - `SECRET_KEY` - 应用密钥（生产环境必须修改）
-- `NEXTAUTH_SECRET` - NextAuth密钥
+- `JWT_SECRET_KEY` - JWT 密钥
+- `NEXTAUTH_SECRET` - NextAuth 密钥
 - `POSTGRES_PASSWORD` - 数据库密码
-- `REDIS_PASSWORD` - Redis密码
+- `REDIS_PASSWORD` - Redis 密码
+- `MINIO_ROOT_PASSWORD` - MinIO 密码
 
-### API密钥
+### 可选的环境变量
 
-- `TMDB_API_KEY` - TMDB电影数据库API密钥
-- `GOOGLE_BOOKS_API_KEY` - Google Books API密钥
-- `DEEPSEEK_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` - LLM API密钥
+**第三方 API（探索功能）：**
+- `TMDB_API_KEY` - TMDB 电影数据库 API 密钥
+- `GOOGLE_BOOKS_API_KEY` - Google Books API 密钥
+- `BANGUMI_API_KEY` - Bangumi（番组计划）API 密钥
+
+**LLM API（AI 功能）：**
+- `SILICONFLOW_API_KEY` - 硅基流动 API（推荐）
+- `DEEPSEEK_API_KEY` - DeepSeek API
+- `OPENAI_API_KEY` - OpenAI API
+- `ANTHROPIC_API_KEY` - Anthropic Claude API
+
+**系统配置：**
+- `REDIS_MAX_MEMORY` - Redis 最大内存限制（默认: 512mb）
+- `LOG_LEVEL` - 日志级别（默认: INFO）
+- `RATE_LIMIT_PER_MINUTE` - 每分钟请求限制（默认: 60）
+
+📚 **完整配置说明：** [docs/环境变量配置说明.md](docs/环境变量配置说明.md)
 
 ## 🔒 安全建议
 

@@ -48,6 +48,31 @@ class TaskScheduler:
         except Exception as e:
             logger.error(f"Scheduled home data refresh failed: {e}", exc_info=True)
     
+    def cache_warming_task(self):
+        """缓存预热的定时任务"""
+        try:
+            from app.services.cache_warming import cache_warming_service
+            from app.core.cache_config import cache_config_manager
+            
+            config = cache_config_manager.get_config()
+            
+            if not config.warming_enabled:
+                logger.info("Cache warming is disabled, skipping")
+                return
+            
+            logger.info("Scheduled cache warming started")
+            results = cache_warming_service.warm_all()
+            
+            total_items = sum(r.items_warmed for r in results)
+            total_duration = sum(r.duration_seconds for r in results)
+            
+            logger.info(
+                f"Scheduled cache warming completed: {len(results)} strategies, "
+                f"{total_items} items, {total_duration:.2f}s"
+            )
+        except Exception as e:
+            logger.error(f"Scheduled cache warming failed: {e}", exc_info=True)
+    
     def start(self):
         """启动调度器"""
         if self._is_running:
@@ -71,6 +96,21 @@ class TaskScheduler:
             logger.info(
                 f"Added scheduled task: refresh_home_data "
                 f"(will run daily at {hour:02d}:{minute:02d})"
+            )
+            
+            # 添加缓存预热任务（每小时执行一次）
+            self.scheduler.add_job(
+                self.cache_warming_task,
+                trigger=IntervalTrigger(hours=1),
+                id="cache_warming",
+                name="缓存预热",
+                replace_existing=True,
+                max_instances=1,  # 同时只运行一个实例
+            )
+            
+            logger.info(
+                "Added scheduled task: cache_warming "
+                "(will run every hour)"
             )
             
             # 启动调度器

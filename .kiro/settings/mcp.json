@@ -20,7 +20,7 @@
       "args": [
         "mcp-server-fetch"
       ],
-      "disabled": false,
+      "disabled": true,
       "autoApprove": [
         "fetch"
       ],

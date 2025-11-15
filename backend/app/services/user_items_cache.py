@@ -6,7 +6,7 @@ import json
 from typing import Optional, Dict, Any, List, Tuple
 from datetime import timedelta
 
-from app.core.cache import AsyncCacheManager, CacheKeyGenerator
+from app.core.cache import AsyncMultiLevelCacheManager, CacheKeyGenerator
 from app.core.logging import logger
 
 
@@ -16,12 +16,14 @@ class UserItemsCacheService:
     # 缓存键前缀
     CACHE_PREFIX = "user_items"
     
-    # 缓存过期时间：直到用户登出（设置较长时间，在登出时手动删除）
-    # 设置为 24 小时，但在用户操作时会手动清除
-    CACHE_EXPIRE = timedelta(hours=24)
+    # 缓存过期时间
+    # L1: 5 分钟（内存缓存，快速访问）
+    # L2: 30 分钟（Redis 缓存，持久化）
+    L1_TTL = 300
+    L2_TTL = 1800
     
     def __init__(self):
-        self.cache = AsyncCacheManager()
+        self.cache = AsyncMultiLevelCacheManager()
     
     def _get_cache_key(self, user_id: int, filters: Optional[Dict[str, Any]] = None) -> str:
         """
@@ -61,7 +63,7 @@ class UserItemsCacheService:
         filters: Optional[Dict[str, Any]] = None
     ) -> Optional[Tuple[List[Dict[str, Any]], int]]:
         """
-        从缓存获取用户记录列表
+        从多级缓存获取用户记录列表
         
         Args:
             user_id: 用户ID
@@ -75,10 +77,10 @@ class UserItemsCacheService:
             cached_data = await self.cache.get(cache_key)
             
             if cached_data:
-                logger.debug(f"Cache hit for user {user_id} items with filters {filters}")
+                logger.debug(f"Multi-level cache hit for user {user_id} items")
                 return cached_data.get("items"), cached_data.get("total")
             
-            logger.debug(f"Cache miss for user {user_id} items with filters {filters}")
+            logger.debug(f"Multi-level cache miss for user {user_id} items")
             return None
             
         except Exception as e:
@@ -93,7 +95,7 @@ class UserItemsCacheService:
         filters: Optional[Dict[str, Any]] = None
     ):
         """
-        缓存用户记录列表
+        缓存用户记录列表到多级缓存
         
         Args:
             user_id: 用户ID
@@ -111,17 +113,18 @@ class UserItemsCacheService:
             await self.cache.set(
                 cache_key,
                 cache_data,
-                expire=int(self.CACHE_EXPIRE.total_seconds())
+                l1_ttl=self.L1_TTL,
+                l2_ttl=self.L2_TTL
             )
             
-            logger.debug(f"Cached {len(items)} items for user {user_id} with filters {filters}")
+            logger.debug(f"Cached {len(items)} items to multi-level cache for user {user_id}")
             
         except Exception as e:
             logger.error(f"Error caching items for user {user_id}: {e}")
     
     async def clear_user_cache(self, user_id: int):
         """
-        清除用户的所有记录缓存
+        清除用户的所有记录缓存（L1 + L2）
         
         Args:
             user_id: 用户ID
@@ -130,7 +133,7 @@ class UserItemsCacheService:
             pattern = self._get_user_cache_pattern(user_id)
             deleted_count = await self.cache.delete_pattern(pattern)
             
-            logger.info(f"Cleared {deleted_count} cache entries for user {user_id}")
+            logger.info(f"Cleared {deleted_count} multi-level cache entries for user {user_id}")
             
         except Exception as e:
             logger.error(f"Error clearing cache for user {user_id}: {e}")

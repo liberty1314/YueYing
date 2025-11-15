@@ -1,0 +1,92 @@
+====================================
+阅影·log 环境变量配置说明
+====================================
+
+📁 配置文件位置
+--------------
+Docker 环境（推荐）：
+  ✅ 只需配置：.env
+
+本地开发环境：
+  ✅ 后端配置：backend/.env
+  ✅ 前端配置：frontend/.env.local
+
+🚀 快速开始
+-----------
+1. 初始化项目
+   make init
+
+2. 编辑配置文件
+   vim .env
+
+3. 启动服务
+   make up
+
+4. 初始化数据库
+   make migrate
+
+🔑 必需配置项
+-------------
+以下配置项必须填写：
+
+1. 应用密钥（生成方法见下方）
+   - SECRET_KEY
+   - JWT_SECRET_KEY
+   - NEXTAUTH_SECRET
+
+2. 数据库密码
+   - POSTGRES_PASSWORD
+   - REDIS_PASSWORD
+   - MINIO_ROOT_PASSWORD
+
+🔐 生成安全密钥
+--------------
+使用以下命令生成随机密钥：
+
+  python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+或使用 OpenSSL：
+
+  openssl rand -base64 32
+
+🌟 可选配置项
+-------------
+以下配置项是可选的，但填写后可以启用更多功能：
+
+1. 第三方 API（探索功能）
+   - TMDB_API_KEY
+   - GOOGLE_BOOKS_API_KEY
+   - BANGUMI_API_KEY
+
+2. LLM API（AI 功能）
+   - SILICONFLOW_API_KEY（推荐）
+   - DEEPSEEK_API_KEY
+   - OPENAI_API_KEY
+   - ANTHROPIC_API_KEY
+
+📚 详细文档
+-----------
+完整的配置说明请查看：
+  docs/环境变量配置说明.md
+
+❓ 常见问题
+-----------
+Q: 为什么有多个 .env 文件？
+A: Docker 环境只需要根目录的 .env，其他文件用于本地开发。
+
+Q: 不填写第三方 API Keys 会怎样？
+A: 不影响核心功能，但无法使用探索和 AI 功能。
+
+Q: 如何查看服务状态？
+A: 运行 make ps 或 make logs
+
+🔒 安全提示
+-----------
+1. 永远不要将 .env 文件提交到 Git
+2. 定期更换密钥和密码
+3. 使用强密码（至少 16 位）
+4. 妥善保管备份文件
+
+====================================
+最后更新：2025-11-15
+====================================

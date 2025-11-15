@@ -11,7 +11,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.cache import async_cached
+from app.core.cache import async_multi_level_cached
 from app.utils.cache_keys import TMDB_MOVIE_DETAIL_TTL, TMDB_SEARCH_TTL
 
 
@@ -119,7 +119,7 @@ class TMDBClient:
 
     # ==================== 电影相关 API ====================
 
-    @async_cached(prefix="tmdb:search:movie", expire=TMDB_SEARCH_TTL)
+    @async_multi_level_cached(prefix="tmdb:search:movie", l1_ttl=300, l2_ttl=3600)
     async def search_movies(
         self,
         query: str,
@@ -150,7 +150,7 @@ class TMDBClient:
         logger.info(f"Searching movies: query='{query}', page={page}, year={year}")
         return await self._request("GET", "/search/movie", params=params)
 
-    @async_cached(prefix="tmdb:movie", expire=TMDB_MOVIE_DETAIL_TTL)
+    @async_multi_level_cached(prefix="tmdb:movie", l1_ttl=300, l2_ttl=86400)
     async def get_movie_details(
         self,
         movie_id: int,
@@ -281,7 +281,7 @@ class TMDBClient:
 
     # ==================== 剧集相关 API ====================
 
-    @async_cached(prefix="tmdb:search:tv", expire=TMDB_SEARCH_TTL)
+    @async_multi_level_cached(prefix="tmdb:search:tv", l1_ttl=300, l2_ttl=3600)
     async def search_tv_shows(
         self,
         query: str,
@@ -312,7 +312,7 @@ class TMDBClient:
         logger.info(f"Searching TV shows: query='{query}', page={page}")
         return await self._request("GET", "/search/tv", params=params)
 
-    @async_cached(prefix="tmdb:tv", expire=TMDB_MOVIE_DETAIL_TTL)
+    @async_multi_level_cached(prefix="tmdb:tv", l1_ttl=300, l2_ttl=86400)
     async def get_tv_details(
         self,
         tv_id: int,
@@ -436,7 +436,7 @@ class TMDBClient:
 
     # ==================== 趋势相关 API ====================
 
-    @async_cached(prefix="tmdb:trending", expire=3600)  # 缓存1小时
+    @async_multi_level_cached(prefix="tmdb:trending", l1_ttl=300, l2_ttl=3600)
     async def get_trending(
         self,
         media_type: str = "all",  # all, movie, tv, person

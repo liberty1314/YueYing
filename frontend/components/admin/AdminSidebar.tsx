@@ -13,6 +13,7 @@ import {
   Brain,
   Key,
   FileText,
+  Layers,
 } from "lucide-react";
 
 const menuItems = [
@@ -40,6 +41,11 @@ const menuItems = [
     title: "API 密钥",
     href: "/admin/api-keys",
     icon: Key,
+  },
+  {
+    title: "缓存管理",
+    href: "/admin/cache",
+    icon: Layers,
   },
   {
     title: "系统日志",

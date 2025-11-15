@@ -11,7 +11,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.cache import async_cached
+from app.core.cache import async_multi_level_cached
 from app.utils.cache_keys import GOOGLE_BOOKS_SEARCH_TTL, GOOGLE_BOOKS_DETAIL_TTL
 
 
@@ -109,7 +109,7 @@ class GoogleBooksClient:
 
     # ==================== 书籍搜索 ====================
 
-    @async_cached(prefix="google_books:search", expire=GOOGLE_BOOKS_SEARCH_TTL)
+    @async_multi_level_cached(prefix="google_books:search", l1_ttl=300, l2_ttl=3600)
     async def search_books(
         self,
         query: str,
@@ -155,7 +155,7 @@ class GoogleBooksClient:
         )
         return await self._request("GET", "/volumes", params=params)
 
-    @async_cached(prefix="google_books:volume", expire=GOOGLE_BOOKS_DETAIL_TTL)
+    @async_multi_level_cached(prefix="google_books:volume", l1_ttl=300, l2_ttl=86400)
     async def get_volume_details(self, volume_id: str) -> Dict[str, Any]:
         """
         获取书籍详情

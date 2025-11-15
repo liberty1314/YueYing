@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any, List
 from loguru import logger
 
 from app.core.config import settings
-from app.core.cache import async_cached
+from app.core.cache import async_multi_level_cached
 from app.utils.cache_keys import (
     BANGUMI_SEARCH_TTL,
     BANGUMI_SUBJECT_DETAIL_TTL,
@@ -109,7 +109,7 @@ class BangumiClient:
 
     # ==================== 搜索功能 ====================
 
-    @async_cached(prefix="bangumi:search", expire=BANGUMI_SEARCH_TTL)
+    @async_multi_level_cached(prefix="bangumi:search", l1_ttl=300, l2_ttl=3600)
     async def search_subjects(
         self,
         keyword: str,
@@ -154,7 +154,7 @@ class BangumiClient:
 
     # ==================== 条目详情 ====================
 
-    @async_cached(prefix="bangumi:subject", expire=BANGUMI_SUBJECT_DETAIL_TTL)
+    @async_multi_level_cached(prefix="bangumi:subject", l1_ttl=300, l2_ttl=86400)
     async def get_subject_details(
         self, subject_id: int, response_group: str = "large"
     ) -> Dict[str, Any]:
@@ -188,7 +188,7 @@ class BangumiClient:
 
     # ==================== 章节/剧集信息 ====================
 
-    @async_cached(prefix="bangumi:episodes", expire=BANGUMI_SUBJECT_DETAIL_TTL)
+    @async_multi_level_cached(prefix="bangumi:episodes", l1_ttl=300, l2_ttl=86400)
     async def get_subject_episodes(
         self, subject_id: int, type: int = 0, offset: int = 0, limit: int = 100
     ) -> Dict[str, Any]:
@@ -230,7 +230,7 @@ class BangumiClient:
 
     # ==================== 角色信息 ====================
 
-    @async_cached(prefix="bangumi:characters", expire=BANGUMI_SUBJECT_DETAIL_TTL)
+    @async_multi_level_cached(prefix="bangumi:characters", l1_ttl=300, l2_ttl=86400)
     async def get_subject_characters(self, subject_id: int) -> List[Dict[str, Any]]:
         """
         获取条目的角色列表
@@ -259,7 +259,7 @@ class BangumiClient:
 
     # ==================== 人物信息 ====================
 
-    @async_cached(prefix="bangumi:persons", expire=BANGUMI_SUBJECT_DETAIL_TTL)
+    @async_multi_level_cached(prefix="bangumi:persons", l1_ttl=300, l2_ttl=86400)
     async def get_subject_persons(self, subject_id: int) -> List[Dict[str, Any]]:
         """
         获取条目的制作人员列表
@@ -288,7 +288,7 @@ class BangumiClient:
 
     # ==================== 每日放送 ====================
 
-    @async_cached(prefix="bangumi:calendar", expire=BANGUMI_CALENDAR_TTL)
+    @async_multi_level_cached(prefix="bangumi:calendar", l1_ttl=300, l2_ttl=3600)
     async def get_calendar(self) -> List[Dict[str, Any]]:
         """
         获取每日放送（当前一周的放送时间表）

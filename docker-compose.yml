@@ -29,11 +29,15 @@ services:
     image: redis:7-alpine
     container_name: yueying-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-yueying_redis_password}
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --requirepass ${REDIS_PASSWORD:-yueying}
+      --maxmemory ${REDIS_MAX_MEMORY:-512mb}
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     networks:
       - yueying-network
     healthcheck:
@@ -76,7 +80,7 @@ services:
       # 数据库配置
       DATABASE_URL: postgresql://${POSTGRES_USER:-yueying}:${POSTGRES_PASSWORD:-yueying_dev_password}@postgres:5432/${POSTGRES_DB:-yueying}
       # Redis配置
-      REDIS_URL: redis://:${REDIS_PASSWORD:-yueying_redis_password}@redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD:-yueying}@redis:6379/0
       # MinIO配置
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
