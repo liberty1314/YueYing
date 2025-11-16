@@ -3,12 +3,15 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ApiKeyCard } from "@/components/admin/ApiKeyCard";
+import { ApiKeyTableView } from "@/components/admin/ApiKeyTableView";
 import { Loading } from "@/components/ui/loading";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Key, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Key, AlertCircle, LayoutGrid, List } from "lucide-react";
 import { apiKeyApi } from "@/lib/api-key-api";
 import { useToast } from "@/hooks/use-toast";
 import type { ApiKeyConfig, ServiceInfo } from "@/types/api-key";
+import { cn } from "@/lib/utils";
 
 // 服务信息配置
 const SERVICE_INFO: Record<string, ServiceInfo> = {
@@ -42,6 +45,21 @@ export default function ApiKeysPage() {
   const { toast } = useToast();
   const [configs, setConfigs] = useState<ApiKeyConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<"card" | "list">("list");
+
+  // 从 localStorage 加载视图偏好
+  useEffect(() => {
+    const savedViewMode = localStorage.getItem("apiKeyViewMode");
+    if (savedViewMode === "card" || savedViewMode === "list") {
+      setViewMode(savedViewMode);
+    }
+  }, []);
+
+  // 保存视图偏好到 localStorage
+  const handleViewModeChange = (mode: "card" | "list") => {
+    setViewMode(mode);
+    localStorage.setItem("apiKeyViewMode", mode);
+  };
 
   // 加载配置
   const loadConfigs = async () => {
@@ -68,10 +86,40 @@ export default function ApiKeysPage() {
   return (
     <div className="space-y-6">
       {/* 页面头部 */}
-      <PageHeader
-        title="API 密钥管理"
-        description="管理第三方 API 密钥配置"
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader
+          title="API 密钥管理"
+          description="管理第三方 API 密钥配置"
+        />
+
+        {/* 视图切换按钮 */}
+        <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => handleViewModeChange("list")}
+            className={cn(
+              "gap-2",
+              viewMode === "list" && "shadow-sm"
+            )}
+          >
+            <List className="h-4 w-4" />
+            <span className="hidden sm:inline"></span>
+          </Button>
+          <Button
+            variant={viewMode === "card" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => handleViewModeChange("card")}
+            className={cn(
+              "gap-2",
+              viewMode === "card" && "shadow-sm"
+            )}
+          >
+            <LayoutGrid className="h-4 w-4" />
+            <span className="hidden sm:inline"></span>
+          </Button>
+        </div>
+      </div>
 
       {/* 说明信息 */}
       <Alert>
@@ -83,7 +131,7 @@ export default function ApiKeysPage() {
         </AlertDescription>
       </Alert>
 
-      {/* 配置卡片 */}
+      {/* 配置展示 */}
       {isLoading ? (
         <Loading />
       ) : configs.length === 0 ? (
@@ -94,6 +142,12 @@ export default function ApiKeysPage() {
             无法加载 API 密钥配置，请检查后端服务是否正常运行。
           </AlertDescription>
         </Alert>
+      ) : viewMode === "list" ? (
+        <ApiKeyTableView
+          configs={configs}
+          serviceInfoMap={SERVICE_INFO}
+          onUpdate={loadConfigs}
+        />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {configs.map((config) => {

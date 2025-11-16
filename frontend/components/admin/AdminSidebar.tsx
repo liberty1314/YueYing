@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -71,13 +71,31 @@ const menuItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // 处理导航点击，确保在当前标签页内跳转
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // 检查是否按住了修饰键（Ctrl/Cmd/Shift），如果是则允许默认行为
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+      return;
+    }
+
+    // 阻止默认行为，使用 router.push 进行导航
+    e.preventDefault();
+    router.push(href);
+  };
 
   return (
     <aside className="w-64 border-r bg-card fixed top-16 left-0 h-[calc(100vh-4rem)] z-40">
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-14 items-center border-b px-6">
-          <Link href="/admin" prefetch={true} className="flex items-center gap-2 font-semibold">
+          <Link
+            href="/admin"
+            prefetch={true}
+            onClick={(e) => handleNavClick(e, "/admin")}
+            className="flex items-center gap-2 font-semibold"
+          >
             <Bot className="h-6 w-6" />
             <span>阅影·log 管理</span>
           </Link>
@@ -94,6 +112,7 @@ export function AdminSidebar() {
                 key={item.href}
                 href={item.href}
                 prefetch={true}
+                onClick={(e) => handleNavClick(e, item.href)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
@@ -113,6 +132,7 @@ export function AdminSidebar() {
           <Link
             href="/"
             prefetch={true}
+            onClick={(e) => handleNavClick(e, "/")}
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             返回首页

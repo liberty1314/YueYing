@@ -11,10 +11,10 @@ from app.models.base import BaseModel
 class LLMProvider(str, enum.Enum):
     """LLM 提供商枚举"""
 
-    SILICONFLOW = "siliconflow"
-    DEEPSEEK = "deepseek"
-    OPENAI = "openai"
-    CLAUDE = "claude"
+    siliconflow = "siliconflow"
+    deepseek = "deepseek"
+    openai = "openai"
+    claude = "claude"
 
 
 class LLMConfig(BaseModel):
@@ -28,7 +28,7 @@ class LLMConfig(BaseModel):
     provider = Column(
         Enum(LLMProvider),
         nullable=False,
-        default=LLMProvider.SILICONFLOW,
+        default=LLMProvider.siliconflow,
         comment="LLM 提供商"
     )
     

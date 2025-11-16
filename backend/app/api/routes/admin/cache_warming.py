@@ -3,7 +3,7 @@
 
 提供缓存预热的触发、状态查询和历史记录接口
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from pydantic import BaseModel, Field
 
@@ -23,10 +23,10 @@ router = APIRouter()
 class WarmingStatusResponse(BaseModel):
     """预热状态响应"""
     is_running: bool
-    last_run: str | None = None
-    last_duration_seconds: float | None = None
-    last_status: str | None = None
-    items_warmed: int | None = None
+    last_run: Optional[str] = None
+    last_duration_seconds: Optional[float] = None
+    last_status: Optional[str] = None
+    items_warmed: Optional[int] = None
 
 
 class WarmingHistoryItem(BaseModel):
@@ -58,7 +58,7 @@ class WarmingStrategiesResponse(BaseModel):
 class WarmingTriggerResponse(BaseModel):
     """预热触发响应"""
     message: str
-    task_id: str | None = None
+    task_id: Optional[str] = None
 
 
 # ====================================
@@ -68,7 +68,7 @@ class WarmingTriggerResponse(BaseModel):
 @router.post("/warm", response_model=WarmingTriggerResponse)
 async def trigger_warming(
     background_tasks: BackgroundTasks,
-    batch_size: int | None = Query(None, ge=10, le=1000, description="批次大小"),
+    batch_size: Optional[int] = Query(None, ge=10, le=1000, description="批次大小"),
     current_user: User = Depends(get_current_admin)
 ):
     """

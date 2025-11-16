@@ -28,7 +28,7 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
 
     // 生成周矩阵
     const weeks: Array<Array<{ date: string; count: number }>> = [];
-    let currentDate = new Date(firstDayOfWeek);
+    const currentDate = new Date(firstDayOfWeek);
     let currentWeek: Array<{ date: string; count: number }> = [];
 
     while (currentDate <= endDate) {

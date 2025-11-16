@@ -32,6 +32,9 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.middleware.logging_middleware import LoggingMiddleware
 from app.middleware.http_cache_middleware import HTTPCacheMiddleware
+from app.middleware.api_docs_auth import APIDocsAuthMiddleware
+from app.middleware.rate_limit import limiter, rate_limit_handler
+from slowapi.errors import RateLimitExceeded
 from app.api.routes import auth
 
 # 设置日志
@@ -42,11 +45,15 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description="AI驱动的个人娱乐记录平台",
     version="0.1.0",
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None,
-    openapi_url="/openapi.json" if settings.DEBUG else None,
+    docs_url="/docs" if settings.ENABLE_API_DOCS else None,
+    redoc_url="/redoc" if settings.ENABLE_API_DOCS else None,
+    openapi_url="/openapi.json" if settings.ENABLE_API_DOCS else None,
     default_response_class=ORJSONResponse,  # 使用高性能JSON响应
 )
+
+# 注册速率限制器
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
 # CORS 中间件
 app.add_middleware(
@@ -56,6 +63,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API 文档认证中间件（如果配置了认证信息）
+if settings.API_DOCS_USERNAME and settings.API_DOCS_PASSWORD:
+    app.add_middleware(APIDocsAuthMiddleware)
+    logger.info("✓ API 文档认证已启用")
 
 # 日志中间件（记录所有请求/响应）
 app.add_middleware(LoggingMiddleware)
@@ -200,6 +212,15 @@ async def root():
 async def startup_event():
     """应用启动时执行"""
     logger.info(f"🚀 {settings.PROJECT_NAME} 正在启动...")
+    
+    # 验证环境变量
+    try:
+        from app.core.config import validate_required_settings
+        validate_required_settings()
+    except ValueError as e:
+        logger.error(f"环境变量验证失败: {e}")
+        raise
+    
     logger.info(f"📝 环境: {settings.APP_ENV}")
     logger.info(f"🔍 调试模式: {settings.DEBUG}")
     if settings.DEBUG:

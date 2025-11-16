@@ -1,0 +1,36 @@
+[flake8]
+# 最大行长度
+max-line-length = 100
+
+# 忽略的错误代码
+ignore = 
+    # E203: whitespace before ':'（与 black 冲突）
+    E203,
+    # W503: line break before binary operator（与 black 冲突）
+    W503,
+    # E501: line too long（由 black 处理）
+    E501,
+    # F401: module imported but unused（某些 __init__.py 需要）
+    # F403: 'from module import *' used（某些 __init__.py 需要）
+
+# 排除的目录
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .eggs,
+    *.egg,
+    build,
+    dist,
+    alembic/versions,
+    data,
+    logs
+
+# 每个文件的最大复杂度
+max-complexity = 10
+
+# 导入顺序检查
+import-order-style = google
+application-import-names = app

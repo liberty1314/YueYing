@@ -50,14 +50,14 @@ FROM node:20-alpine AS builder
 # 设置工作目录
 WORKDIR /app
 
+# 安装 pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # 复制依赖
 COPY --from=deps /app/node_modules ./node_modules
 
 # 复制应用代码
 COPY . .
-
-# 安装 pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # 设置环境变量（构建时）
 ENV NEXT_TELEMETRY_DISABLED=1 \
@@ -77,16 +77,17 @@ WORKDIR /app
 # 设置环境变量
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
 
 # 创建非root用户
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# 复制public文件夹
-COPY --from=builder /app/public ./public
+# 复制public文件夹（如果存在）
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# 复制构建输出
+# 复制构建输出（standalone 模式）
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 

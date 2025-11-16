@@ -2,6 +2,7 @@
 用户设置 Pydantic Schemas
 """
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -17,7 +18,7 @@ class UserSettingsCreate(UserSettingsBase):
 
 class UserSettingsUpdate(BaseModel):
     """更新用户设置"""
-    auto_generate_tags: bool | None = Field(None, description="创建记录时自动生成标签")
+    auto_generate_tags: Optional[bool] = Field(None, description="创建记录时自动生成标签")
 
 
 class UserSettingsResponse(UserSettingsBase):

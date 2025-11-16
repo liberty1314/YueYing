@@ -152,6 +152,13 @@ class Settings(BaseSettings):
     # ====================================
     LOG_LEVEL: str = Field(default="INFO", alias="LOG_LEVEL")
     LOG_FORMAT: str = Field(default="json", alias="LOG_FORMAT")
+    
+    # ====================================
+    # API 文档配置
+    # ====================================
+    ENABLE_API_DOCS: bool = Field(default=True, alias="ENABLE_API_DOCS")
+    API_DOCS_USERNAME: Optional[str] = Field(default=None, alias="API_DOCS_USERNAME")
+    API_DOCS_PASSWORD: Optional[str] = Field(default=None, alias="API_DOCS_PASSWORD")
 
     # ====================================
     # 速率限制配置
@@ -198,5 +205,71 @@ class Settings(BaseSettings):
 
 # 创建全局配置实例
 settings = Settings()
+
+
+def validate_required_settings() -> None:
+    """
+    验证所有必需的环境变量是否已设置
+    
+    在应用启动时调用此函数，确保关键配置已正确设置
+    
+    Raises:
+        ValueError: 如果缺少必需的环境变量
+    """
+    from loguru import logger
+    
+    missing_vars = []
+    warnings = []
+    
+    # 检查必需的配置
+    required_checks = [
+        ("DATABASE_URL", settings.DATABASE_URL, "数据库连接字符串"),
+        ("REDIS_URL", settings.REDIS_URL, "Redis 连接字符串"),
+        ("SECRET_KEY", settings.SECRET_KEY, "应用密钥"),
+        ("JWT_SECRET_KEY", settings.JWT_SECRET_KEY, "JWT 密钥"),
+        ("MINIO_ENDPOINT", settings.MINIO_ENDPOINT, "MinIO 端点"),
+        ("MINIO_ACCESS_KEY", settings.MINIO_ACCESS_KEY, "MinIO 访问密钥"),
+        ("MINIO_SECRET_KEY", settings.MINIO_SECRET_KEY, "MinIO 密钥"),
+    ]
+    
+    for var_name, var_value, description in required_checks:
+        if not var_value:
+            missing_vars.append(f"{var_name} ({description})")
+    
+    # 检查可选但推荐的配置
+    optional_checks = [
+        ("TMDB_API_KEY", settings.TMDB_API_KEY, "TMDB API 密钥（用于电影/剧集数据）"),
+        ("GOOGLE_BOOKS_API_KEY", settings.GOOGLE_BOOKS_API_KEY, "Google Books API 密钥（用于图书数据）"),
+        ("BANGUMI_API_KEY", settings.BANGUMI_API_KEY, "Bangumi API 密钥（用于动漫/游戏数据）"),
+        ("SILICONFLOW_API_KEY", settings.SILICONFLOW_API_KEY, "SiliconFlow API 密钥（用于 AI 功能）"),
+    ]
+    
+    for var_name, var_value, description in optional_checks:
+        if not var_value:
+            warnings.append(f"{var_name} ({description})")
+    
+    # 如果有缺失的必需变量，抛出异常
+    if missing_vars:
+        error_msg = "缺少必需的环境变量:\n" + "\n".join(f"  - {var}" for var in missing_vars)
+        error_msg += "\n\n请在 .env 文件中设置这些变量，参考 .env.example 文件"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+    
+    # 记录警告信息
+    if warnings:
+        logger.warning("以下可选环境变量未设置，某些功能可能不可用:")
+        for warning in warnings:
+            logger.warning(f"  - {warning}")
+    
+    # 验证通过
+    logger.info("✓ 所有必需的环境变量验证通过")
+    
+    # 记录当前配置摘要
+    logger.info(f"应用环境: {settings.APP_ENV}")
+    logger.info(f"调试模式: {settings.DEBUG}")
+    logger.info(f"日志级别: {settings.LOG_LEVEL}")
+    logger.info(f"CORS 来源: {settings.CORS_ORIGINS}")
+    logger.info(f"默认 LLM 提供商: {settings.DEFAULT_LLM_PROVIDER}")
+    logger.info(f"默认 LLM 模型: {settings.DEFAULT_LLM_MODEL}")
 
 

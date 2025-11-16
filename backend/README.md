@@ -55,7 +55,59 @@ docker-compose up backend
 
 API 将在 http://localhost:8000 启动。
 
-### 数据库迁移
+### 数据库初始化与迁移
+
+#### 初始化数据库
+
+```bash
+# 方式 1: 使用初始化脚本（推荐，首次部署）
+python scripts/init_db.py
+
+# 方式 2: 使用 Alembic 迁移
+alembic upgrade head
+```
+
+**`init_db.py` 脚本功能**：
+- 直接从 SQLAlchemy 模型创建所有表
+- 自动测试数据库连接
+- 显示创建的表列表
+- 适合首次部署或快速初始化
+
+#### 加载种子数据
+
+```bash
+# 创建管理员用户和初始化系统设置
+python scripts/seed_data.py
+
+# 或使用 Docker
+docker-compose exec backend python scripts/seed_data.py
+
+# 或使用 Makefile
+make seed
+```
+
+**`seed_data.py` 脚本功能**：
+- 创建管理员用户（如果不存在）
+  - 用户名、密码、邮箱从环境变量读取
+  - 默认值：`admin` / `admin123` / `admin@example.com`
+- 初始化系统设置
+  - 探索功能开关（`DEFAULT_ENABLE_EXPLORE`）
+  - 用户 AI 标签设置权限（`DEFAULT_ALLOW_USER_AI_TAG_SETTINGS`）
+- 创建 API 密钥配置模板
+  - TMDB、Google Books、Bangumi
+  - 初始状态为未测试，需要在管理后台填写密钥
+
+**环境变量配置**：
+```bash
+# .env 文件
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+ADMIN_EMAIL=admin@example.com
+DEFAULT_ENABLE_EXPLORE=false
+DEFAULT_ALLOW_USER_AI_TAG_SETTINGS=true
+```
+
+#### Alembic 迁移管理
 
 ```bash
 # 初始化 Alembic（仅首次）
@@ -193,6 +245,37 @@ backend/
 
 ## Docker 部署
 
+### 使用 Makefile（推荐）
+
+项目根目录提供了便捷的 Makefile 命令：
+
+```bash
+# 验证项目配置
+make validate
+
+# 完整部署（构建 -> 启动 -> 迁移 -> 种子数据）
+make deploy
+
+# 快速启动（已初始化项目）
+make quick-start
+
+# 重新构建后端镜像
+make build-backend
+
+# 完全重启（清理缓存 + 重新构建）
+make full-restart
+
+# 查看后端日志
+make logs-backend
+
+# 进入后端容器
+make shell-backend
+```
+
+📖 **详细命令说明**：[Makefile 使用指南](../docs/Makefile使用指南.md)
+
+### 手动 Docker 操作
+
 ```bash
 # 构建镜像
 docker build -t yueying-backend .
@@ -219,6 +302,37 @@ docker-compose up backend
 
 - **L1 缓存（内存 LRU）**: 进程内高速缓存，访问延迟 < 1ms
 - **L2 缓存（Redis）**: 分布式缓存，支持多实例共享
+
+### 缓存模块架构
+
+缓存模块已完成模块化重构（2025-11-15），从单一的 1385 行文件拆分为多个职责明确的模块：
+
+```
+backend/app/core/cache/
+├── __init__.py              # 统一导出接口
+├── key_generator.py         # 缓存键生成器
+├── manager.py               # 缓存管理器（同步/异步）
+├── decorators.py            # 缓存装饰器
+└── multi_level.py           # 多级缓存管理器
+```
+
+**使用示例：**
+
+```python
+from app.core.cache import cached, multi_level_cached
+
+# 简单缓存
+@cached(prefix="user", expire=3600)
+def get_user(user_id: int):
+    return fetch_user_from_db(user_id)
+
+# 多级缓存（热数据）
+@multi_level_cached(prefix="data", l1_ttl=300, l2_ttl=3600)
+def get_hot_data(id: int):
+    return fetch_hot_data(id)
+```
+
+**详细文档：** [缓存模块重构文档](docs/cache-refactoring.md)
 
 ### 缓存管理 API
 
@@ -366,6 +480,13 @@ await task_scheduler.run_job_now("cache_warming")
 
 ### 项目文档
 
+**代码重构**：
+- [UserItemService 重构文档](docs/user-item-service-refactoring.md) - 服务拆分进度和使用指南
+- [User Items 路由重构文档](docs/user-items-route-refactoring.md) - 路由拆分说明
+
+**开发工具**：
+- [工具函数库文档](docs/utils-library.md) - 数据验证、转换和错误处理工具 ⭐
+
 **缓存系统**：
 - [缓存快速参考](docs/CACHE_QUICK_REFERENCE.md) - 常用命令和配置速查 ⭐
 - [缓存优化文档](docs/CACHE_OPTIMIZATION.md) - 双层缓存架构、使用指南和最佳实践
@@ -373,8 +494,21 @@ await task_scheduler.run_job_now("cache_warming")
 - [多级缓存迁移报告](docs/MULTI_LEVEL_CACHE_MIGRATION.md) - 服务迁移详情
 - [缓存迁移总结](docs/CACHE_MIGRATION_SUMMARY.md) - 迁移状态一览
 - [缓存管理 API](docs/CACHE_MANAGEMENT_API.md) - 管理接口文档
-- [缓存失效指南](docs/CACHE_INVALIDATION_GUIDE.md) - 失效策略和最佳实践
 - [Redis 配置文档](docs/REDIS_CONFIGURATION.md) - Redis 配置、监控和故障排查
+
+**缓存失效管理**：系统提供 `CacheInvalidator` 类用于管理缓存失效
+```python
+from app.core.cache.invalidation import cache_invalidator
+
+# 失效单个缓存
+cache_invalidator.invalidate_by_key("user:123:profile")
+
+# 按模式批量失效
+cache_invalidator.invalidate_by_pattern("user:123:*")
+
+# 失效用户所有缓存
+cache_invalidator.invalidate_user_cache(123)
+```
 
 **性能优化**：
 - [数据库优化报告](docs/DATABASE_OPTIMIZATION_REPORT.md) - 数据库性能优化记录

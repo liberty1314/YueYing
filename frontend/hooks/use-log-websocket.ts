@@ -18,7 +18,7 @@ function getWebSocketBaseUrl(): string {
 
   // 根据当前环境自动确定
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8000';
 
   // 从 API URL 中提取 host 和 port（移除 protocol 和 path）
   const urlParts = apiUrl.replace(/^https?:\/\//, '').split('/');
@@ -31,12 +31,12 @@ export function useLogWebSocket(enabled: boolean = false) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [error, setError] = useState<string | null>(null);
-  
+
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
-  
+
   const { token } = useAuthStore();
 
   // 清理函数
@@ -111,7 +111,7 @@ export function useLogWebSocket(enabled: boolean = false) {
           reconnectAttempts.current += 1;
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
           console.log(`Will reconnect in ${delay}ms (attempt ${reconnectAttempts.current})`);
-          
+
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, delay);

@@ -25,11 +25,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base as development
 
 # 复制依赖文件
-COPY requirements.txt ./
+COPY requirements.txt requirements-dev.txt ./
 
-# 安装Python依赖
+# 安装Python依赖（包括开发依赖）
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
 
 # 复制应用代码
 COPY . .
@@ -57,8 +57,9 @@ FROM base as builder
 # 复制依赖文件
 COPY requirements.txt ./
 
-# 安装生产依赖
-RUN pip install --upgrade pip && \
+# 安装生产依赖（使用缓存挂载优化）
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
     pip install --user --no-warn-script-location -r requirements.txt
 
 # ====================================
@@ -72,24 +73,30 @@ WORKDIR /app
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PATH=/root/.local/bin:$PATH
+    PATH=/home/appuser/.local/bin:$PATH \
+    PYTHONPATH=/app
 
-# 安装运行时依赖
+# 创建非root用户（先创建，以便后续使用正确的权限）
+RUN useradd -m -u 1000 appuser
+
+# 安装运行时依赖（最小化安装）
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# 从builder阶段复制Python包
-COPY --from=builder /root/.local /root/.local
+# 从builder阶段复制Python包（使用正确的用户路径）
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 
 # 复制应用代码
-COPY . .
+COPY --chown=appuser:appuser . .
 
-# 创建非root用户
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
+# 创建必要的目录
+RUN mkdir -p /app/data/chromadb /app/logs && \
+    chown -R appuser:appuser /app/data /app/logs
 
+# 切换到非root用户
 USER appuser
 
 # 暴露端口
@@ -99,6 +106,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# 生产环境启动命令
+# 生产环境启动命令（使用多进程）
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 

@@ -34,20 +34,22 @@ async def get_llm_config(
 ):
     """获取 LLM 配置"""
     try:
-        # 获取解密后的配置（统一加载逻辑）
-        config_dict = LLMConfigService.get_config(db)
-        if not config_dict:
+        # 获取数据库对象
+        db_config = LLMConfigService.get_config_from_db(db)
+        
+        # 如果数据库中没有配置，返回 404
+        if not db_config:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="LLM 配置不存在",
             )
 
-        # 获取数据库对象（用于 id、created_at、updated_at）
-        db_config = LLMConfigService.get_config_from_db(db)
+        # 获取解密后的配置
+        config_dict = LLMConfigService.get_config(db)
         
         # 合并数据：使用解密后的配置 + 数据库的元数据
         response_dict = {
-            "id": db_config.id if db_config else 0,
+            "id": db_config.id,
             "provider": config_dict.get("provider"),
             "api_key": config_dict.get("api_key"),  # 已解密的明文密钥
             "base_url": config_dict.get("base_url"),
@@ -58,8 +60,8 @@ async def get_llm_config(
             "enabled": config_dict.get("enabled"),
             "auto_tag_enabled": config_dict.get("auto_tag_enabled"),
             "description": config_dict.get("description"),
-            "created_at": db_config.created_at.isoformat() if db_config else None,
-            "updated_at": db_config.updated_at.isoformat() if db_config else None,
+            "created_at": db_config.created_at.isoformat(),
+            "updated_at": db_config.updated_at.isoformat(),
         }
 
         return LLMConfigResponse(**response_dict)

@@ -54,10 +54,10 @@ class ModelListResponse(BaseModel):
 
 class LLMProvider(str, enum.Enum):
     """LLM 提供商"""
-    SILICONFLOW = "siliconflow"
-    DEEPSEEK = "deepseek"
-    OPENAI = "openai"
-    CLAUDE = "claude"
+    siliconflow = "siliconflow"
+    deepseek = "deepseek"
+    openai = "openai"
+    claude = "claude"
 
 
 class LLMConfigBase(BaseModel):

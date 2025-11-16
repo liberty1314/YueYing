@@ -3,7 +3,7 @@
 
 处理用户注册、登录、Token 刷新等
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from loguru import logger
 from datetime import datetime
@@ -21,6 +21,7 @@ from app.services.auth import auth_service
 from app.services.user_items_cache import user_items_cache_service
 from app.api.dependencies.auth import get_current_active_user
 from app.models.user import User
+from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["认证"])
 
@@ -32,7 +33,9 @@ router = APIRouter(prefix="/auth", tags=["认证"])
     summary="用户注册",
     description="创建新用户账户"
 )
+@limiter.limit("3/minute")
 def register(
+    request: Request,
     user_data: UserRegister,
     db: Session = Depends(get_db),
 ):
@@ -51,7 +54,9 @@ def register(
     summary="用户登录",
     description="验证用户凭据并返回访问令牌和刷新令牌"
 )
+@limiter.limit("5/minute")
 def login(
+    request: Request,
     login_data: UserLogin,
     db: Session = Depends(get_db),
 ):

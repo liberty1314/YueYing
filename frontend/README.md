@@ -98,6 +98,34 @@ cp .env.example .env.local
 
 ## 开发命令
 
+### 使用 Makefile（推荐）
+
+项目根目录提供了便捷的 Makefile 命令：
+
+```bash
+# 快速启动（已初始化项目）
+make quick-start
+
+# 重新构建前端镜像
+make build-frontend
+
+# 完全重启（清理缓存 + 重新构建）
+make full-restart
+
+# 查看前端日志
+make logs-frontend
+
+# 进入前端容器
+make shell-frontend
+
+# 运行前端测试
+make test-frontend
+```
+
+📖 **详细命令说明**：[Makefile 使用指南](../docs/Makefile使用指南.md)
+
+### 本地开发命令
+
 ```bash
 # 安装依赖（推荐使用 pnpm）
 pnpm install

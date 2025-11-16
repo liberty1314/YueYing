@@ -38,6 +38,9 @@
 ### 数据库与缓存
 - **数据库**: PostgreSQL 16
 - **缓存**: Redis 7 (LRU驱逐策略，支持自定义配置)
+  - L1 缓存（内存 LRU）：< 1ms 延迟
+  - L2 缓存（Redis）：< 10ms 延迟
+  - 模块化架构，支持多种缓存策略
 - **对象存储**: MinIO
 
 ### AI能力
@@ -77,6 +80,8 @@ cp .env.example .env
 vim .env
 ```
 
+> **提示**：`make init` 命令会自动启动基础服务（PostgreSQL、Redis、MinIO）并等待数据库就绪（最多等待 60 秒）。
+
 **必需配置：**
 - `SECRET_KEY` - 应用密钥
 - `JWT_SECRET_KEY` - JWT 密钥
@@ -87,20 +92,73 @@ vim .env
 - 第三方 API 密钥（TMDB、Google Books、Bangumi）
 - LLM API 密钥（用于 AI 功能）
 
-📚 **详细配置说明：** [docs/环境变量配置说明.md](docs/环境变量配置说明.md)
+📚 **详细配置说明：** [docs/环境变量配置说明.md](docs/环境变量配置说明.md)  
+📖 **Makefile 使用指南：** [docs/Makefile使用指南.md](docs/Makefile使用指南.md) ⭐ 推荐阅读
 
-### 3️⃣ 启动所有服务
+### 3️⃣ 一键部署（推荐）
 
 ```bash
-# 构建并启动所有容器
+# 完整部署流程：构建 -> 启动 -> 迁移数据库 -> 加载种子数据
+make deploy
+```
+
+这个命令会自动完成所有部署步骤，部署完成后会显示访问地址和管理员账号信息。
+
+### 3️⃣ 手动部署（分步骤）
+
+如果需要更细粒度的控制，可以分步执行：
+
+#### a. 启动所有服务
+
+```bash
+# 使用 Makefile（推荐）
+make up
+
+# 或直接使用 Docker Compose
 docker-compose up -d
 
 # 查看服务状态
+make ps
+# 或
 docker-compose ps
-
-# 查看日志
-docker-compose logs -f
 ```
+
+#### b. 初始化数据库
+
+```bash
+# 方式 1: 使用初始化脚本（推荐，首次部署）
+make init-db
+# 或
+docker-compose exec backend python scripts/init_db.py
+
+# 方式 2: 使用 Alembic 迁移（开发环境）
+make migrate
+# 或
+docker-compose exec backend alembic upgrade head
+```
+
+**说明**：
+- `init_db.py`: 直接从 SQLAlchemy 模型创建所有表，适合首次部署或快速初始化
+- `alembic upgrade head`: 应用数据库迁移，适合开发环境和版本升级
+
+#### c. 加载种子数据（可选）
+
+```bash
+# 创建管理员用户和初始化系统设置
+make seed
+# 或
+docker-compose exec backend python scripts/seed_data.py
+```
+
+**种子数据包括**：
+- 管理员用户（用户名、密码从环境变量读取）
+- 系统设置默认值
+- API 密钥配置模板（TMDB、Google Books、Bangumi）
+
+**默认管理员账户**（可在 `.env` 中配置）：
+- 用户名：`admin`（`ADMIN_USERNAME`）
+- 密码：`admin123`（`ADMIN_PASSWORD`）
+- 邮箱：`admin@example.com`（`ADMIN_EMAIL`）
 
 ### 4️⃣ 访问应用
 
@@ -111,19 +169,6 @@ docker-compose logs -f
 - **API文档**: http://localhost:8000/docs
 - **MinIO控制台**: http://localhost:9001
 - **Nginx代理**: http://localhost
-
-### 5️⃣ 初始化数据库
-
-```bash
-# 进入后端容器
-docker-compose exec backend bash
-
-# 运行数据库迁移
-alembic upgrade head
-
-# （可选）加载种子数据
-python scripts/seed_data.py
-```
 
 ## 📦 Docker服务说明
 
@@ -264,6 +309,69 @@ yueying/
 ```
 
 ## 🔧 常用命令
+
+### 使用 Makefile（推荐）
+
+项目提供了便捷的 Makefile 命令，简化日常操作：
+
+```bash
+# 查看所有可用命令
+make help
+
+# 项目初始化（首次运行）
+make init                    # 创建 .env 文件并启动基础服务
+
+# 服务管理
+make up                      # 启动所有服务
+make down                    # 停止所有服务
+make restart                 # 重启所有服务
+make ps                      # 查看服务状态
+make quick-start             # 快速启动（已初始化项目）
+
+# 日志查看
+make logs                    # 查看所有服务日志
+make logs-all                # 查看所有服务日志（同 logs）
+make logs-backend            # 查看后端日志
+make logs-frontend           # 查看前端日志
+
+# 构建相关
+make build                   # 重新构建所有镜像
+make build-backend           # 重新构建后端镜像
+make build-frontend          # 重新构建前端镜像
+make full-restart            # 完全重启（清理缓存 + 重新构建）
+
+# 数据库操作
+make init-db                 # 初始化数据库（首次部署推荐）
+make migrate                 # 运行数据库迁移
+make migrate-create          # 创建新的迁移
+make seed                    # 加载种子数据
+make backup-db               # 备份数据库
+make restore-db              # 恢复数据库
+
+# 测试
+make test                    # 运行所有测试
+make test-backend            # 运行后端测试
+make test-frontend           # 运行前端测试
+
+# 容器操作
+make shell-backend           # 进入后端容器
+make shell-frontend          # 进入前端容器
+make shell-db                # 进入数据库容器
+
+# 部署相关
+make check-env               # 检查环境变量配置
+make validate                # 验证项目配置（Makefile、docker-compose、Docker 环境）
+make deploy                  # 完整部署（构建 -> 启动 -> 初始化）
+make redeploy                # 重新部署（清理 -> 构建 -> 启动 -> 初始化）
+
+# 清理
+make clean                   # 清理所有容器和数据卷（危险操作！）
+
+# 健康检查
+make health                  # 检查所有服务健康状态
+```
+
+### 直接使用 Docker Compose
 
 ```bash
 # 启动所有服务
