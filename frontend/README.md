@@ -317,6 +317,10 @@ npm i -g vercel
 vercel
 ```
 
+## 项目文档
+
+- [API 集成文档](docs/api-integration.md) - 前端 API 调用、认证和最佳实践 ⭐
+
 ## 相关链接
 
 - [Next.js 文档](https://nextjs.org/docs)

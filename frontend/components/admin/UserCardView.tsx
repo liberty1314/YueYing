@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Pencil, Power, Trash2, Mail, Calendar } from "lucide-react";
-import { format } from "date-fns";
-import { zhCN } from "date-fns/locale";
+import { formatDate } from "@/lib/utils/date-formatters";
 import type { AdminUser } from "@/types/admin";
 
 interface UserCardViewProps {
@@ -26,12 +25,8 @@ export function UserCardView({
   onToggleStatus,
   onDelete,
 }: UserCardViewProps) {
-  const formatDate = (dateStr: string) => {
-    try {
-      return format(new Date(dateStr), "yyyy-MM-dd", { locale: zhCN });
-    } catch {
-      return dateStr;
-    }
+  const formatDateStr = (dateStr: string) => {
+    return formatDate(dateStr, "yyyy-MM-dd") || dateStr;
   };
 
   const getInitials = (user: AdminUser) => {
@@ -50,11 +45,10 @@ export function UserCardView({
       {users.map((user) => (
         <Card
           key={user.id}
-          className={`transition-all cursor-pointer flex flex-col ${
-            isCurrentUser(user.id)
-              ? "shadow-[0_0_20px_rgba(249,115,22,0.4)] ring-2 ring-orange-500/60 bg-orange-50/30 dark:bg-orange-950/20"
-              : "hover:shadow-md"
-          }`}
+          className={`transition-all cursor-pointer flex flex-col ${isCurrentUser(user.id)
+            ? "shadow-[0_0_20px_rgba(249,115,22,0.4)] ring-2 ring-orange-500/60 bg-orange-50/30 dark:bg-orange-950/20"
+            : "hover:shadow-md"
+            }`}
           onClick={() => onViewDetail(user)}
         >
           <CardContent className="p-6 flex flex-col flex-1 min-h-[400px]">
@@ -115,7 +109,7 @@ export function UserCardView({
             <div className="flex items-center justify-center gap-2 mb-4 text-xs text-muted-foreground min-h-[20px]">
               <Calendar className="h-3 w-3 flex-shrink-0" />
               <span className="whitespace-nowrap">
-                创建于 {formatDate(user.created_at)}
+                创建于 {formatDateStr(user.created_at)}
               </span>
             </div>
 

@@ -5,9 +5,13 @@ Google Books API 路由
 """
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
+from sqlalchemy.orm import Session
 from loguru import logger
 
+from app.core.database import get_db
+from app.api.dependencies.auth import get_current_user
+from app.models.user import User
 from app.services.external_apis.google_books import google_books_client
 from app.schemas.google_books import (
     BooksSearchResponse,
@@ -19,6 +23,7 @@ from app.schemas.google_books import (
     AuthorSearchRequest,
     CategorySearchRequest,
 )
+from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/google-books", tags=["Google 图书"])
 
@@ -31,13 +36,16 @@ router = APIRouter(prefix="/google-books", tags=["Google 图书"])
     summary="搜索书籍",
     description="通过关键词搜索书籍，支持高级搜索语法（标题、作者、出版社、主题、ISBN等）"
 )
+@limiter.limit("30/minute")
 async def search_books(
+    request: Request,
     query: str = Query(..., min_length=1, max_length=500, description="搜索关键词"),
     start_index: int = Query(0, ge=0, description="起始索引"),
     max_results: int = Query(10, ge=1, le=40, description="最大结果数"),
     lang_restrict: Optional[str] = Query("zh-CN", description="语言限制"),
     order_by: str = Query("relevance", description="排序方式 (relevance, newest)"),
     print_type: str = Query("all", description="打印类型 (all, books, magazines)"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     搜索书籍
@@ -79,8 +87,11 @@ async def search_books(
     summary="通过 ISBN 搜索",
     description="通过 ISBN 号码搜索书籍，支持 ISBN-10 和 ISBN-13 格式"
 )
+@limiter.limit("30/minute")
 async def search_by_isbn(
+    request: Request,
     isbn: str = Query(..., min_length=10, max_length=13, description="ISBN 号码"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     通过 ISBN 搜索书籍
@@ -108,10 +119,13 @@ async def search_by_isbn(
     summary="通过标题搜索",
     description="通过书籍标题搜索，可选择性地指定作者进行精确筛选"
 )
+@limiter.limit("30/minute")
 async def search_by_title(
+    request: Request,
     title: str = Query(..., min_length=1, max_length=200, description="书籍标题"),
     author: Optional[str] = Query(None, max_length=100, description="作者名（可选）"),
     max_results: int = Query(10, ge=1, le=40, description="最大结果数"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     通过标题和作者搜索书籍
@@ -144,10 +158,13 @@ async def search_by_title(
     summary="通过作者搜索",
     description="通过作者姓名搜索该作者的所有书籍"
 )
+@limiter.limit("30/minute")
 async def search_by_author(
+    request: Request,
     author: str = Query(..., min_length=1, max_length=100, description="作者名"),
     start_index: int = Query(0, ge=0, description="起始索引"),
     max_results: int = Query(10, ge=1, le=40, description="最大结果数"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     通过作者搜索书籍
@@ -177,10 +194,13 @@ async def search_by_author(
     summary="通过分类搜索",
     description="通过书籍分类或主题搜索相关书籍"
 )
+@limiter.limit("30/minute")
 async def search_by_category(
+    request: Request,
     category: str = Query(..., min_length=1, max_length=100, description="书籍分类"),
     start_index: int = Query(0, ge=0, description="起始索引"),
     max_results: int = Query(10, ge=1, le=40, description="最大结果数"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     通过分类/主题搜索书籍
@@ -215,7 +235,12 @@ async def search_by_category(
     summary="获取书籍详情",
     description="根据 Google Books 卷 ID 获取书籍的完整详细信息"
 )
-async def get_volume_details(volume_id: str):
+@limiter.limit("60/minute")
+async def get_volume_details(
+    request: Request,
+    volume_id: str,
+    current_user: User = Depends(get_current_user),
+):
     """
     获取书籍详情
 

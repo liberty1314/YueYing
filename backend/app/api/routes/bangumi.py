@@ -5,10 +5,15 @@ Bangumi API 路由
 """
 
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
+from sqlalchemy.orm import Session
 from loguru import logger
 
+from app.core.database import get_db
+from app.api.dependencies.auth import get_current_user
+from app.models.user import User
 from app.services.external_apis.bangumi import bangumi_client
+from app.middleware.rate_limit import limiter
 from app.schemas.bangumi import (
     BangumiSearchResult,
     BangumiSubject,
@@ -33,11 +38,14 @@ router = APIRouter(prefix="/bangumi", tags=["Bangumi 番组"])
     summary="搜索条目",
     description="通过关键词搜索动漫、游戏、书籍等条目"
 )
+@limiter.limit("30/minute")
 async def search_subjects(
+    request: Request,
     keyword: str = Query(..., min_length=1, max_length=200, description="搜索关键词"),
     type: Optional[int] = Query(None, description="条目类型 (1=书籍, 2=动画, 3=音乐, 4=游戏, 6=三次元)"),
     max_results: int = Query(25, ge=1, le=25, description="最大结果数"),
     start: int = Query(0, ge=0, description="起始位置"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     搜索条目
@@ -80,13 +88,16 @@ async def search_subjects(
     summary="搜索动画",
     description="专门搜索动画类型的条目"
 )
+@limiter.limit("30/minute")
 async def search_anime(
+    request: Request,
     keyword: str = Query(..., min_length=1, max_length=200, description="搜索关键词"),
     max_results: int = Query(25, ge=1, le=25, description="最大结果数"),
     start: int = Query(0, ge=0, description="起始位置"),
+    current_user: User = Depends(get_current_user),
 ):
     """搜索动画"""
-    return await search_subjects(keyword=keyword, type=2, max_results=max_results, start=start)
+    return await search_subjects(request=request, keyword=keyword, type=2, max_results=max_results, start=start)
 
 
 @router.get(
@@ -95,13 +106,16 @@ async def search_anime(
     summary="搜索游戏",
     description="专门搜索游戏类型的条目"
 )
+@limiter.limit("30/minute")
 async def search_game(
+    request: Request,
     keyword: str = Query(..., min_length=1, max_length=200, description="搜索关键词"),
     max_results: int = Query(25, ge=1, le=25, description="最大结果数"),
     start: int = Query(0, ge=0, description="起始位置"),
+    current_user: User = Depends(get_current_user),
 ):
     """搜索游戏"""
-    return await search_subjects(keyword=keyword, type=4, max_results=max_results, start=start)
+    return await search_subjects(request=request, keyword=keyword, type=4, max_results=max_results, start=start)
 
 
 # ==================== 条目详情 ====================
@@ -112,9 +126,12 @@ async def search_game(
     summary="获取条目详情",
     description="根据条目 ID 获取详细信息"
 )
+@limiter.limit("60/minute")
 async def get_subject_details(
+    request: Request,
     subject_id: int,
     response_group: str = Query("large", description="返回数据大小 (small, medium, large)"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     获取条目详情
@@ -152,7 +169,12 @@ async def get_subject_details(
     summary="获取条目简要信息",
     description="获取条目的简化信息，适合列表展示"
 )
-async def get_subject_simple(subject_id: int):
+@limiter.limit("60/minute")
+async def get_subject_simple(
+    request: Request,
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """获取条目简要信息"""
     try:
         result = await bangumi_client.get_subject_details(
@@ -182,11 +204,14 @@ async def get_subject_simple(subject_id: int):
     summary="获取章节列表",
     description="获取条目的章节/剧集列表"
 )
+@limiter.limit("60/minute")
 async def get_subject_episodes(
+    request: Request,
     subject_id: int,
     type: int = Query(0, description="章节类型 (0=本篇, 1=SP, 2=OP, 3=ED)"),
     offset: int = Query(0, ge=0, description="偏移量"),
     limit: int = Query(100, ge=1, le=100, description="限制数量"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     获取条目的章节/剧集列表
@@ -235,7 +260,12 @@ async def get_subject_episodes(
     summary="获取章节详情",
     description="根据章节 ID 获取详细信息"
 )
-async def get_episode_details(episode_id: int):
+@limiter.limit("60/minute")
+async def get_episode_details(
+    request: Request,
+    episode_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """获取章节/剧集详情"""
     try:
         result = await bangumi_client.get_episode_details(episode_id)
@@ -261,7 +291,12 @@ async def get_episode_details(episode_id: int):
     summary="获取条目角色",
     description="获取条目的角色列表"
 )
-async def get_subject_characters(subject_id: int):
+@limiter.limit("60/minute")
+async def get_subject_characters(
+    request: Request,
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """获取条目的角色列表"""
     try:
         result = await bangumi_client.get_subject_characters(subject_id)
@@ -280,7 +315,12 @@ async def get_subject_characters(subject_id: int):
     summary="获取制作人员",
     description="获取条目的制作人员列表"
 )
-async def get_subject_persons(subject_id: int):
+@limiter.limit("60/minute")
+async def get_subject_persons(
+    request: Request,
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """获取条目的制作人员列表"""
     try:
         result = await bangumi_client.get_subject_persons(subject_id)
@@ -301,7 +341,11 @@ async def get_subject_persons(subject_id: int):
     summary="获取每日放送",
     description="获取当前一周的动画放送时间表"
 )
-async def get_calendar():
+@limiter.limit("30/minute")
+async def get_calendar(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+):
     """获取每日放送（当前一周的放送时间表）"""
     try:
         result = await bangumi_client.get_calendar()

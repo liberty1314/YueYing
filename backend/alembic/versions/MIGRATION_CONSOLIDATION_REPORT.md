@@ -236,13 +236,13 @@ SELECT * FROM system_settings;
 
 ## 清理操作已完成 ✅
 
-已执行以下清理操作：
+### 第一次清理（2025-11-16）
 
 1. ✅ 已删除旧迁移文件：
    - `20251107_0000_consolidated_schema.py`
    - `20251112_0000_performance_and_cleanup.py`
 
-2. ✅ 已保留备份目录（可选择稍后手动删除）：
+2. ✅ 已保留备份目录（待后续清理）：
    - `backup_20251106_164603/`
    - `backup_20251114_consolidated/`
 
@@ -252,6 +252,24 @@ SELECT * FROM system_settings;
 4. ✅ 已更新 Makefile，添加 `reset-db` 命令
 
 5. ✅ 已更新文档：`docs/Makefile使用指南.md`
+
+### 第二次清理（2025-11-16）
+
+1. ✅ 已创建数据库备份：`backups/yueying_*.sql`
+
+2. ✅ 已删除所有历史迁移备份目录：
+   - `backup_20251106_164603/` (13个历史迁移文件)
+   - `backup_20251114_consolidated/` (7个历史迁移文件)
+
+3. ✅ 验证迁移链完整性：
+   - 迁移链：`base -> initial_001 -> db0f5c7317a4 (head)`
+   - 当前版本：`db0f5c7317a4`
+   - 状态：正常 ✓
+
+4. ✅ 当前保留的迁移文件：
+   - `20251116_0000_initial_schema.py` (revision: initial_001)
+   - `20251116_0049_db0f5c7317a4_rename_llm_config_model_to_default_model.py` (revision: db0f5c7317a4, head)
+   - `MIGRATION_CONSOLIDATION_REPORT.md` (本文档)
 
 ## 使用新的迁移脚本
 
@@ -288,19 +306,38 @@ python scripts/seed_data.py
 
 ## 后续维护建议
 
-1. **备份目录清理**：确认新迁移脚本无误后，可以删除备份目录：
+1. ✅ **备份目录清理**：已完成
+   - 已删除 `backup_20251106_164603/`
+   - 已删除 `backup_20251114_consolidated/`
+
+2. **版本控制**：将清理后的迁移脚本提交到 Git：
    ```bash
-   rm -rf backend/alembic/versions/backup_20251106_164603
-   rm -rf backend/alembic/versions/backup_20251114_consolidated
+   git add backend/alembic/versions/
+   git commit -m "chore: 清理历史迁移备份目录"
    ```
 
-2. **版本控制**：将新的迁移脚本提交到 Git：
+3. **团队同步**：通知团队成员
+   - 当前迁移链已简化为 2 个文件
+   - 如需重置数据库，使用 `make reset-db`
+   - 数据库备份位于 `backups/` 目录
+
+## 回滚方案
+
+如果清理后出现问题，可以使用以下方法回滚：
+
+1. **恢复数据库备份**：
    ```bash
-   git add backend/alembic/versions/20251116_0000_initial_schema.py
-   git add backend/alembic/versions/MIGRATION_CONSOLIDATION_REPORT.md
-   git add Makefile
-   git add docs/Makefile使用指南.md
-   git commit -m "feat: 整合数据库迁移脚本为单一初始化脚本"
+   make restore-db
+   # 选择最新的备份文件：backups/yueying_*.sql
    ```
 
-3. **团队同步**：通知团队成员使用 `make reset-db` 重置本地数据库
+2. **从 Git 恢复备份目录**（如果已提交）：
+   ```bash
+   git checkout HEAD~1 -- backend/alembic/versions/backup_*
+   ```
+
+3. **重新运行迁移**：
+   ```bash
+   docker-compose exec backend alembic downgrade base
+   docker-compose exec backend alembic upgrade head
+   ```

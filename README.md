@@ -470,12 +470,17 @@ docker-compose exec postgres psql -U yueying -d yueying -c "SELECT 1;"
    - 启用HTTPS（配置SSL证书）
    - 配置防火墙规则
 
-2. **API密钥管理**：
+2. **API 认证与授权**：
+   - 所有 API 端点（除登录/注册外）都需要 JWT 认证
+   - Token 默认有效期为 7 天，可通过 `ACCESS_TOKEN_EXPIRE_MINUTES` 配置
+   - 生产环境建议使用 HTTPS 传输 Token
+
+3. **API密钥管理**：
    - 不要将 `.env` 文件提交到版本控制
    - 使用环境变量或密钥管理服务
    - 定期轮换API密钥
 
-3. **数据备份**：
+4. **数据备份**：
    - 定期备份PostgreSQL数据
    - 备份MinIO对象存储数据
    - 备份配置文件

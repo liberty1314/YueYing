@@ -480,9 +480,13 @@ await task_scheduler.run_job_now("cache_warming")
 
 ### 项目文档
 
+**API 文档**：
+- [API 认证文档](docs/api-authentication.md) - JWT 认证、端点权限和安全最佳实践 ⭐
+- [API 变更日志](docs/API_CHANGELOG.md) - API 重要变更记录
+
 **代码重构**：
 - [UserItemService 重构文档](docs/user-item-service-refactoring.md) - 服务拆分进度和使用指南
-- [User Items 路由重构文档](docs/user-items-route-refactoring.md) - 路由拆分说明
+- [User Items 路由重构文档](docs/user-items-route-refactoring.md) - 路由模块化重构说明 ✅ 已完成
 
 **开发工具**：
 - [工具函数库文档](docs/utils-library.md) - 数据验证、转换和错误处理工具 ⭐

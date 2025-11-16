@@ -1,217 +1,264 @@
 """
-统一的错误处理工具
+统一错误处理装饰器
 
-提供可复用的错误处理函数，减少路由中的重复代码
+提供一致的API错误响应格式和日志记录
 """
+from functools import wraps
+from typing import Callable, Optional, Type, Union
 from fastapi import HTTPException, status
+from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from pydantic import ValidationError
-from loguru import logger
-from typing import Any, Optional, Callable
-import functools
 
 
-def handle_service_error(
-    error: Exception,
-    default_message: str = "操作失败",
-    log_error: bool = True
-) -> HTTPException:
-    """
-    处理服务层错误，转换为适当的 HTTP 异常
-    
-    Args:
-        error: 捕获的异常
-        default_message: 默认错误消息
-        log_error: 是否记录错误日志
-    
-    Returns:
-        HTTPException: 格式化的 HTTP 异常
-    
-    Examples:
-        try:
-            result = service.do_something()
-        except Exception as e:
-            raise handle_service_error(e, "无法执行操作")
-    """
-    if log_error:
-        logger.error(f"Service error: {type(error).__name__}: {str(error)}")
-    
-    # 数据库完整性错误（如唯一约束冲突）
-    if isinstance(error, IntegrityError):
-        return HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="数据冲突，该记录可能已存在"
+class APIError(Exception):
+    """自定义API错误基类"""
+    def __init__(
+        self,
+        message: str,
+        status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        error_code: Optional[str] = None,
+        details: Optional[dict] = None
+    ):
+        self.message = message
+        self.status_code = status_code
+        self.error_code = error_code or "INTERNAL_ERROR"
+        self.details = details or {}
+        super().__init__(self.message)
+
+
+class NotFoundError(APIError):
+    """资源未找到错误"""
+    def __init__(self, message: str = "资源未找到", details: Optional[dict] = None):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_404_NOT_FOUND,
+            error_code="NOT_FOUND",
+            details=details
         )
-    
-    # 其他数据库错误
-    if isinstance(error, SQLAlchemyError):
-        return HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="数据库操作失败"
-        )
-    
-    # 验证错误
-    if isinstance(error, ValidationError):
-        return HTTPException(
+
+
+class ValidationError(APIError):
+    """数据验证错误"""
+    def __init__(self, message: str = "数据验证失败", details: Optional[dict] = None):
+        super().__init__(
+            message=message,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(error)
+            error_code="VALIDATION_ERROR",
+            details=details
         )
-    
-    # HTTP 异常直接返回
-    if isinstance(error, HTTPException):
-        return error
-    
-    # 其他未知错误
-    return HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=default_message
-    )
 
 
-def handle_validation_error(
-    error: ValidationError,
-    context: str = ""
-) -> HTTPException:
-    """
-    处理 Pydantic 验证错误
-    
-    Args:
-        error: Pydantic 验证错误
-        context: 错误上下文描述
-    
-    Returns:
-        HTTPException: 格式化的验证错误异常
-    
-    Examples:
-        try:
-            data = UserCreate(**request_data)
-        except ValidationError as e:
-            raise handle_validation_error(e, "用户注册")
-    """
-    logger.warning(f"Validation error in {context}: {error}")
-    
-    # 提取错误详情
-    errors = []
-    for err in error.errors():
-        field = " -> ".join(str(loc) for loc in err["loc"])
-        message = err["msg"]
-        errors.append(f"{field}: {message}")
-    
-    return HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        detail={
-            "message": "数据验证失败",
-            "errors": errors
-        }
-    )
+class UnauthorizedError(APIError):
+    """未授权错误"""
+    def __init__(self, message: str = "未授权访问", details: Optional[dict] = None):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            error_code="UNAUTHORIZED",
+            details=details
+        )
 
 
-def handle_not_found_error(
-    resource_type: str,
-    resource_id: Any,
-    additional_info: Optional[str] = None
-) -> HTTPException:
-    """
-    处理资源未找到错误
-    
-    Args:
-        resource_type: 资源类型（如 "用户", "记录"）
-        resource_id: 资源ID
-        additional_info: 额外信息
-    
-    Returns:
-        HTTPException: 404 错误
-    
-    Examples:
-        if not user:
-            raise handle_not_found_error("用户", user_id)
-    """
-    message = f"{resource_type} (ID: {resource_id}) 不存在"
-    if additional_info:
-        message += f" - {additional_info}"
-    
-    logger.warning(f"Resource not found: {message}")
-    
-    return HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=message
-    )
+class ForbiddenError(APIError):
+    """禁止访问错误"""
+    def __init__(self, message: str = "禁止访问", details: Optional[dict] = None):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            error_code="FORBIDDEN",
+            details=details
+        )
 
 
-def handle_permission_error(
-    action: str,
-    resource: str = "",
-    reason: Optional[str] = None
-) -> HTTPException:
-    """
-    处理权限错误
-    
-    Args:
-        action: 尝试执行的操作
-        resource: 资源描述
-        reason: 拒绝原因
-    
-    Returns:
-        HTTPException: 403 错误
-    
-    Examples:
-        if user.id != item.user_id:
-            raise handle_permission_error("修改", "该记录")
-    """
-    message = f"无权{action}"
-    if resource:
-        message += f" {resource}"
-    if reason:
-        message += f": {reason}"
-    
-    logger.warning(f"Permission denied: {message}")
-    
-    return HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail=message
-    )
+class ConflictError(APIError):
+    """资源冲突错误"""
+    def __init__(self, message: str = "资源冲突", details: Optional[dict] = None):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            error_code="CONFLICT",
+            details=details
+        )
 
 
-def with_error_handling(
-    default_message: str = "操作失败",
-    log_errors: bool = True
+def handle_api_errors(
+    error_message: Optional[str] = None,
+    log_level: str = "error",
+    include_traceback: bool = False
 ):
     """
-    装饰器：为函数添加统一的错误处理
+    API错误处理装饰器
+    
+    统一处理API端点的异常，提供一致的错误响应格式
     
     Args:
-        default_message: 默认错误消息
-        log_errors: 是否记录错误
+        error_message: 自定义错误消息（可选）
+        log_level: 日志级别 (debug, info, warning, error, critical)
+        include_traceback: 是否在响应中包含堆栈跟踪（仅开发环境）
+    
+    Usage:
+        @router.get("/items")
+        @handle_api_errors("获取项目列表失败")
+        async def get_items():
+            ...
     
     Returns:
-        装饰器函数
-    
-    Examples:
-        @with_error_handling("无法获取用户列表")
-        async def get_users(db: Session):
-            return db.query(User).all()
+        装饰后的函数
     """
     def decorator(func: Callable):
-        @functools.wraps(func)
+        @wraps(func)
         async def async_wrapper(*args, **kwargs):
             try:
                 return await func(*args, **kwargs)
+            
+            except APIError as e:
+                # 自定义API错误
+                log_func = getattr(logger, log_level)
+                log_func(f"{error_message or func.__name__}: {e.message}")
+                
+                raise HTTPException(
+                    status_code=e.status_code,
+                    detail={
+                        "error": e.error_code,
+                        "message": e.message,
+                        "details": e.details
+                    }
+                )
+            
             except HTTPException:
+                # FastAPI的HTTPException直接抛出
                 raise
+            
+            except IntegrityError as e:
+                # 数据库完整性错误（如唯一约束冲突）
+                logger.error(f"{error_message or func.__name__}: Database integrity error - {str(e)}")
+                
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={
+                        "error": "CONFLICT",
+                        "message": "数据冲突，可能是重复的记录",
+                        "details": {"db_error": str(e.orig) if hasattr(e, 'orig') else str(e)}
+                    }
+                )
+            
+            except SQLAlchemyError as e:
+                # 其他数据库错误
+                logger.error(f"{error_message or func.__name__}: Database error - {str(e)}")
+                
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={
+                        "error": "DATABASE_ERROR",
+                        "message": "数据库操作失败",
+                        "details": {"db_error": str(e)}
+                    }
+                )
+            
+            except ValidationError as e:
+                # Pydantic验证错误
+                logger.warning(f"{error_message or func.__name__}: Validation error - {str(e)}")
+                
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail={
+                        "error": "VALIDATION_ERROR",
+                        "message": "数据验证失败",
+                        "details": {"validation_errors": str(e)}
+                    }
+                )
+            
             except Exception as e:
-                raise handle_service_error(e, default_message, log_errors)
+                # 未预期的错误
+                logger.exception(f"{error_message or func.__name__}: Unexpected error - {str(e)}")
+                
+                error_detail = {
+                    "error": "INTERNAL_ERROR",
+                    "message": error_message or "操作失败",
+                    "details": {}
+                }
+                
+                # 在开发环境中包含详细错误信息
+                if include_traceback:
+                    import traceback
+                    error_detail["details"]["traceback"] = traceback.format_exc()
+                    error_detail["details"]["exception_type"] = type(e).__name__
+                    error_detail["details"]["exception_message"] = str(e)
+                
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=error_detail
+                )
         
-        @functools.wraps(func)
+        @wraps(func)
         def sync_wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
+            
+            except APIError as e:
+                log_func = getattr(logger, log_level)
+                log_func(f"{error_message or func.__name__}: {e.message}")
+                
+                raise HTTPException(
+                    status_code=e.status_code,
+                    detail={
+                        "error": e.error_code,
+                        "message": e.message,
+                        "details": e.details
+                    }
+                )
+            
             except HTTPException:
                 raise
+            
+            except IntegrityError as e:
+                logger.error(f"{error_message or func.__name__}: Database integrity error - {str(e)}")
+                
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={
+                        "error": "CONFLICT",
+                        "message": "数据冲突，可能是重复的记录",
+                        "details": {"db_error": str(e.orig) if hasattr(e, 'orig') else str(e)}
+                    }
+                )
+            
+            except SQLAlchemyError as e:
+                logger.error(f"{error_message or func.__name__}: Database error - {str(e)}")
+                
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={
+                        "error": "DATABASE_ERROR",
+                        "message": "数据库操作失败",
+                        "details": {"db_error": str(e)}
+                    }
+                )
+            
             except Exception as e:
-                raise handle_service_error(e, default_message, log_errors)
+                logger.exception(f"{error_message or func.__name__}: Unexpected error - {str(e)}")
+                
+                error_detail = {
+                    "error": "INTERNAL_ERROR",
+                    "message": error_message or "操作失败",
+                    "details": {}
+                }
+                
+                if include_traceback:
+                    import traceback
+                    error_detail["details"]["traceback"] = traceback.format_exc()
+                    error_detail["details"]["exception_type"] = type(e).__name__
+                    error_detail["details"]["exception_message"] = str(e)
+                
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=error_detail
+                )
         
-        # 根据函数类型返回对应的包装器
-        if functools.iscoroutinefunction(func):
+        # 根据函数类型返回对应的wrapper
+        import asyncio
+        if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
@@ -219,70 +266,62 @@ def with_error_handling(
     return decorator
 
 
-def create_error_response(
-    status_code: int,
-    message: str,
-    details: Optional[dict] = None
-) -> dict:
+def handle_not_found(resource_name: str = "资源"):
     """
-    创建标准化的错误响应
+    资源未找到错误处理装饰器
     
-    Args:
-        status_code: HTTP 状态码
-        message: 错误消息
-        details: 额外的错误详情
-    
-    Returns:
-        标准化的错误响应字典
-    
-    Examples:
-        return create_error_response(400, "参数错误", {"field": "email"})
+    Usage:
+        @router.get("/items/{item_id}")
+        @handle_not_found("项目")
+        async def get_item(item_id: int):
+            item = get_item_from_db(item_id)
+            if not item:
+                raise NotFoundError(f"项目 {item_id} 不存在")
+            return item
     """
-    response = {
-        "error": True,
-        "status_code": status_code,
-        "message": message
-    }
-    
-    if details:
-        response["details"] = details
-    
-    return response
-
-
-# 常用错误快捷方式
-def bad_request(message: str = "请求参数错误") -> HTTPException:
-    """400 错误"""
-    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
-
-
-def unauthorized(message: str = "未授权") -> HTTPException:
-    """401 错误"""
-    return HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=message,
-        headers={"WWW-Authenticate": "Bearer"}
+    return handle_api_errors(
+        error_message=f"{resource_name}未找到",
+        log_level="warning"
     )
 
 
-def forbidden(message: str = "禁止访问") -> HTTPException:
-    """403 错误"""
-    return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=message)
-
-
-def not_found(message: str = "资源不存在") -> HTTPException:
-    """404 错误"""
-    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-
-
-def conflict(message: str = "资源冲突") -> HTTPException:
-    """409 错误"""
-    return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=message)
-
-
-def internal_error(message: str = "服务器内部错误") -> HTTPException:
-    """500 错误"""
-    return HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=message
+def handle_validation_errors(operation: str = "操作"):
+    """
+    数据验证错误处理装饰器
+    
+    Usage:
+        @router.post("/items")
+        @handle_validation_errors("创建项目")
+        async def create_item(item: ItemCreate):
+            ...
+    """
+    return handle_api_errors(
+        error_message=f"{operation}数据验证失败",
+        log_level="warning"
     )
+
+
+# 便捷的错误抛出函数
+def raise_not_found(message: str, details: Optional[dict] = None):
+    """抛出404错误"""
+    raise NotFoundError(message, details)
+
+
+def raise_validation_error(message: str, details: Optional[dict] = None):
+    """抛出422验证错误"""
+    raise ValidationError(message, details)
+
+
+def raise_unauthorized(message: str = "未授权访问", details: Optional[dict] = None):
+    """抛出401未授权错误"""
+    raise UnauthorizedError(message, details)
+
+
+def raise_forbidden(message: str = "禁止访问", details: Optional[dict] = None):
+    """抛出403禁止访问错误"""
+    raise ForbiddenError(message, details)
+
+
+def raise_conflict(message: str = "资源冲突", details: Optional[dict] = None):
+    """抛出409冲突错误"""
+    raise ConflictError(message, details)

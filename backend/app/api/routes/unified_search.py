@@ -4,10 +4,11 @@
 提供整合多个外部API的统一搜索接口
 """
 
-from fastapi import APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, Query, HTTPException, status, Request
 from typing import Optional
 from loguru import logger
 
+from app.middleware.rate_limit import limiter
 from app.schemas.unified_search import (
     UnifiedSearchResponse,
     ContentType,
@@ -38,7 +39,9 @@ router = APIRouter(prefix="/search", tags=["统一搜索"])
     搜索结果会自动去重、排序并分页。
     """,
 )
+@limiter.limit("20/minute")
 async def unified_search(
+    request: Request,
     q: str = Query(
         ...,
         min_length=1,
@@ -126,7 +129,9 @@ async def unified_search(
     summary="搜索统计",
     description="获取搜索结果的统计信息（各来源和类型的结果数量）",
 )
+@limiter.limit("30/minute")
 async def search_stats(
+    request: Request,
     q: str = Query(
         ...,
         min_length=1,
@@ -182,7 +187,9 @@ async def search_stats(
     summary="清除搜索缓存",
     description="清除指定关键词的搜索缓存",
 )
+@limiter.limit("10/minute")
 async def clear_search_cache(
+    request: Request,
     q: Optional[str] = Query(
         None,
         description="搜索关键词（为空则清除所有搜索缓存）",
@@ -211,4 +218,3 @@ async def clear_search_cache(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"清除缓存失败: {str(e)}",
         )
-

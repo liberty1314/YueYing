@@ -5,8 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
-import { zhCN } from "date-fns/locale";
+import { formatDate } from "@/lib/utils/date-formatters";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -111,10 +110,10 @@ export function QuickAddForm({
         rating: values.rating,
         notes: values.notes,
         started_at: values.started_at
-          ? format(values.started_at, "yyyy-MM-dd")
+          ? formatDate(values.started_at, "yyyy-MM-dd")
           : null,
         completed_at: values.completed_at
-          ? format(values.completed_at, "yyyy-MM-dd")
+          ? formatDate(values.completed_at, "yyyy-MM-dd")
           : null,
       };
 
@@ -219,7 +218,7 @@ export function QuickAddForm({
                         )}
                       >
                         {field.value ? (
-                          format(field.value, "PPP", { locale: zhCN })
+                          formatDate(field.value, "yyyy年M月d日")
                         ) : (
                           <span>选择日期</span>
                         )}
@@ -264,7 +263,7 @@ export function QuickAddForm({
                         )}
                       >
                         {field.value ? (
-                          format(field.value, "PPP", { locale: zhCN })
+                          formatDate(field.value, "yyyy年M月d日")
                         ) : (
                           <span>选择日期</span>
                         )}
