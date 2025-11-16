@@ -20,10 +20,37 @@ router = APIRouter(prefix="/system-settings", tags=["系统设置"])
 
 
 @router.get(
+    "/public",
+    summary="获取公开的系统设置",
+    description="获取公开的系统设置（无需登录）。仅返回公开可见的设置项。",
+)
+async def get_public_system_settings(
+    db: Session = Depends(get_db),
+):
+    """
+    获取公开的系统设置（无需登录）
+    
+    仅返回：
+    - allow_anonymous_home_access: 是否允许未登录用户访问首页
+    """
+    try:
+        settings = SystemSettingsService.get_settings(db)
+        return {
+            "allow_anonymous_home_access": settings.allow_anonymous_home_access,
+        }
+    except Exception as e:
+        logger.error(f"Error getting public system settings: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="获取系统设置失败",
+        )
+
+
+@router.get(
     "",
     response_model=SystemSettingsResponse,
     summary="获取系统设置",
-    description="获取当前的系统设置（所有用户可访问）。如果数据库中没有设置，将自动从环境变量创建默认设置。",
+    description="获取当前的系统设置（需要登录）。如果数据库中没有设置，将自动从环境变量创建默认设置。",
 )
 async def get_system_settings(
     current_user: User = Depends(get_current_user),

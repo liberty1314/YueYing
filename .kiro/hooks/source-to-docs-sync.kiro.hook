@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Source to Docs Sync",
   "description": "Monitors all source files (Python, TypeScript, JavaScript, configuration files) in the repository and triggers documentation updates in README.md or /docs folder when changes are detected",
   "version": "1",

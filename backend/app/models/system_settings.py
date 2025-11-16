@@ -28,7 +28,15 @@ class SystemSettings(BaseModel):
         server_default='true',
         comment="允许用户自行设置 AI 自动标签"
     )
+    
+    allow_anonymous_home_access = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default='true',
+        comment="允许未登录用户访问首页"
+    )
 
     def __repr__(self):
-        return f"<SystemSettings(id={self.id}, enable_explore={self.enable_explore}, allow_user_ai_tag_settings={self.allow_user_ai_tag_settings})>"
+        return f"<SystemSettings(id={self.id}, enable_explore={self.enable_explore}, allow_user_ai_tag_settings={self.allow_user_ai_tag_settings}, allow_anonymous_home_access={self.allow_anonymous_home_access})>"
 

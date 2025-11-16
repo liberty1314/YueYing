@@ -339,14 +339,17 @@ async def get_subject_persons(
     "/calendar",
     response_model=List[BangumiCalendarItem],
     summary="获取每日放送",
-    description="获取当前一周的动画放送时间表"
+    description="获取当前一周的动画放送时间表（公开接口，无需登录）"
 )
 @limiter.limit("30/minute")
 async def get_calendar(
     request: Request,
-    current_user: User = Depends(get_current_user),
 ):
-    """获取每日放送（当前一周的放送时间表）"""
+    """
+    获取每日放送（当前一周的放送时间表）
+    
+    注意：此接口无需登录即可访问
+    """
     try:
         result = await bangumi_client.get_calendar()
         

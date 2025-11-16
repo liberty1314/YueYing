@@ -193,6 +193,7 @@ class Settings(BaseSettings):
     # 系统设置默认值
     DEFAULT_ENABLE_EXPLORE: bool = Field(default=False, alias="DEFAULT_ENABLE_EXPLORE")
     DEFAULT_ALLOW_USER_AI_TAG_SETTINGS: bool = Field(default=True, alias="DEFAULT_ALLOW_USER_AI_TAG_SETTINGS")
+    DEFAULT_ALLOW_ANONYMOUS_HOME_ACCESS: bool = Field(default=True, alias="DEFAULT_ALLOW_ANONYMOUS_HOME_ACCESS")
 
     # ====================================
     # 首页数据缓存配置

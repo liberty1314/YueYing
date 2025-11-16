@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Container } from "@/components/common/Container";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
@@ -11,6 +12,7 @@ import { RecommendationsSection } from "@/components/home/RecommendationsSection
 import { ContentDetailDialog } from "@/components/content/ContentDetailDialog";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -30,6 +32,7 @@ interface ContentItem {
 export default function HomePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { data: session, status } = useSession();
   const [trendingToday, setTrendingToday] = useState<ContentItem[]>([]);
   const [trendingWeek, setTrendingWeek] = useState<ContentItem[]>([]);
   const [animeCalendarData, setAnimeCalendarData] = useState<any[]>([]); // 完整calendar数据
@@ -37,6 +40,49 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
+
+  // 访问控制：检查是否允许未登录用户访问首页
+  useEffect(() => {
+    const checkHomeAccess = async () => {
+      // 如果正在加载会话状态，等待
+      if (status === "loading") {
+        return;
+      }
+
+      // 如果已登录，允许访问
+      if (status === "authenticated") {
+        setCheckingAccess(false);
+        return;
+      }
+
+      // 如果未登录，检查系统设置
+      try {
+        const { systemSettingsApi } = await import("@/lib/system-settings-api");
+        const publicSettings = await systemSettingsApi.getPublicSettings();
+
+        if (!publicSettings.allow_anonymous_home_access) {
+          // 不允许匿名访问，重定向到登录页
+          toast({
+            title: "必须登录才可以访问",
+            description: "请先登录您的账号",
+            variant: "default",
+          });
+          router.push("/login");
+          return;
+        }
+
+        // 允许匿名访问
+        setCheckingAccess(false);
+      } catch (error) {
+        console.error("获取系统设置失败:", error);
+        // 出错时默认允许访问
+        setCheckingAccess(false);
+      }
+    };
+
+    checkHomeAccess();
+  }, [status, router, toast]);
 
   useEffect(() => {
     loadHomeData();
@@ -95,8 +141,8 @@ export default function HomePage() {
       year: item.release_date
         ? String(new Date(item.release_date).getFullYear())
         : item.first_air_date
-        ? String(new Date(item.first_air_date).getFullYear())
-        : undefined,
+          ? String(new Date(item.first_air_date).getFullYear())
+          : undefined,
       rating: item.vote_average,
       description: item.overview,
     };
@@ -126,12 +172,12 @@ export default function HomePage() {
   // 获取当前选择星期的番剧
   const getAnimeForWeekday = () => {
     if (!animeCalendarData.length) return [];
-    
+
     // Bangumi calendar的weekday: 1=周一, 2=周二, ..., 7=周日
     // JavaScript的getDay(): 0=周日, 1=周一, ..., 6=周六
     // 需要转换
     const bangumiWeekday = selectedWeekday === 0 ? 7 : selectedWeekday;
-    
+
     const dayData = animeCalendarData.find((day: any) => day.weekday?.id === bangumiWeekday);
     return dayData?.items || [];
   };
@@ -147,7 +193,11 @@ export default function HomePage() {
     { label: "周六", value: 6 },
   ];
 
-  // 显示骨架屏当初始加载时
+  // 显示骨架屏当初始加载时或检查访问权限时
+  if (checkingAccess || status === "loading") {
+    return <HomeSkeleton />;
+  }
+
   if (isLoading && trendingToday.length === 0) {
     return <HomeSkeleton />;
   }
@@ -200,7 +250,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">📺 本周新番</h2>
             </div>
-            
+
             {/* 星期筛选 */}
             <div className="flex gap-2 overflow-x-auto pb-2">
               {weekdayOptions.map((option) => (

@@ -17,6 +17,7 @@ export default function SystemSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [enableExplore, setEnableExplore] = useState(false);
   const [allowUserAiTagSettings, setAllowUserAiTagSettings] = useState(true);
+  const [allowAnonymousHomeAccess, setAllowAnonymousHomeAccess] = useState(true);
 
   // 加载系统设置
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function SystemSettingsPage() {
         setSettings(data);
         setEnableExplore(data.enable_explore);
         setAllowUserAiTagSettings(data.allow_user_ai_tag_settings);
+        setAllowAnonymousHomeAccess(data.allow_anonymous_home_access);
       } catch (err: any) {
         console.error("加载系统设置失败:", err);
         toast({
@@ -48,6 +50,7 @@ export default function SystemSettingsPage() {
       const updated = await systemSettingsApi.updateSettings({
         enable_explore: enableExplore,
         allow_user_ai_tag_settings: allowUserAiTagSettings,
+        allow_anonymous_home_access: allowAnonymousHomeAccess,
       });
       setSettings(updated);
       toast({
@@ -123,6 +126,24 @@ export default function SystemSettingsPage() {
               id="allow-user-ai-tag-settings"
               checked={allowUserAiTagSettings}
               onCheckedChange={setAllowUserAiTagSettings}
+            />
+          </div>
+
+          {/* 允许未登录用户访问首页 */}
+          <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
+            <div className="flex-1 space-y-1">
+              <Label htmlFor="allow-anonymous-home-access" className="text-base font-semibold">
+                允许未登录用户访问首页
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                启用后，未登录用户可以访问首页查看内容。
+                禁用后，未登录用户访问首页将自动跳转到登录页面。
+              </p>
+            </div>
+            <Switch
+              id="allow-anonymous-home-access"
+              checked={allowAnonymousHomeAccess}
+              onCheckedChange={setAllowAnonymousHomeAccess}
             />
           </div>
 

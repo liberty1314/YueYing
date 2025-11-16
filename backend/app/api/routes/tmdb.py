@@ -103,7 +103,7 @@ async def get_popular_movies(
     "/movies/top-rated",
     response_model=TMDBMovieSearchResponse,
     summary="获取高分电影",
-    description="获取评分最高的电影列表，支持年份筛选"
+    description="获取评分最高的电影列表，支持年份筛选（公开接口，无需登录）"
 )
 @limiter.limit("30/minute")
 async def get_top_rated_movies(
@@ -112,12 +112,13 @@ async def get_top_rated_movies(
     language: str = Query("zh-CN", description="语言"),
     region: Optional[str] = Query(None, description="地区代码"),
     year: Optional[int] = Query(None, description="年份过滤"),
-    current_user: User = Depends(get_current_user),
 ):
     """
-    获取高分电影
+    获取高分电影（公开接口）
 
     获取评分最高的电影列表，支持年份筛选
+    
+    注意：此接口无需登录即可访问
     """
     try:
         logger.info(f"Fetching top rated movies: page={page}, region={region}, year={year}")
@@ -316,7 +317,7 @@ async def get_popular_tv_shows(
     "/tv/top-rated",
     response_model=TMDBTVShowSearchResponse,
     summary="获取高分剧集",
-    description="获取评分最高的剧集列表，支持年份筛选"
+    description="获取评分最高的剧集列表，支持年份筛选（公开接口，无需登录）"
 )
 @limiter.limit("30/minute")
 async def get_top_rated_tv_shows(
@@ -324,12 +325,13 @@ async def get_top_rated_tv_shows(
     page: int = Query(1, ge=1, le=500, description="页码"),
     language: str = Query("zh-CN", description="语言"),
     first_air_date_year: Optional[int] = Query(None, description="首播年份过滤"),
-    current_user: User = Depends(get_current_user),
 ):
     """
-    获取高分剧集
+    获取高分剧集（公开接口）
 
     获取评分最高的剧集列表，支持年份筛选
+    
+    注意：此接口无需登录即可访问
     """
     try:
         logger.info(f"Fetching top rated TV shows: page={page}, first_air_date_year={first_air_date_year}")
@@ -459,7 +461,7 @@ async def get_tv_season_details(
     "/trending/{media_type}/{time_window}",
     response_model=dict,
     summary="获取趋势内容",
-    description="获取今日或本周的趋势电影/剧集"
+    description="获取今日或本周的趋势电影/剧集（公开接口，无需登录）"
 )
 @limiter.limit("30/minute")
 async def get_trending(
@@ -468,13 +470,14 @@ async def get_trending(
     time_window: str,  # day, week
     page: int = Query(1, ge=1, le=500, description="页码"),
     language: str = Query("zh-CN", description="语言"),
-    current_user: User = Depends(get_current_user),
 ):
     """
-    获取趋势内容
+    获取趋势内容（公开接口）
     
     - media_type: all (全部), movie (电影), tv (剧集)
     - time_window: day (今日), week (本周)
+    
+    注意：此接口无需登录即可访问
     """
     try:
         logger.info(f"Fetching trending {media_type} for {time_window}")

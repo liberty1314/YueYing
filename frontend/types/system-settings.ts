@@ -9,6 +9,7 @@ export interface SystemSettings {
   id: number;
   enable_explore: boolean;
   allow_user_ai_tag_settings: boolean;
+  allow_anonymous_home_access: boolean;
 }
 
 /**
@@ -17,5 +18,6 @@ export interface SystemSettings {
 export interface SystemSettingsUpdate {
   enable_explore?: boolean;
   allow_user_ai_tag_settings?: boolean;
+  allow_anonymous_home_access?: boolean;
 }
 

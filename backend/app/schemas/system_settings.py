@@ -14,6 +14,10 @@ class SystemSettingsBase(BaseModel):
         default=True,
         description="允许用户自行设置 AI 自动标签"
     )
+    allow_anonymous_home_access: bool = Field(
+        default=True,
+        description="允许未登录用户访问首页"
+    )
 
 
 class SystemSettingsUpdate(SystemSettingsBase):

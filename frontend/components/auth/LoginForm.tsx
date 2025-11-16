@@ -10,9 +10,15 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@/store/authStore'
 import { getCurrentUser } from '@/lib/auth-api'
+import { useToast } from '@/hooks/use-toast'
 
-export default function LoginForm() {
+interface LoginFormProps {
+  callbackUrl?: string
+}
+
+export default function LoginForm({ callbackUrl = '/' }: LoginFormProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -41,11 +47,11 @@ export default function LoginForm() {
           // 从 NextAuth session 获取 token
           const response = await fetch('/api/auth/session')
           const session = await response.json()
-          
+
           if (session?.accessToken) {
             // 使用 token 获取完整的用户信息（包括 role）
             const userInfo = await getCurrentUser(session.accessToken)
-            
+
             // 设置到 authStore
             setToken(session.accessToken)
             setUser({
@@ -59,8 +65,16 @@ export default function LoginForm() {
         } catch (err) {
           console.error('获取用户信息失败:', err)
         }
-        
-        router.push('/')
+
+        // 显示登录成功提示
+        toast({
+          title: '登录成功',
+          description: '欢迎回来！',
+          variant: 'default',
+        })
+
+        // 跳转到回调 URL 或首页
+        router.push(callbackUrl)
         router.refresh()
       }
     } catch (err: any) {

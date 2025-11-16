@@ -96,46 +96,58 @@ def seed_system_settings(db: Session):
 def seed_api_key_configs(db: Session):
     """初始化 API 密钥配置"""
     try:
+        from app.services.api_key_service import api_key_service
+        
         # 检查是否已存在配置
         existing_count = db.query(ApiKeyConfig).count()
         if existing_count > 0:
             logger.info(f"✓ API 密钥配置已存在 ({existing_count} 个)")
+            
+            # 如果设置了强制从环境变量读取，更新数据库配置
+            if settings.FORCE_ENV_SETTINGS:
+                logger.info("检测到 FORCE_ENV_SETTINGS=True，从环境变量更新 API 密钥配置...")
+                from app.core.encryption import encryption_service
+                
+                # 更新 TMDB
+                if settings.TMDB_API_KEY:
+                    tmdb_config = db.query(ApiKeyConfig).filter(
+                        ApiKeyConfig.service == ApiKeyService.TMDB
+                    ).first()
+                    if tmdb_config:
+                        tmdb_config.api_key = encryption_service.encrypt(settings.TMDB_API_KEY)
+                        logger.info("  ✓ 更新 TMDB API 密钥")
+                
+                # 更新 Google Books
+                if settings.GOOGLE_BOOKS_API_KEY:
+                    books_config = db.query(ApiKeyConfig).filter(
+                        ApiKeyConfig.service == ApiKeyService.GOOGLE_BOOKS
+                    ).first()
+                    if books_config:
+                        books_config.api_key = encryption_service.encrypt(settings.GOOGLE_BOOKS_API_KEY)
+                        logger.info("  ✓ 更新 Google Books API 密钥")
+                
+                # 更新 Bangumi
+                if settings.BANGUMI_API_KEY:
+                    bangumi_config = db.query(ApiKeyConfig).filter(
+                        ApiKeyConfig.service == ApiKeyService.BANGUMI
+                    ).first()
+                    if bangumi_config:
+                        bangumi_config.api_key = encryption_service.encrypt(settings.BANGUMI_API_KEY)
+                        logger.info("  ✓ 更新 Bangumi API 密钥")
+                
+                db.commit()
+                logger.info("✓ API 密钥配置已从环境变量更新")
+            
             return
         
-        # 创建默认 API 配置
-        configs = [
-            ApiKeyConfig(
-                service=ApiKeyService.TMDB,
-                api_key=None,
-                base_url="https://api.themoviedb.org/3",
-                enabled=True,
-                test_status=TestStatus.NOT_TESTED,
-                description="电影和电视剧数据库"
-            ),
-            ApiKeyConfig(
-                service=ApiKeyService.GOOGLE_BOOKS,
-                api_key=None,
-                base_url="https://www.googleapis.com/books/v1",
-                enabled=True,
-                test_status=TestStatus.NOT_TESTED,
-                description="Google 图书数据库"
-            ),
-            ApiKeyConfig(
-                service=ApiKeyService.BANGUMI,
-                api_key=None,
-                base_url="https://api.bgm.tv",
-                enabled=True,
-                test_status=TestStatus.NOT_TESTED,
-                description="Bangumi 动漫数据库"
-            )
-        ]
+        # 使用 api_key_service 从环境变量初始化
+        logger.info("从环境变量初始化 API 密钥配置...")
+        initialized_configs = api_key_service.initialize_from_env(db)
         
-        for config in configs:
-            db.add(config)
-        
-        db.commit()
-        
-        logger.info(f"✓ API 密钥配置初始化成功 ({len(configs)} 个)")
+        if initialized_configs:
+            logger.info(f"✓ API 密钥配置初始化成功 ({len(initialized_configs)} 个)")
+        else:
+            logger.warning("⚠ 未从环境变量初始化任何 API 密钥配置")
         
     except Exception as e:
         logger.error(f"✗ 初始化 API 密钥配置失败: {e}")

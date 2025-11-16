@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Auto-Translate Localization Files",
   "description": "Monitors changes to localization files (JSON, YAML, etc.) and automatically generates translations for all configured target languages when new or modified text is detected",
   "version": "1",

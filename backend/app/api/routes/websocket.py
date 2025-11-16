@@ -103,6 +103,7 @@ async def websocket_endpoint(
         # 创建一个任务来定期检查 token 过期
         async def check_token_expiration():
             """定期检查 token 是否过期"""
+            nonlocal token_exp  # 声明使用外层变量
             while True:
                 try:
                     await asyncio.sleep(60)  # 每分钟检查一次
@@ -160,7 +161,6 @@ async def websocket_endpoint(
                             new_payload = decode_token(new_token)
                             if new_payload and new_payload.get("sub") == str(user.id):
                                 # 更新 token 过期时间
-                                nonlocal token_exp
                                 token_exp = new_payload.get("exp")
                                 await websocket.send_json({
                                     "type": "token_refreshed",

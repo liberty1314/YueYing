@@ -294,6 +294,10 @@ class LLMConfigService:
             if key == "api_key":
                 if value:  # 只有非空时才更新
                     setattr(config, key, encryption_service.encrypt(value))
+            # 对于 provider，需要转换为枚举类型
+            elif key == "provider":
+                if value is not None:
+                    setattr(config, key, LLMProvider(value))
             elif value is not None:
                 setattr(config, key, value)
 
