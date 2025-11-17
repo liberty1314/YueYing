@@ -23,12 +23,17 @@ export const metadata: Metadata = {
   creator: 'YueYing Team',
   publisher: 'YueYing',
   robots: 'index, follow',
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
-  ],
 }
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
+
+export const themeColor = [
+  { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+  { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+]
 
 export default function RootLayout({
   children,

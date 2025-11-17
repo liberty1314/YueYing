@@ -25,11 +25,10 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 
-  // 实验性功能
-  experimental: {
-    // 启用服务端组件
-    serverActions: true,
-  },
+  // 实验性功能（移除过时的配置）
+  // experimental: {
+  //   serverActions: true, // 已默认启用，无需配置
+  // },
 
   // Webpack 配置
   webpack: (config, { isServer }) => {

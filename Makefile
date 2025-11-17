@@ -2,7 +2,7 @@
 # 阅影·log（YueYing）Makefile
 # ====================================
 
-.PHONY: help up down restart logs logs-all build clean test init
+.PHONY: help up down restart logs logs-all build build-cache build-backend build-backend-cache build-frontend build-frontend-cache clean test init
 
 # 默认目标
 .DEFAULT_GOAL := help
@@ -56,22 +56,40 @@ logs-frontend:
 ## logs-all: 查看所有服务日志（同 logs）
 logs-all: logs
 
-## build: 重新构建所有镜像
+## build: 重新构建所有镜像（不使用缓存）
 build:
 	@echo "${BLUE}重新构建镜像...${NC}"
 	docker-compose build --no-cache
 	@echo "${GREEN}✓ 镜像构建完成${NC}"
 
-## build-backend: 重新构建后端镜像
+## build-cache: 构建所有镜像（使用缓存）
+build-cache:
+	@echo "${BLUE}构建镜像（使用缓存）...${NC}"
+	docker-compose build
+	@echo "${GREEN}✓ 镜像构建完成${NC}"
+
+## build-backend: 重新构建后端镜像（不使用缓存）
 build-backend:
 	@echo "${BLUE}重新构建后端镜像...${NC}"
 	docker-compose build --no-cache backend
 	@echo "${GREEN}✓ 后端镜像构建完成${NC}"
 
-## build-frontend: 重新构建前端镜像
+## build-backend-cache: 构建后端镜像（使用缓存）
+build-backend-cache:
+	@echo "${BLUE}构建后端镜像（使用缓存）...${NC}"
+	docker-compose build backend
+	@echo "${GREEN}✓ 后端镜像构建完成${NC}"
+
+## build-frontend: 重新构建前端镜像（不使用缓存）
 build-frontend:
 	@echo "${BLUE}重新构建前端镜像...${NC}"
 	docker-compose build --no-cache frontend
+	@echo "${GREEN}✓ 前端镜像构建完成${NC}"
+
+## build-frontend-cache: 构建前端镜像（使用缓存）
+build-frontend-cache:
+	@echo "${BLUE}构建前端镜像（使用缓存）...${NC}"
+	docker-compose build frontend
 	@echo "${GREEN}✓ 前端镜像构建完成${NC}"
 
 ## ps: 查看服务状态
