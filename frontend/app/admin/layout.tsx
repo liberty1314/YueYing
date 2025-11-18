@@ -1,48 +1,37 @@
-"use client";
+/**
+ * Admin Layout - Server Component
+ * 
+ * 在服务端执行管理员权限检查，避免客户端加载延迟
+ */
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { Loading } from "@/components/ui/loading";
-import { useAuthStore } from "@/store/authStore";
+import { getServerSession, isAdmin, redirectToLogin, redirectToHome } from "@/lib/auth/server-auth";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { isAuthenticated, isAdmin, isLoading: isAuthLoading } = useAuthStore();
-  const [isChecking, setIsChecking] = useState(true);
+  // 服务端获取 session
+  const session = await getServerSession();
 
-  useEffect(() => {
-    // 关键修复：必须等待 auth 状态从 localStorage 完全加载后再检查
-    if (isAuthLoading) {
-      // Auth 状态还在加载中，等待
-      return;
-    }
-
-    // Auth 状态已加载完成，现在可以安全地检查权限
-    if (!isAuthenticated) {
-      // 未登录，跳转到登录页
-      router.push("/login");
-    } else if (!isAdmin) {
-      // 已登录但不是管理员，跳转到首页
-      router.push("/");
-    } else {
-      // 是管理员，允许访问
-      setIsChecking(false);
-    }
-  }, [isAuthenticated, isAdmin, isAuthLoading, router]);
-
-  // Auth 状态加载中、权限检查中或未授权时显示加载状态
-  if (isAuthLoading || isChecking || !isAuthenticated || !isAdmin) {
-    return <Loading />;
+  // 未认证用户，重定向到登录页
+  if (!session) {
+    redirectToLogin('/admin');
   }
 
+  // 检查是否为管理员
+  const isAdminUser = await isAdmin(session);
+
+  // 已认证但非管理员用户，重定向到首页
+  if (!isAdminUser) {
+    redirectToHome();
+  }
+
+  // 权限验证通过，渲染管理后台布局
   return (
     <>
-      {/* 侧边栏 */}
+      {/* 侧边栏 - Client Component */}
       <AdminSidebar />
 
       {/* 主内容区 - 添加左侧 margin 避开侧边栏 */}

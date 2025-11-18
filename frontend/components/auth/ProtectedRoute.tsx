@@ -1,59 +1,66 @@
 'use client'
 
 /**
- * 受保护路由组件
+ * 受保护路由组件（简化版）
  * 
- * 用于保护需要登录才能访问的页面
- * 未登录时显示 toast 提示并跳转到登录页
+ * ## 使用场景
+ * 
+ * 此组件仅用于 Middleware 无法处理的特殊场景：
+ * 1. 在客户端组件中需要显示会话加载状态
+ * 2. 在客户端组件中需要访问会话上下文
+ * 
+ * ## 重要说明
+ * 
+ * - **优先使用 Server Component**: 大多数情况下应该使用 Server Component + 服务端认证工具
+ * - **Middleware 已处理基本认证**: 实际的认证重定向由服务端 Middleware 处理
+ * - **此组件不执行权限检查**: 仅用于 UI 状态管理
+ * 
+ * ## 使用示例
+ * 
+ * ```typescript
+ * // 仅在客户端组件中使用
+ * 'use client'
+ * 
+ * import ProtectedRoute from '@/components/auth/ProtectedRoute'
+ * 
+ * export default function ClientPage() {
+ *   return (
+ *     <ProtectedRoute>
+ *       <div>Protected Content</div>
+ *     </ProtectedRoute>
+ *   )
+ * }
+ * ```
+ * 
+ * ## 推荐做法
+ * 
+ * 优先使用 Server Component：
+ * 
+ * ```typescript
+ * // 推荐：使用 Server Component
+ * import { getServerSession, redirectToLogin } from '@/lib/auth/server-auth'
+ * 
+ * export default async function ServerPage() {
+ *   const session = await getServerSession()
+ *   if (!session) {
+ *     redirectToLogin('/protected-page')
+ *   }
+ *   
+ *   return <div>Protected Content</div>
+ * }
+ * ```
+ * 
+ * @see {@link file://./lib/auth/README.md} 完整的认证文档
  */
 
 import { useSession } from 'next-auth/react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useEffect, useRef } from 'react'
-import { useToast } from '@/hooks/use-toast'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  redirectTo?: string
-  showToast?: boolean
-  toastMessage?: string
 }
 
-export default function ProtectedRoute({
-  children,
-  redirectTo = '/login',
-  showToast = true,
-  toastMessage = '请先登录才能访问此页面',
-}: ProtectedRouteProps) {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const { toast } = useToast()
-  const hasShownToast = useRef(false)
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      // 构建回调 URL（当前页面的完整路径）
-      const currentPath = pathname || '/'
-      const queryString = searchParams?.toString()
-      const callbackUrl = queryString ? `${currentPath}?${queryString}` : currentPath
-
-      // 显示 toast 提示（只显示一次）
-      if (showToast && !hasShownToast.current) {
-        toast({
-          title: '需要登录',
-          description: toastMessage,
-          variant: 'default',
-        })
-        hasShownToast.current = true
-      }
-
-      // 跳转到登录页，并保存回调 URL
-      const loginUrl = `${redirectTo}?callbackUrl=${encodeURIComponent(callbackUrl)}`
-      router.push(loginUrl)
-    }
-  }, [status, router, redirectTo, pathname, searchParams, showToast, toastMessage, toast])
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { status } = useSession()
 
   // 加载中状态
   if (status === 'loading') {
@@ -67,12 +74,8 @@ export default function ProtectedRoute({
     )
   }
 
-  // 未登录状态（正在跳转）
-  if (status === 'unauthenticated') {
-    return null
-  }
-
   // 已登录，渲染子组件
+  // 注意：如果未登录，middleware 会在到达这里之前重定向
   return <>{children}</>
 }
 
