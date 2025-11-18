@@ -42,13 +42,15 @@ import { Eye, EyeOff } from "lucide-react";
 interface ApiKeyTableViewProps {
     configs: ApiKeyConfig[];
     serviceInfoMap: Record<string, ServiceInfo>;
-    onUpdate: () => void;
+    onUpdate: (config: ApiKeyConfig) => void;
+    onFullUpdate: () => void;
 }
 
 export function ApiKeyTableView({
     configs,
     serviceInfoMap,
     onUpdate,
+    onFullUpdate,
 }: ApiKeyTableViewProps) {
     const { toast } = useToast();
     const [editingService, setEditingService] = useState<string | null>(null);
@@ -116,15 +118,19 @@ export function ApiKeyTableView({
                     title: "测试成功",
                     description: result.message,
                 });
+                // 获取更新后的单个配置
+                const updatedConfig = await apiKeyApi.getConfig(service);
+                onUpdate(updatedConfig);
             } else {
                 toast({
                     title: "测试失败",
                     description: result.message,
                     variant: "destructive",
                 });
+                // 即使失败，也获取状态以更新“上次测试时间”
+                const updatedConfig = await apiKeyApi.getConfig(service);
+                onUpdate(updatedConfig);
             }
-
-            onUpdate();
         } catch (error: any) {
             console.error("测试连接失败:", error);
             toast({
@@ -147,7 +153,12 @@ export function ApiKeyTableView({
                 description: `${serviceInfoMap[service]?.name || service} 已${enabled ? "启用" : "禁用"
                     }`,
             });
-            onUpdate();
+
+            // 乐观更新
+            const currentConfig = configs.find((c) => c.service === service);
+            if (currentConfig) {
+                onUpdate({ ...currentConfig, enabled });
+            }
         } catch (error: any) {
             console.error("更新状态失败:", error);
             toast({
@@ -269,7 +280,7 @@ export function ApiKeyTableView({
                     config={configs.find((c) => c.service === editingService)!}
                     serviceInfo={serviceInfoMap[editingService]}
                     onClose={() => setEditingService(null)}
-                    onUpdate={onUpdate}
+                    onUpdate={onFullUpdate}
                 />
             )}
         </>

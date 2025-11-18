@@ -43,8 +43,14 @@ RUN python -c "from sentence_transformers import SentenceTransformer; \
     except Exception as e: \
         print(f'Model download failed (will retry at runtime): {e}')" || true
 
+# 设置启动脚本权限
+RUN chmod +x scripts/entrypoint.sh
+
 # 暴露端口
 EXPOSE 8000
+
+# 使用启动脚本
+ENTRYPOINT ["scripts/entrypoint.sh"]
 
 # 开发环境启动命令（支持热重载）
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
@@ -96,6 +102,9 @@ COPY --chown=appuser:appuser . .
 RUN mkdir -p /app/data/chromadb /app/logs && \
     chown -R appuser:appuser /app/data /app/logs
 
+# 设置启动脚本权限
+RUN chmod +x scripts/entrypoint.sh
+
 # 切换到非root用户
 USER appuser
 
@@ -105,6 +114,9 @@ EXPOSE 8000
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
+
+# 使用启动脚本
+ENTRYPOINT ["scripts/entrypoint.sh"]
 
 # 生产环境启动命令（使用多进程）
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

@@ -38,10 +38,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // 全局配置
-            staleTime: 60 * 1000, // 1分钟
-            refetchOnWindowFocus: false,
-            retry: 1,
+            // 全局配置 - 优化缓存策略
+            staleTime: 5 * 60 * 1000, // 5分钟 - 数据在5分钟内被认为是新鲜的
+            gcTime: 10 * 60 * 1000, // 10分钟 - 缓存保留时间（原 cacheTime）
+            refetchOnWindowFocus: false, // 窗口聚焦时不重新请求
+            refetchOnMount: false, // 组件挂载时不自动重新请求（如果有缓存）
+            refetchOnReconnect: false, // 网络重连时不自动重新请求
+            retry: 1, // 失败重试1次
           },
         },
       })

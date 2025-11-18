@@ -25,9 +25,16 @@ up:
 	@echo "${BLUE}启动所有服务...${NC}"
 	docker-compose up -d
 	@echo "${GREEN}✓ 服务已启动${NC}"
-	@echo "${YELLOW}前端: http://localhost:3000${NC}"
-	@echo "${YELLOW}后端: http://localhost:8000${NC}"
-	@echo "${YELLOW}API文档: http://localhost:8000/docs${NC}"
+	@echo ""
+	@echo "${BLUE}注意：${NC}"
+	@echo "  后端容器启动时会自动执行数据库迁移和种子数据加载"
+	@echo "  首次启动或重新构建后，请等待初始化完成（约 10-30 秒）"
+	@echo "  查看启动日志: ${YELLOW}make logs-backend${NC}"
+	@echo ""
+	@echo "${BLUE}访问地址：${NC}"
+	@echo "${YELLOW}  前端: http://localhost:3000${NC}"
+	@echo "${YELLOW}  后端: http://localhost:8000${NC}"
+	@echo "${YELLOW}  API文档: http://localhost:8000/docs${NC}"
 
 ## down: 停止所有服务
 down:
@@ -305,9 +312,13 @@ validate:
 	fi
 	@echo "${GREEN}✓ 所有配置验证通过${NC}"
 
-## deploy: 完整部署流程（构建 -> 启动 -> 迁移 -> 种子数据）
-deploy: build up migrate seed
+## deploy: 完整部署流程（构建 -> 启动）
+deploy: build up
 	@echo "${GREEN}✓ 部署完成${NC}"
+	@echo ""
+	@echo "${BLUE}注意：${NC}"
+	@echo "  后端容器启动时会自动执行数据库迁移和种子数据加载"
+	@echo "  请等待容器完全启动（查看日志: make logs-backend）"
 	@echo ""
 	@echo "${BLUE}访问地址：${NC}"
 	@echo "${YELLOW}  前端: http://localhost:3000${NC}"

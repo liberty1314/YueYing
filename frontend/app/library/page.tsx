@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Container } from "@/components/common/Container";
 import { FilterPanel } from "@/components/library/FilterPanel";
 import { GridView } from "@/components/library/GridView";
@@ -11,356 +10,271 @@ import { LibrarySkeleton } from "@/components/library/LibrarySkeleton";
 import { SearchPagination } from "@/components/search/SearchPagination";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { userItemsApi } from "@/lib/user-items-api";
+import { useUserItems, useDeleteUserItem } from "@/hooks/use-user-items";
 import { useToast } from "@/hooks/use-toast";
-import type { UserItemFilters, UserItemListResponse } from "@/types/user-item";
+import type { UserItemFilters } from "@/types/user-item";
 import { Loader2, Search } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/library/DeleteConfirmDialog";
 
 export default function LibraryPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { toast } = useToast();
-  const { status } = useSession();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { toast } = useToast();
 
-  // 从 URL 读取初始参数
-  const initialStatus = searchParams.get("status") as any || undefined;
-  const initialContentType = searchParams.get("content_type") as any || undefined;
-  const initialSearchQuery = searchParams.get("search") || "";
-  const initialSortBy = searchParams.get("sort_by") || "status";
-  const initialSortOrder = searchParams.get("sort_order") || "asc";
-  const initialPage = parseInt(searchParams.get("page") || "1", 10);
-  const initialViewMode = searchParams.get("view") || "grid";
-  const initialYearFrom = searchParams.get("year_from") ? parseInt(searchParams.get("year_from")!) : undefined;
-  const initialYearTo = searchParams.get("year_to") ? parseInt(searchParams.get("year_to")!) : undefined;
+    // 从 URL 读取参数并构建 filters（使用 useMemo 避免重复计算）
+    const filters = useMemo<UserItemFilters>(() => ({
+        status: searchParams.get("status") as any || undefined,
+        content_type: searchParams.get("content_type") as any || undefined,
+        search: searchParams.get("search") || undefined,
+        sort_by: (searchParams.get("sort_by") || "status") as any,
+        sort_order: (searchParams.get("sort_order") || "asc") as any,
+        page: parseInt(searchParams.get("page") || "1", 10),
+        page_size: 20,
+        year_from: searchParams.get("year_from") ? parseInt(searchParams.get("year_from")!) : undefined,
+        year_to: searchParams.get("year_to") ? parseInt(searchParams.get("year_to")!) : undefined,
+    }), [searchParams]);
 
-  // 使用本地状态管理
-  const [filters, setFilters] = useState<UserItemFilters>({
-    status: initialStatus,
-    content_type: initialContentType,
-    search: initialSearchQuery || undefined,
-    sort_by: initialSortBy as any,
-    sort_order: initialSortOrder as any,
-    page: initialPage,
-    page_size: 20,
-    year_from: initialYearFrom,
-    year_to: initialYearTo,
-  });
-  
-  const [searchInput, setSearchInput] = useState(initialSearchQuery);
-  const [viewMode, setViewMode] = useState(initialViewMode);
-  const [data, setData] = useState<UserItemListResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // 删除确认对话框状态
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ id: number; title: string } | null>(null);
+    const [searchInput, setSearchInput] = useState(filters.search || "");
+    const [viewMode, setViewMode] = useState(searchParams.get("view") || "grid");
 
-  // 加载数据
-  const loadData = async (currentFilters: UserItemFilters) => {
-    setIsLoading(true);
-    setError(null);
+    // 使用 React Query 获取数据
+    const { data, isLoading, error } = useUserItems(filters);
+    const deleteMutation = useDeleteUserItem();
 
-    try {
-      const response = await userItemsApi.getUserItems(currentFilters);
-      setData(response);
-    } catch (err: any) {
-      console.error("Failed to load user items:", err);
-      setError(err.response?.data?.detail || "加载失败");
-      toast({
-        title: "加载失败",
-        description: err.response?.data?.detail || "无法加载记录列表",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // 删除确认对话框状态
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{ id: number; title: string } | null>(null);
 
-  // 更新 URL（使用 replace 避免历史记录堆积）
-  const updateURL = (currentFilters: UserItemFilters, currentViewMode: string) => {
-    const params = new URLSearchParams();
-    
-    if (currentFilters.status) params.set("status", currentFilters.status);
-    if (currentFilters.content_type) params.set("content_type", currentFilters.content_type);
-    if (currentFilters.search) params.set("search", currentFilters.search);
-    if (currentFilters.sort_by) params.set("sort_by", currentFilters.sort_by);
-    if (currentFilters.sort_order) params.set("sort_order", currentFilters.sort_order);
-    if (currentFilters.year_from) params.set("year_from", currentFilters.year_from.toString());
-    if (currentFilters.year_to) params.set("year_to", currentFilters.year_to.toString());
-    if (currentFilters.page && currentFilters.page > 1) params.set("page", currentFilters.page.toString());
-    if (currentViewMode && currentViewMode !== "grid") params.set("view", currentViewMode);
+    // 更新 URL
+    const updateURL = (newFilters: Partial<UserItemFilters>, newViewMode?: string) => {
+        const params = new URLSearchParams();
+        const mergedFilters = { ...filters, ...newFilters };
 
-    const newUrl = `/library?${params.toString()}`;
-    // 使用 replace 而不是 push，避免页面跳动
-    router.replace(newUrl, { scroll: false });
-  };
+        if (mergedFilters.status) params.set("status", mergedFilters.status);
+        if (mergedFilters.content_type) params.set("content_type", mergedFilters.content_type);
+        if (mergedFilters.search) params.set("search", mergedFilters.search);
+        if (mergedFilters.sort_by) params.set("sort_by", mergedFilters.sort_by);
+        if (mergedFilters.sort_order) params.set("sort_order", mergedFilters.sort_order);
+        if (mergedFilters.year_from) params.set("year_from", mergedFilters.year_from.toString());
+        if (mergedFilters.year_to) params.set("year_to", mergedFilters.year_to.toString());
+        if (mergedFilters.page && mergedFilters.page > 1) params.set("page", mergedFilters.page.toString());
 
-  // 检查登录状态
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      // 未登录，重定向到登录页面
-      router.push("/login");
-    }
-  }, [status, router]);
+        const currentViewMode = newViewMode || viewMode;
+        if (currentViewMode && currentViewMode !== "grid") params.set("view", currentViewMode);
 
-  // 初始加载
-  useEffect(() => {
-    if (status === "authenticated") {
-      loadData(filters);
-    }
-  }, [status]);
-
-  // 处理搜索（不立即更新URL，避免抖动）
-  const handleSearch = (value: string) => {
-    setSearchInput(value);
-    const newFilters = {
-      ...filters,
-      search: value || undefined,
-      page: 1,
+        router.push(`/library?${params.toString()}`, { scroll: false });
     };
-    setFilters(newFilters);
-    loadData(newFilters);
-    // 不立即更新URL，避免输入时的抖动
-  };
 
-  // 处理筛选变化（不立即更新URL，避免抖动）
-  const handleFiltersChange = (newFilters: Partial<UserItemFilters>) => {
-    const updatedFilters = {
-      ...filters,
-      ...newFilters,
-      page: 1, // 筛选变化时重置到第一页
+    // 处理搜索
+    const handleSearch = (value: string) => {
+        setSearchInput(value);
+        updateURL({ search: value || undefined, page: 1 });
     };
-    setFilters(updatedFilters);
-    loadData(updatedFilters);
-    // 不立即更新URL，等数据加载完成后再更新
-  };
 
-  // 处理排序变化（不立即更新URL，避免抖动）
-  const handleSortChange = (sortBy: string, sortOrder: string) => {
-    const updatedFilters = {
-      ...filters,
-      sort_by: sortBy as any,
-      sort_order: sortOrder as any,
-      page: 1,
+    // 处理筛选变化
+    const handleFiltersChange = (newFilters: Partial<UserItemFilters>) => {
+        updateURL({ ...newFilters, page: 1 });
     };
-    setFilters(updatedFilters);
-    loadData(updatedFilters);
-    // 不立即更新URL，等数据加载完成后再更新
-  };
 
-  // 处理页码变化
-  const handlePageChange = (newPage: number) => {
-    const updatedFilters = {
-      ...filters,
-      page: newPage,
+    // 处理排序变化
+    const handleSortChange = (sortBy: string, sortOrder: string) => {
+        updateURL({ sort_by: sortBy as any, sort_order: sortOrder as any, page: 1 });
     };
-    setFilters(updatedFilters);
-    loadData(updatedFilters);
-    updateURL(updatedFilters, viewMode);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
-  // 处理视图模式变化
-  const handleViewModeChange = (mode: "grid" | "list") => {
-    setViewMode(mode);
-    updateURL(filters, mode);
-  };
+    // 处理页码变化
+    const handlePageChange = (newPage: number) => {
+        updateURL({ page: newPage });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
-  // 打开删除确认对话框
-  const openDeleteDialog = (id: number, title: string) => {
-    setItemToDelete({ id, title });
-    setDeleteDialogOpen(true);
-  };
+    // 处理视图模式变化
+    const handleViewModeChange = (mode: "grid" | "list") => {
+        setViewMode(mode);
+        updateURL({}, mode);
+    };
 
-  // 处理删除
-  const handleDeleteConfirm = async () => {
-    if (!itemToDelete) return;
+    // 打开删除确认对话框
+    const openDeleteDialog = (id: number, title: string) => {
+        setItemToDelete({ id, title });
+        setDeleteDialogOpen(true);
+    };
 
-    try {
-      await userItemsApi.deleteUserItem(itemToDelete.id);
-      toast({
-        title: "删除成功",
-        description: "记录已删除",
-      });
-      loadData(filters); // 重新加载数据
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
-    } catch (err: any) {
-      toast({
-        title: "删除失败",
-        description: err.response?.data?.detail || "无法删除记录",
-        variant: "destructive",
-      });
+    // 处理删除
+    const handleDeleteConfirm = async () => {
+        if (!itemToDelete) return;
+
+        deleteMutation.mutate(itemToDelete.id, {
+            onSuccess: () => {
+                toast({
+                    title: "删除成功",
+                    description: "记录已删除",
+                });
+                setDeleteDialogOpen(false);
+                setItemToDelete(null);
+            },
+            onError: (err: any) => {
+                toast({
+                    title: "删除失败",
+                    description: err.response?.data?.detail || "无法删除记录",
+                    variant: "destructive",
+                });
+            },
+        });
+    };
+
+    // 加载中显示骨架屏
+    if (isLoading && !data) {
+        return <LibrarySkeleton />;
     }
-  };
 
-  // 加载中或未登录时显示骨架屏
-  if (status === "loading" || (isLoading && !data)) {
-    return <LibrarySkeleton />;
-  }
-
-  // 如果未登录，不渲染内容（会被useEffect重定向）
-  if (status === "unauthenticated") {
-    return null;
-  }
-
-  return (
-    <div className="min-h-[calc(100vh-64px)] bg-background">
-      <Container className="py-8">
-        {/* 状态筛选标签 */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant={!filters.status ? "default" : "ghost"}
-              size="lg"
-              onClick={() => handleFiltersChange({ status: undefined })}
-              className="h-10 px-6 text-base font-semibold"
-            >
-              全部
-            </Button>
-            <Button
-              type="button"
-              variant={filters.status === "watching" ? "default" : "ghost"}
-              size="lg"
-              onClick={() => handleFiltersChange({ status: "watching" })}
-              className="h-10 px-6 text-base font-semibold"
-            >
-              在看
-            </Button>
-            <Button
-              type="button"
-              variant={filters.status === "want_to_watch" ? "default" : "ghost"}
-              size="lg"
-              onClick={() => handleFiltersChange({ status: "want_to_watch" })}
-              className="h-10 px-6 text-base font-semibold"
-            >
-              想看
-            </Button>
-            <Button
-              type="button"
-              variant={filters.status === "watched" ? "default" : "ghost"}
-              size="lg"
-              onClick={() => handleFiltersChange({ status: "watched" })}
-              className="h-10 px-6 text-base font-semibold"
-            >
-              看过
-            </Button>
-          </div>
-        </div>
-
-        {/* 工具栏 */}
-        <div className="flex flex-col gap-4 mb-6">
-          {/* 第一行：记录数（左）和搜索框（右） */}
-          <div className="flex items-center justify-between gap-4">
-            {/* 记录条数 */}
-            <p className="text-muted-foreground">
-              {data ? `共 ${data.total} 条记录` : "加载中..."}
-            </p>
-            
-            {/* 搜索框（1/4宽度） */}
-            <div className="relative w-full md:w-1/4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="搜索标题..."
-                value={searchInput}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-
-          {/* 第二行和第三行：筛选按钮+排序+视图 / 展开的筛选面板 */}
-          <FilterPanel
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            sortBy={(filters.sort_by || "status") as any}
-            sortOrder={(filters.sort_order || "asc") as any}
-            onSortChange={handleSortChange}
-            viewMode={viewMode as "grid" | "list"}
-            onViewModeChange={handleViewModeChange}
-          />
-        </div>
-
-        {/* 错误状态 */}
-        {error && !data && (
-          <div className="text-center py-20">
-            <p className="text-destructive mb-4">{error}</p>
-            <button
-              onClick={() => loadData(filters)}
-              className="text-primary hover:underline"
-            >
-              重试
-            </button>
-          </div>
-        )}
-
-        {/* 数据展示（保持内容可见，避免抖动） */}
-        {data && (
-          <div className="relative">
-            {/* 加载遮罩 - 在数据上方显示半透明遮罩 */}
-            {isLoading && (
-              <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-start justify-center pt-20">
-                <div className="bg-background rounded-lg p-4 shadow-lg">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    return (
+        <div className="min-h-[calc(100vh-64px)] bg-background">
+            <Container className="py-8">
+                {/* 状态筛选标签 */}
+                <div className="mb-6">
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant={!filters.status ? "default" : "ghost"}
+                            size="lg"
+                            onClick={() => handleFiltersChange({ status: undefined })}
+                            className="h-10 px-6 text-base font-semibold"
+                        >
+                            全部
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={filters.status === "watching" ? "default" : "ghost"}
+                            size="lg"
+                            onClick={() => handleFiltersChange({ status: "watching" })}
+                            className="h-10 px-6 text-base font-semibold"
+                        >
+                            在看
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={filters.status === "want_to_watch" ? "default" : "ghost"}
+                            size="lg"
+                            onClick={() => handleFiltersChange({ status: "want_to_watch" })}
+                            className="h-10 px-6 text-base font-semibold"
+                        >
+                            想看
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={filters.status === "watched" ? "default" : "ghost"}
+                            size="lg"
+                            onClick={() => handleFiltersChange({ status: "watched" })}
+                            className="h-10 px-6 text-base font-semibold"
+                        >
+                            看过
+                        </Button>
+                    </div>
                 </div>
-              </div>
-            )}
 
-            {data.items.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-muted-foreground mb-4">
-                  还没有记录，快去添加吧！
-                </p>
-                <button
-                  onClick={() => router.push("/explore")}
-                  className="text-primary hover:underline"
-                >
-                  去探索
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* 网格或列表视图 */}
-                {viewMode === "grid" ? (
-                  <GridView items={data.items} onDelete={openDeleteDialog} />
-                ) : (
-                  <ListView items={data.items} onDelete={openDeleteDialog} />
-                )}
+                {/* 工具栏 */}
+                <div className="flex flex-col gap-4 mb-6">
+                    {/* 第一行：记录数（左）和搜索框（右） */}
+                    <div className="flex items-center justify-between gap-4">
+                        {/* 记录条数 */}
+                        <p className="text-muted-foreground">
+                            {data ? `共 ${data.total} 条记录` : "加载中..."}
+                        </p>
 
-                {/* 分页 */}
-                {data.total_pages > 1 && (
-                  <div className="mt-8">
-                    <SearchPagination
-                      currentPage={data.page}
-                      totalPages={data.total_pages}
-                      onPageChange={handlePageChange}
+                        {/* 搜索框（1/4宽度） */}
+                        <div className="relative w-full md:w-1/4">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="搜索标题..."
+                                value={searchInput}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 第二行和第三行：筛选按钮+排序+视图 / 展开的筛选面板 */}
+                    <FilterPanel
+                        filters={filters}
+                        onFiltersChange={handleFiltersChange}
+                        sortBy={(filters.sort_by || "status") as any}
+                        sortOrder={(filters.sort_order || "asc") as any}
+                        onSortChange={handleSortChange}
+                        viewMode={viewMode as "grid" | "list"}
+                        onViewModeChange={handleViewModeChange}
                     />
-                  </div>
+                </div>
+
+                {/* 错误状态 */}
+                {error && !data && (
+                    <div className="text-center py-20">
+                        <p className="text-destructive mb-4">加载失败</p>
+                        <button
+                            onClick={() => router.refresh()}
+                            className="text-primary hover:underline"
+                        >
+                            重试
+                        </button>
+                    </div>
                 )}
-              </>
-            )}
-          </div>
-        )}
 
-        {/* 初始加载状态（只在没有数据时显示） */}
-        {!data && isLoading && (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-      </Container>
+                {/* 数据展示 */}
+                {data && (
+                    <div className="relative">
+                        {/* 加载遮罩 */}
+                        {isLoading && (
+                            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-start justify-center pt-20">
+                                <div className="bg-background rounded-lg p-4 shadow-lg">
+                                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                </div>
+                            </div>
+                        )}
 
-      {/* 删除确认对话框 */}
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDeleteConfirm}
-        title={itemToDelete?.title || "此记录"}
-      />
-    </div>
-  );
+                        {data.items.length === 0 ? (
+                            <div className="text-center py-20">
+                                <p className="text-muted-foreground mb-4">
+                                    还没有记录，快去添加吧！
+                                </p>
+                                <button
+                                    onClick={() => router.push("/discover")}
+                                    className="text-primary hover:underline"
+                                >
+                                    去探索
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* 网格或列表视图 */}
+                                {viewMode === "grid" ? (
+                                    <GridView items={data.items} onDelete={openDeleteDialog} />
+                                ) : (
+                                    <ListView items={data.items} onDelete={openDeleteDialog} />
+                                )}
+
+                                {/* 分页 */}
+                                {data.total_pages > 1 && (
+                                    <div className="mt-8">
+                                        <SearchPagination
+                                            currentPage={data.page}
+                                            totalPages={data.total_pages}
+                                            onPageChange={handlePageChange}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+            </Container>
+
+            {/* 删除确认对话框 */}
+            <DeleteConfirmDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                onConfirm={handleDeleteConfirm}
+                title={itemToDelete?.title || "此记录"}
+            />
+        </div>
+    );
 }

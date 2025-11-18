@@ -79,6 +79,15 @@ export default function ApiKeysPage() {
     }
   };
 
+  // 更新单个配置项
+  const handleConfigUpdate = (updatedConfig: ApiKeyConfig) => {
+    setConfigs((prevConfigs) =>
+      prevConfigs.map((config) =>
+        config.service === updatedConfig.service ? updatedConfig : config
+      )
+    );
+  };
+
   useEffect(() => {
     loadConfigs();
   }, []);
@@ -146,7 +155,8 @@ export default function ApiKeysPage() {
         <ApiKeyTableView
           configs={configs}
           serviceInfoMap={SERVICE_INFO}
-          onUpdate={loadConfigs}
+          onUpdate={handleConfigUpdate}
+          onFullUpdate={loadConfigs}
         />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -162,7 +172,8 @@ export default function ApiKeysPage() {
                 key={config.service}
                 config={config}
                 serviceInfo={serviceInfo}
-                onUpdate={loadConfigs}
+                onUpdate={handleConfigUpdate}
+                onFullUpdate={loadConfigs}
               />
             );
           })}

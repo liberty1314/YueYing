@@ -97,46 +97,67 @@ def seed_api_key_configs(db: Session):
     """初始化 API 密钥配置"""
     try:
         from app.services.api_key_service import api_key_service
+        from app.core.encryption import encryption_service
         
         # 检查是否已存在配置
         existing_count = db.query(ApiKeyConfig).count()
+        
+        # 检查是否有空的 api_key（NULL）
+        null_key_count = db.query(ApiKeyConfig).filter(
+            ApiKeyConfig.api_key.is_(None)
+        ).count()
+        
         if existing_count > 0:
             logger.info(f"✓ API 密钥配置已存在 ({existing_count} 个)")
             
-            # 如果设置了强制从环境变量读取，更新数据库配置
-            if settings.FORCE_ENV_SETTINGS:
-                logger.info("检测到 FORCE_ENV_SETTINGS=True，从环境变量更新 API 密钥配置...")
-                from app.core.encryption import encryption_service
+            # 如果有空的 api_key 或设置了强制从环境变量读取，更新数据库配置
+            should_update = null_key_count > 0 or settings.FORCE_ENV_SETTINGS
+            
+            if should_update:
+                if null_key_count > 0:
+                    logger.info(f"检测到 {null_key_count} 个配置的 API 密钥为空，从环境变量填充...")
+                if settings.FORCE_ENV_SETTINGS:
+                    logger.info("检测到 FORCE_ENV_SETTINGS=True，从环境变量更新所有 API 密钥配置...")
+                
+                updated_count = 0
                 
                 # 更新 TMDB
                 if settings.TMDB_API_KEY:
                     tmdb_config = db.query(ApiKeyConfig).filter(
                         ApiKeyConfig.service == ApiKeyService.TMDB
                     ).first()
-                    if tmdb_config:
+                    if tmdb_config and (tmdb_config.api_key is None or settings.FORCE_ENV_SETTINGS):
                         tmdb_config.api_key = encryption_service.encrypt(settings.TMDB_API_KEY)
                         logger.info("  ✓ 更新 TMDB API 密钥")
+                        updated_count += 1
                 
                 # 更新 Google Books
                 if settings.GOOGLE_BOOKS_API_KEY:
                     books_config = db.query(ApiKeyConfig).filter(
                         ApiKeyConfig.service == ApiKeyService.GOOGLE_BOOKS
                     ).first()
-                    if books_config:
+                    if books_config and (books_config.api_key is None or settings.FORCE_ENV_SETTINGS):
                         books_config.api_key = encryption_service.encrypt(settings.GOOGLE_BOOKS_API_KEY)
                         logger.info("  ✓ 更新 Google Books API 密钥")
+                        updated_count += 1
                 
                 # 更新 Bangumi
                 if settings.BANGUMI_API_KEY:
                     bangumi_config = db.query(ApiKeyConfig).filter(
                         ApiKeyConfig.service == ApiKeyService.BANGUMI
                     ).first()
-                    if bangumi_config:
+                    if bangumi_config and (bangumi_config.api_key is None or settings.FORCE_ENV_SETTINGS):
                         bangumi_config.api_key = encryption_service.encrypt(settings.BANGUMI_API_KEY)
                         logger.info("  ✓ 更新 Bangumi API 密钥")
+                        updated_count += 1
                 
-                db.commit()
-                logger.info("✓ API 密钥配置已从环境变量更新")
+                if updated_count > 0:
+                    db.commit()
+                    logger.info(f"✓ 已更新 {updated_count} 个 API 密钥配置")
+                else:
+                    logger.info("⚠ 环境变量中未配置 API 密钥，跳过更新")
+            else:
+                logger.info("所有 API 密钥配置完整，跳过更新")
             
             return
         

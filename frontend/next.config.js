@@ -25,14 +25,25 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 
-  // 实验性功能（移除过时的配置）
-  // experimental: {
-  //   serverActions: true, // 已默认启用，无需配置
-  // },
+  // 性能优化配置
+  swcMinify: true, // 使用 SWC 进行代码压缩（更快）
+
+  // 实验性功能
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'], // 优化包导入
+  },
 
   // Webpack 配置
   webpack: (config, { isServer }) => {
-    // 可以在这里添加自定义 webpack 配置
+    // 优化构建性能
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
     return config;
   },
 

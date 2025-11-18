@@ -149,13 +149,46 @@ class LLMConfigService:
     def initialize_from_env(db: Session) -> Optional[LLMConfig]:
         """
         从环境变量初始化 LLM 配置
-        仅在数据库中没有配置时执行
+        如果配置存在但 api_key 为空，或设置了 FORCE_ENV_SETTINGS，则更新配置
         """
         # 检查是否已有配置
         existing_config = db.query(LLMConfig).first()
+        
         if existing_config:
-            logger.info("LLM 配置已存在，跳过初始化")
-            return existing_config
+            # 检查是否需要更新（api_key 为空或强制使用环境变量）
+            should_update = existing_config.api_key is None or settings.FORCE_ENV_SETTINGS
+            
+            if should_update:
+                provider = existing_config.provider.value
+                presets = LLMConfigService.get_provider_presets()
+                
+                if provider in presets:
+                    preset = presets[provider]
+                    api_key = preset.get("api_key")
+                    
+                    if api_key:
+                        # 更新 API 密钥
+                        existing_config.api_key = encryption_service.encrypt(api_key)
+                        
+                        # 如果强制使用环境变量，也更新其他字段
+                        if settings.FORCE_ENV_SETTINGS:
+                            existing_config.base_url = preset.get("base_url", existing_config.base_url)
+                            existing_config.default_model = preset.get("default_model", existing_config.default_model)
+                        
+                        db.commit()
+                        db.refresh(existing_config)
+                        
+                        # 清除缓存
+                        LLMConfigCache.clear()
+                        
+                        logger.info(f"✓ 从环境变量更新 LLM 配置: provider={provider}")
+                        return existing_config
+                    else:
+                        logger.warning(f"环境变量中未配置 {provider.upper()} 的 API 密钥")
+                        return existing_config
+            else:
+                logger.info("LLM 配置已存在且完整，跳过初始化")
+                return existing_config
 
         # 获取默认提供商的配置
         provider = settings.DEFAULT_LLM_PROVIDER.lower()
