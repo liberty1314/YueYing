@@ -107,6 +107,8 @@ def mock_redis_client(mock_redis):
         
         # 同时 mock cache invalidation 模块中的 redis_client
         with patch('app.core.cache.invalidation.default_redis_client', mock_client):
-            yield mock_client
+            # Mock 性能监控中间件中的 redis_client
+            with patch('app.middleware.performance_middleware.performance_metrics.redis_client', mock_redis):
+                yield mock_client
 
 

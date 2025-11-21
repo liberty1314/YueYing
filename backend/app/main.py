@@ -34,6 +34,7 @@ from app.middleware.logging_middleware import LoggingMiddleware
 from app.middleware.http_cache_middleware import HTTPCacheMiddleware
 from app.middleware.api_docs_auth import APIDocsAuthMiddleware
 from app.middleware.rate_limit import limiter, rate_limit_handler
+from app.middleware.performance_middleware import PerformanceMiddleware
 from slowapi.errors import RateLimitExceeded
 from app.api.routes import auth
 
@@ -71,6 +72,9 @@ if settings.API_DOCS_USERNAME and settings.API_DOCS_PASSWORD:
 
 # 日志中间件（记录所有请求/响应）
 app.add_middleware(LoggingMiddleware)
+
+# 性能监控中间件
+app.add_middleware(PerformanceMiddleware)
 
 # HTTP缓存中间件
 app.add_middleware(HTTPCacheMiddleware)
@@ -145,6 +149,18 @@ app.include_router(assistant.router, prefix="/api")
 # 智能总结路由
 from app.api.routes import summary
 app.include_router(summary.router, prefix="/api")
+
+# AI 内容摘要路由
+from app.api.routes import ai_content_summary
+app.include_router(ai_content_summary.router, prefix="/api")
+
+# AI 洞察路由
+from app.api.routes import ai_insights
+app.include_router(ai_insights.router, prefix="/api")
+
+# 健康检查路由
+from app.api.routes import health
+app.include_router(health.router, prefix="/api")
 
 # 管理员路由
 from app.api.routes.admin import users as admin_users

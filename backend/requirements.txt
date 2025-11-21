@@ -60,6 +60,7 @@ Pillow==10.2.0
 python-dotenv==1.0.0
 tenacity==8.2.3
 loguru==0.7.2
+psutil==5.9.8
 
 # 速率限制
 slowapi==0.1.9

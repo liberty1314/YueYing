@@ -9,7 +9,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.dependencies.auth import get_current_user
+from app.api.dependencies.auth import get_current_user, get_optional_current_user
 from app.models.user import User
 from app.services.external_apis.tmdb import tmdb_client
 from app.schemas.tmdb import (
@@ -68,7 +68,7 @@ async def search_movies(
     "/movies/popular",
     response_model=TMDBMovieSearchResponse,
     summary="获取热门电影",
-    description="获取当前热门的电影列表"
+    description="获取当前热门的电影列表(公开接口,无需登录)"
 )
 @limiter.limit("30/minute")
 async def get_popular_movies(
@@ -76,12 +76,13 @@ async def get_popular_movies(
     page: int = Query(1, ge=1, le=500, description="页码"),
     language: str = Query("zh-CN", description="语言"),
     region: Optional[str] = Query(None, description="地区代码"),
-    current_user: User = Depends(get_current_user),
 ):
     """
-    获取热门电影
+    获取热门电影(公开接口)
     
     获取当前热门的电影列表
+    
+    注意：此接口无需登录即可访问
     """
     try:
         logger.info(f"Fetching popular movies: page={page}, region={region}")
@@ -284,19 +285,20 @@ async def search_tv_shows(
     "/tv/popular",
     response_model=TMDBTVShowSearchResponse,
     summary="获取热门剧集",
-    description="获取当前热门的剧集列表"
+    description="获取当前热门的剧集列表(公开接口,无需登录)"
 )
 @limiter.limit("30/minute")
 async def get_popular_tv_shows(
     request: Request,
     page: int = Query(1, ge=1, le=500, description="页码"),
     language: str = Query("zh-CN", description="语言"),
-    current_user: User = Depends(get_current_user),
 ):
     """
-    获取热门剧集
+    获取热门剧集(公开接口)
     
     获取当前热门的剧集列表
+    
+    注意：此接口无需登录即可访问
     """
     try:
         logger.info(f"Fetching popular TV shows: page={page}")
