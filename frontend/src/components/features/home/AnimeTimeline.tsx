@@ -36,11 +36,12 @@ interface CalendarDay {
 
 interface AnimeTimelineProps {
   calendarData: CalendarDay[];
+  onAnimeClick?: (anime: AnimeItem) => void;
 }
 
 const WEEKDAY_MAP = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 
-export default function AnimeTimeline({ calendarData }: AnimeTimelineProps) {
+export default function AnimeTimeline({ calendarData, onAnimeClick }: AnimeTimelineProps) {
   const [activeDay, setActiveDay] = useState(0);
 
   // 默认选中今天
@@ -115,7 +116,7 @@ export default function AnimeTimeline({ calendarData }: AnimeTimelineProps) {
       <Grid container spacing={2}>
         {animeList.slice(0, 12).map((anime) => {
           const title = anime.name_cn || anime.name;
-          const imageUrl = anime.images?.large || anime.images?.common || '/placeholder.jpg';
+          const imageUrl = anime.images?.large || anime.images?.common || '/placeholder.svg';
           const score = anime.rating?.score;
           const episodeCount = anime.eps || anime.eps_count;
 
@@ -124,6 +125,7 @@ export default function AnimeTimeline({ calendarData }: AnimeTimelineProps) {
               <AppleCard
                 variant="elevated"
                 hover
+                onClick={() => onAnimeClick?.(anime)}
                 sx={{
                   cursor: 'pointer',
                   height: '100%',
@@ -150,7 +152,7 @@ export default function AnimeTimeline({ calendarData }: AnimeTimelineProps) {
                       objectFit: 'cover',
                     }}
                     onError={(e) => {
-                      e.currentTarget.src = '/placeholder.jpg';
+                      e.currentTarget.src = '/placeholder.svg';
                     }}
                   />
                   {score && (

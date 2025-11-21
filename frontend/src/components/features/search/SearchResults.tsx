@@ -44,24 +44,8 @@ export default function SearchResults({ query, contentType, source }: SearchResu
                 setError('');
 
                 // TODO: 实际调用外部 API
-                // 这里暂时使用模拟数据
-                await new Promise((resolve) => setTimeout(resolve, 500));
-
-                // 模拟搜索结果
-                const mockResults: SearchResult[] = Array.from({ length: 10 }, (_, i) => ({
-                    id: `${source}-${i}`,
-                    external_id: `${source}-${i}`,
-                    title: `${query} - 结果 ${i + 1}`,
-                    original_title: `Original ${query} ${i + 1}`,
-                    description: `这是关于 ${query} 的搜索结果 ${i + 1}。这是一个示例描述，实际数据将来自外部 API。`,
-                    poster_url: `https://via.placeholder.com/300x450?text=${query}+${i + 1}`,
-                    release_date: '2024-01-01',
-                    year: '2024',
-                    rating: Math.floor(Math.random() * 10) + 1,
-                }));
-
-                setResults(mockResults);
-                setTotalPages(3);
+                setResults([]);
+                setTotalPages(1);
             } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : '搜索失败，请重试');
             } finally {

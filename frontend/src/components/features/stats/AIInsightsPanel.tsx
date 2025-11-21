@@ -2,21 +2,25 @@
  * AIInsightsPanel - AI洞察面板
  * 
  * Week 6: AI洞察 - 基于用户行为的智能分析和建议
+ * 升级版：支持多种洞察类型、优先级排序、刷新机制
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, Button, Badge } from '@/components/ui';
-import { SparklesIcon, TrendingUpIcon, HeartIcon, ClockIcon, RefreshCwIcon } from 'lucide-react';
+import { SparklesIcon, TrendingUpIcon, HeartIcon, AwardIcon, LightbulbIcon, RefreshCwIcon, ChevronRightIcon } from 'lucide-react';
 import { api, APIError } from '@/lib/apiClient';
 
 interface Insight {
-  type: 'trend' | 'preference' | 'recommendation' | 'achievement';
+  type: 'trend' | 'recommendation' | 'achievement' | 'suggestion';
   title: string;
   description: string;
-  icon: 'trending' | 'heart' | 'clock' | 'sparkles';
   priority: 'high' | 'medium' | 'low';
+  action?: {
+    label: string;
+    link?: string;
+  };
 }
 
 interface AIInsightsPanelProps {
@@ -24,16 +28,30 @@ interface AIInsightsPanelProps {
 }
 
 const iconComponents = {
-  trending: TrendingUpIcon,
-  heart: HeartIcon,
-  clock: ClockIcon,
-  sparkles: SparklesIcon,
+  trend: TrendingUpIcon,
+  recommendation: HeartIcon,
+  achievement: AwardIcon,
+  suggestion: LightbulbIcon,
 };
 
-const priorityColors = {
-  high: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
-  medium: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
-  low: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+const typeColors = {
+  trend: 'from-blue-500/20 to-blue-600/20 border-blue-200 dark:border-blue-800',
+  recommendation: 'from-pink-500/20 to-pink-600/20 border-pink-200 dark:border-pink-800',
+  achievement: 'from-yellow-500/20 to-yellow-600/20 border-yellow-200 dark:border-yellow-800',
+  suggestion: 'from-green-500/20 to-green-600/20 border-green-200 dark:border-green-800',
+};
+
+const typeLabels = {
+  trend: '趋势分析',
+  recommendation: '推荐',
+  achievement: '成就',
+  suggestion: '建议',
+};
+
+const priorityBadges = {
+  high: { label: '重要', variant: 'error' as const },
+  medium: { label: '一般', variant: 'warning' as const },
+  low: { label: '提示', variant: 'default' as const },
 };
 
 export function AIInsightsPanel({ className }: AIInsightsPanelProps) {
@@ -47,37 +65,14 @@ export function AIInsightsPanel({ className }: AIInsightsPanelProps) {
   const fetchInsights = async () => {
     setLoading(true);
     try {
-      // 调用AI洞察分析API
-      const data = await api.get<{ insights: Insight[] }>('/api/ai/insights');
+      // 调用AI洞察分析API（需要认证）
+      const data = await api.get<{ insights: Insight[] }>('/ai/insights', true);
       setInsights(data.insights || []);
     } catch (error) {
       if (error instanceof APIError) {
         console.error('Failed to fetch insights:', error.detail);
       }
-      // 使用模拟数据作为后备
-      setInsights([
-        {
-          type: 'trend',
-          title: '观看趋势上升',
-          description: '你在过去一个月的观看时长比上月增加了 35%，保持良好的观影习惯！',
-          icon: 'trending',
-          priority: 'high',
-        },
-        {
-          type: 'preference',
-          title: '偏好类型分析',
-          description: '你最喜欢的类型是科幻和动作片，占总观看量的 60%。我们为你推荐了更多相关内容。',
-          icon: 'heart',
-          priority: 'medium',
-        },
-        {
-          type: 'recommendation',
-          title: '智能推荐',
-          description: '基于你的观看历史，我们发现你可能会喜欢《星际穿越》和《盗梦空间》。',
-          icon: 'sparkles',
-          priority: 'high',
-        },
-      ]);
+      setInsights([]);
     } finally {
       setLoading(false);
     }
@@ -112,7 +107,7 @@ export function AIInsightsPanel({ className }: AIInsightsPanelProps) {
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
               </div>
             ))}
           </div>
@@ -120,24 +115,60 @@ export function AIInsightsPanel({ className }: AIInsightsPanelProps) {
           /* Insights List */
           <div className="space-y-3">
             {insights.map((insight, index) => {
-              const Icon = iconComponents[insight.icon];
-              const colorClass = priorityColors[insight.priority];
+              const Icon = iconComponents[insight.type];
+              const colorClass = typeColors[insight.type];
+              const badge = priorityBadges[insight.priority];
 
               return (
                 <div
                   key={index}
-                  className={`p-4 rounded-lg border ${colorClass} transition-all hover:shadow-md`}
+                  className={`relative overflow-hidden p-4 rounded-lg border bg-gradient-to-br ${colorClass} transition-all hover:shadow-md`}
                 >
                   <div className="flex items-start gap-3">
+                    {/* Icon */}
                     <div className="flex-shrink-0 mt-0.5">
-                      <Icon className="w-5 h-5" />
+                      <div className="w-10 h-10 rounded-lg bg-white/80 dark:bg-gray-800/80 flex items-center justify-center">
+                        <Icon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                      </div>
                     </div>
+
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold mb-1">{insight.title}</h4>
-                      <p className="text-sm opacity-90 leading-relaxed">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          {insight.title}
+                        </h4>
+                        <Badge variant={badge.variant} size="sm">
+                          {badge.label}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-2">
                         {insight.description}
                       </p>
+
+                      {/* Type Label */}
+                      <span className="inline-block text-xs font-medium text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 px-2 py-0.5 rounded">
+                        {typeLabels[insight.type]}
+                      </span>
                     </div>
+
+                    {/* Action Button */}
+                    {insight.action && (
+                      <div className="flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (insight.action?.link) {
+                              window.location.href = insight.action.link;
+                            }
+                          }}
+                        >
+                          {insight.action.label}
+                          <ChevronRightIcon className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

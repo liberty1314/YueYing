@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { ChatSidebar, MessageBubble, InputArea } from '@/components/features/assistant';
 import { assistantApi } from '@/lib/api/assistant';
-import type { Message as APIMessage, Conversation as APIConversation } from '@/lib/api/assistant';
-import { SparklesIcon } from 'lucide-react';
+import { BotIcon } from 'lucide-react';
 
 // 本地类型
 interface Message {
@@ -84,7 +83,6 @@ export default function AssistantPage() {
         if (!message.trim() || isSending) return;
 
         const userMessage = message.trim();
-        const startTime = Date.now();
         setIsSending(true);
 
         // 立即显示用户消息
@@ -170,11 +168,9 @@ export default function AssistantPage() {
                 {/* 主聊天区域 */}
                 <div className="flex-1 flex flex-col">
                     {/* 标题栏 */}
-                    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                    {/* <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                                <SparklesIcon className="w-5 h-5 text-white" />
-                            </div>
+                            <BotIcon className="w-10 h-10 text-gray-700 dark:text-gray-300" />
                             <div>
                                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                                     AI 助手
@@ -184,7 +180,7 @@ export default function AssistantPage() {
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* 消息列表 */}
                     <div className="flex-1 overflow-y-auto px-6 py-6 bg-gray-50 dark:bg-black">
@@ -194,9 +190,7 @@ export default function AssistantPage() {
                             </div>
                         ) : messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center">
-                                <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-6">
-                                    <SparklesIcon className="w-10 h-10 text-white" />
-                                </div>
+                                <BotIcon className="w-20 h-20 text-gray-400 dark:text-gray-600 mb-6" />
                                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
                                     开始新对话
                                 </h3>
@@ -223,30 +217,7 @@ export default function AssistantPage() {
                                         isStreaming={streamingMessageIndex === index}
                                     />
                                 ))}
-                                {/* 思考中指示器 */}
-                                {isSending && streamingMessageIndex !== null && messages[streamingMessageIndex]?.content === '' && (
-                                    <div className="flex gap-4 mb-6">
-                                        <div className="flex-shrink-0">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                                                <SparklesIcon className="w-5 h-5 text-white animate-pulse" />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 max-w-3xl">
-                                            <div className="inline-block bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex gap-1">
-                                                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                                                    </div>
-                                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                        AI 正在思考中...
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+
                                 <div ref={messagesEndRef} />
                             </div>
                         )}

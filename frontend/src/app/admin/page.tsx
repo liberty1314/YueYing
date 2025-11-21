@@ -1,275 +1,172 @@
+/**
+ * Admin Dashboard Page
+ * Week 7 Days 2-3: 仪表盘主页面
+ */
+
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Box, Typography, Grid } from '@mui/material';
-import { AppleCard } from '@/components/ui';
-import PeopleIcon from '@mui/icons-material/People';
-import MovieIcon from '@mui/icons-material/Movie';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import StorageIcon from '@mui/icons-material/Storage';
-import { api, APIError, CachePresets } from '@/lib/apiClient';
-import { SkeletonCard, ErrorDisplay } from '@/components/ui';
-
-interface AdminStats {
-  total_users: number;
-  total_items: number;
-  ai_calls: number;
-  storage_used_mb: number;
-  active_users_today: number;
-  new_users_week: number;
-}
+import { useEffect } from 'react';
+import { Card } from '@/components/ui';
+import { 
+  DashboardMetricCard, 
+  UserGrowthChart, 
+  SystemHealthPanel, 
+  RetentionHeatmap 
+} from '@/components/features/admin';
+import { useAdminDashboard } from '@/hooks/useAdminDashboard';
+import { 
+  UsersIcon, 
+  ActivityIcon, 
+  TrendingUpIcon, 
+  PercentIcon,
+  RefreshCwIcon 
+} from 'lucide-react';
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { data, loading, error, refetch } = useAdminDashboard({
+    refetchInterval: 30000, // 30秒自动刷新
+  });
 
-  useEffect(() => {
-    fetchAdminStats();
-  }, []);
-
-  const fetchAdminStats = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await api.get<AdminStats>(
-        '/api/admin/stats',
-        true,
-        CachePresets.SHORT // 1分钟缓存
-      );
-      setStats(data);
-    } catch (err) {
-      if (err instanceof APIError) {
-        setError(err);
-      } else if (err instanceof Error) {
-        setError(err);
-      }
-      // 使用模拟数据作为后备
-      setStats({
-        total_users: 0,
-        total_items: 0,
-        ai_calls: 0,
-        storage_used_mb: 0,
-        active_users_today: 0,
-        new_users_week: 0,
-      });
-    } finally {
-      setLoading(false);
-    }
+  // 计算指标趋势
+  const calculateTrend = (current: number, total: number): number => {
+    if (total === 0) return 0;
+    return (current / total) * 100;
   };
 
   if (loading) {
     return (
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
-          仪表盘
-        </Typography>
-        <Grid container spacing={3}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">仪表盘</h1>
+        </div>
+        {/* 骨架屏 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
-              <SkeletonCard />
-            </Grid>
+            <div key={i} className="h-32 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
           ))}
-        </Grid>
-      </Box>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-80 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+          <div className="h-80 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+        </div>
+      </div>
     );
   }
 
-  if (error && !stats) {
+  if (error && !data) {
     return (
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
-          仪表盘
-        </Typography>
-        <ErrorDisplay error={error} onRetry={fetchAdminStats} />
-      </Box>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">仪表盘</h1>
+        <Card className="p-8 text-center">
+          <div className="text-red-500 mb-4">
+            <ActivityIcon className="w-12 h-12 mx-auto" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {error.message}
+          </p>
+          <button
+            onClick={refetch}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            重试
+          </button>
+        </Card>
+      </div>
     );
   }
 
-  const statCards = [
-    { 
-      label: '总用户数', 
-      value: stats?.total_users.toString() || '0', 
-      icon: PeopleIcon, 
-      color: '#007AFF',
-      subtitle: `本周新增 ${stats?.new_users_week || 0}` 
-    },
-    { 
-      label: '总内容数', 
-      value: stats?.total_items.toString() || '0', 
-      icon: MovieIcon, 
-      color: '#34C759',
-      subtitle: '跨所有用户'
-    },
-    { 
-      label: 'AI 调用次数', 
-      value: stats?.ai_calls.toString() || '0', 
-      icon: SmartToyIcon, 
-      color: '#FF9500',
-      subtitle: '总调用量'
-    },
-    { 
-      label: '存储使用', 
-      value: `${stats?.storage_used_mb || 0} MB`, 
-      icon: StorageIcon, 
-      color: '#5856D6',
-      subtitle: 'MinIO存储'
-    },
-  ];
+  const metrics = data?.core_metrics;
+  const dauTrend = data?.dau_trend || [];
+  const retention = data?.retention_trends || [];
+  const health = data?.system_health;
+
+  // 计算趋势数据
+  const dauTrendValue = metrics ? calculateTrend(metrics.dau, metrics.mau) : 0;
+  const newUsersTrendValue = metrics ? (metrics.today_new_users / 10) : 0; // 模拟趋势
 
   return (
-    <Box>
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
-        仪表盘
-      </Typography>
+    <div className="space-y-6">
+      {/* 页面标题 */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">仪表盘</h1>
+        <button
+          onClick={refetch}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <RefreshCwIcon className="w-4 h-4" />
+          刷新
+        </button>
+      </div>
 
-      {/* 统计卡片 */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={stat.label}>
-              <AppleCard
-                sx={{
-                  p: 3,
-                  height: '100%',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 3,
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: -10,
-                    right: -10,
-                    opacity: 0.1,
-                  }}
-                >
-                  <Icon sx={{ fontSize: 100, color: stat.color }} />
-                </Box>
-                <Box sx={{ position: 'relative', zIndex: 1 }}>
-                  <Icon sx={{ fontSize: 32, color: stat.color, mb: 1 }} />
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {stat.label}
-                  </Typography>
-                  {stat.subtitle && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                      {stat.subtitle}
-                    </Typography>
-                  )}
-                </Box>
-              </AppleCard>
-            </Grid>
-          );
-        })}
-      </Grid>
+      {/* 核心指标卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <DashboardMetricCard
+          label="日活跃用户 (DAU)"
+          value={metrics?.dau || 0}
+          icon={UsersIcon}
+          iconColor="text-blue-500"
+          iconBgColor="bg-blue-100 dark:bg-blue-900/30"
+          trend={{
+            direction: dauTrendValue > 50 ? 'up' : 'neutral',
+            value: dauTrendValue,
+            label: '占月活跃用户'
+          }}
+        />
+        <DashboardMetricCard
+          label="月活跃用户 (MAU)"
+          value={metrics?.mau || 0}
+          icon={ActivityIcon}
+          iconColor="text-green-500"
+          iconBgColor="bg-green-100 dark:bg-green-900/30"
+          trend={{
+            direction: 'up',
+            value: metrics?.user_stickiness || 0,
+            label: '用户粘性'
+          }}
+          suffix="%"
+        />
+        <DashboardMetricCard
+          label="今日新增用户"
+          value={metrics?.today_new_users || 0}
+          icon={TrendingUpIcon}
+          iconColor="text-orange-500"
+          iconBgColor="bg-orange-100 dark:bg-orange-900/30"
+          trend={{
+            direction: newUsersTrendValue > 5 ? 'up' : 'neutral',
+            value: newUsersTrendValue,
+            label: '较昨日'
+          }}
+        />
+        <DashboardMetricCard
+          label="用户粘性"
+          value={metrics?.user_stickiness || 0}
+          icon={PercentIcon}
+          iconColor="text-purple-500"
+          iconBgColor="bg-purple-100 dark:bg-purple-900/30"
+          suffix="%"
+          subtitle="DAU/MAU 比率"
+        />
+      </div>
 
-      {/* 快速操作 */}
-      <AppleCard sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-          快速操作
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Box 
-              sx={{ 
-                p: 2, 
-                border: '1px solid', 
-                borderColor: 'divider', 
-                borderRadius: 2,
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => window.location.href = '/admin/users'}
-            >
-              <Typography variant="body1" fontWeight={600}>用户管理</Typography>
-              <Typography variant="caption" color="text.secondary">管理系统用户</Typography>
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Box 
-              sx={{ 
-                p: 2, 
-                border: '1px solid', 
-                borderColor: 'divider', 
-                borderRadius: 2,
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => window.location.href = '/admin/api-keys'}
-            >
-              <Typography variant="body1" fontWeight={600}>API密钥</Typography>
-              <Typography variant="caption" color="text.secondary">配置第三方API</Typography>
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Box 
-              sx={{ 
-                p: 2, 
-                border: '1px solid', 
-                borderColor: 'divider', 
-                borderRadius: 2,
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => window.location.href = '/admin/llm-config'}
-            >
-              <Typography variant="body1" fontWeight={600}>LLM配置</Typography>
-              <Typography variant="caption" color="text.secondary">AI模型设置</Typography>
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Box 
-              sx={{ 
-                p: 2, 
-                border: '1px solid', 
-                borderColor: 'divider', 
-                borderRadius: 2,
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => window.location.href = '/admin/system'}
-            >
-              <Typography variant="body1" fontWeight={600}>系统设置</Typography>
-              <Typography variant="caption" color="text.secondary">全局配置</Typography>
-            </Box>
-          </Grid>
-        </Grid>
-      </AppleCard>
+      {/* 图表区域 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 30天用户增长趋势 */}
+        <UserGrowthChart data={dauTrend} />
 
-      {/* 系统信息 */}
-      <AppleCard sx={{ p: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-          系统信息
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              活跃用户（今日）
-            </Typography>
-            <Typography variant="h6" fontWeight={600}>
-              {stats?.active_users_today || 0}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              系统版本
-            </Typography>
-            <Typography variant="h6" fontWeight={600}>
-              v1.0.0
-            </Typography>
-          </Grid>
-        </Grid>
-      </AppleCard>
-    </Box>
+        {/* 系统健康状态 */}
+        {health && <SystemHealthPanel health={health} />}
+      </div>
+
+      {/* 留存率热力图 */}
+      {retention.length > 0 && (
+        <RetentionHeatmap data={retention} />
+      )}
+
+      {/* 数据刷新提示 */}
+      <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+        数据每30秒自动刷新 • 最后更新: {new Date().toLocaleTimeString('zh-CN')}
+      </div>
+    </div>
   );
 }

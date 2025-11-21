@@ -10,20 +10,24 @@ import { AppleButton } from '@/components/ui';
 
 interface CarouselItem {
   id: number;
-  title: string;
+  title?: string;
+  name?: string;
   overview: string;
   backdrop_path?: string;
   poster_path?: string;
   vote_average?: number;
   genres?: string[];
   media_type?: string;
+  genre_ids?: number[];
 }
 
 interface HeroCarouselProps {
   items: CarouselItem[];
+  onAddToLibrary?: (item: CarouselItem) => void;
+  onViewDetail?: (item: CarouselItem) => void;
 }
 
-export default function HeroCarousel({ items }: HeroCarouselProps) {
+export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
@@ -47,14 +51,17 @@ export default function HeroCarousel({ items }: HeroCarouselProps) {
     setIsAutoPlaying(false);
   };
 
-  if (items.length === 0) return null;
+  if (!items || items.length === 0) {
+    return null;
+  }
 
   const currentItem = items[currentIndex];
+  const title = currentItem.title || currentItem.name || '未知标题';
   const imageUrl = currentItem.backdrop_path
     ? `https://image.tmdb.org/t/p/original${currentItem.backdrop_path}`
     : currentItem.poster_path
       ? `https://image.tmdb.org/t/p/original${currentItem.poster_path}`
-      : '/placeholder.jpg';
+      : '/placeholder.svg';
 
   return (
     <Box
@@ -133,7 +140,7 @@ export default function HeroCarousel({ items }: HeroCarouselProps) {
               textShadow: '2px 2px 8px rgba(0,0,0,0.8)',
             }}
           >
-            {currentItem.title}
+            {title}
           </Typography>
 
           {/* 评分和类型 */}
@@ -184,6 +191,7 @@ export default function HeroCarousel({ items }: HeroCarouselProps) {
             <AppleButton
               variant="primary"
               startIcon={<PlayArrowIcon />}
+              onClick={() => onViewDetail?.(currentItem)}
               sx={{
                 bgcolor: 'white',
                 color: 'black',
@@ -197,6 +205,7 @@ export default function HeroCarousel({ items }: HeroCarouselProps) {
             <AppleButton
               variant="ghost"
               startIcon={<AddIcon />}
+              onClick={() => onAddToLibrary?.(currentItem)}
               sx={{
                 borderColor: 'white',
                 color: 'white',
@@ -208,7 +217,7 @@ export default function HeroCarousel({ items }: HeroCarouselProps) {
                 },
               }}
             >
-              添加到库
+              快速添加
             </AppleButton>
           </Stack>
         </Stack>

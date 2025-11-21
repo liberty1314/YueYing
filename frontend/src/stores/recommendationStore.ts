@@ -46,7 +46,7 @@ interface RecommendationActions {
 
 type RecommendationStore = RecommendationState & RecommendationActions;
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export const useRecommendationStore = create<RecommendationStore>()((set, get) => ({
   // State
@@ -95,7 +95,7 @@ export const useRecommendationStore = create<RecommendationStore>()((set, get) =
       }
 
       const response = await fetch(
-        `${API_BASE_URL}/api/recommendations/for-you?strategy=${strategy}&limit=20`,
+        `${API_BASE_URL}/recommendations/for-you?strategy=${strategy}&limit=20`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -160,7 +160,7 @@ export const useRecommendationStore = create<RecommendationStore>()((set, get) =
       }
 
       const response = await fetch(
-        `${API_BASE_URL}/api/recommendations/discover?limit=24`,
+        `${API_BASE_URL}/recommendations/discover?limit=24`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,

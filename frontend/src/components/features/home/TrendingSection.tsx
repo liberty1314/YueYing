@@ -7,7 +7,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 interface TrendingItem {
   id: number;
-  title: string;
+  title?: string;
   name?: string;
   poster_path?: string;
   vote_average?: number;
@@ -19,12 +19,17 @@ interface TrendingItem {
 interface TrendingSectionProps {
   dailyItems: TrendingItem[];
   weeklyItems: TrendingItem[];
+  onItemClick?: (item: TrendingItem) => void;
 }
 
-export default function TrendingSection({ dailyItems, weeklyItems }: TrendingSectionProps) {
+export default function TrendingSection({ dailyItems, weeklyItems, onItemClick }: TrendingSectionProps) {
   const [activeTab, setActiveTab] = useState(0);
 
   const currentItems = activeTab === 0 ? dailyItems : weeklyItems;
+
+  if ((!dailyItems || dailyItems.length === 0) && (!weeklyItems || weeklyItems.length === 0)) {
+    return null;
+  }
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -65,7 +70,7 @@ export default function TrendingSection({ dailyItems, weeklyItems }: TrendingSec
           const title = item.title || item.name || '未知标题';
           const imageUrl = item.poster_path
             ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-            : '/placeholder.jpg';
+            : '/placeholder.svg';
           const releaseDate = item.release_date || item.first_air_date;
           const year = releaseDate ? new Date(releaseDate).getFullYear() : '';
 
@@ -74,6 +79,7 @@ export default function TrendingSection({ dailyItems, weeklyItems }: TrendingSec
               <AppleCard
                 variant="elevated"
                 hover
+                onClick={() => onItemClick?.(item)}
                 sx={{
                   cursor: 'pointer',
                   height: '100%',

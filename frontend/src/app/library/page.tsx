@@ -38,9 +38,15 @@ export default function LibraryPage() {
     const fetchItems = async () => {
         try {
             setLoading(true);
+
+            // 转换 sortBy 格式：从 'updatedAt-desc' 转换为 'updated_at' 和 'desc'
+            const [sortField, sortOrder] = sortBy.split('-');
+            const sort_by = sortField.replace(/([A-Z])/g, '_$1').toLowerCase();
+
             const response = await userItemsApi.getAll({
                 ...filters,
-                sort_by: sortBy,
+                sort_by,
+                sort_order: sortOrder,
                 page,
                 page_size: pageSize,
             });
@@ -148,7 +154,7 @@ export default function LibraryPage() {
         <ProtectedRoute>
             <div className="min-h-screen bg-gray-50 dark:bg-black">
                 {/* Header */}
-                <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                {/* <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                     <div className="max-w-[1920px] mx-auto px-6 py-4">
                         <div className="flex items-center justify-between">
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -163,7 +169,7 @@ export default function LibraryPage() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Batch Operations Bar */}
                 <BatchOperationsBar

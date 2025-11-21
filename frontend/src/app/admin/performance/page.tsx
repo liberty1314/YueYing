@@ -44,7 +44,7 @@ export default function PerformancePage() {
 
   useEffect(() => {
     fetchMetrics();
-    
+
     // 自动刷新（每30秒）
     if (autoRefresh) {
       const interval = setInterval(fetchMetrics, 30000);
@@ -69,15 +69,6 @@ export default function PerformancePage() {
       } else if (err instanceof Error) {
         setError(err);
       }
-      // 模拟数据
-      setMetrics({
-        api_response_time_avg: 120,
-        cache_hit_rate: 75,
-        memory_usage_percent: 45,
-        db_connection_count: 5,
-        redis_memory_mb: 128,
-        request_count_minute: 20,
-      });
     } finally {
       setLoading(false);
     }
@@ -298,12 +289,12 @@ export default function PerformancePage() {
             (metrics.cache_hit_rate >= 60 &&
               metrics.api_response_time_avg <= 200 &&
               metrics.memory_usage_percent <= 80)) && (
-            <li>
-              <Typography variant="body2" color="success.main">
-                系统性能良好，暂无优化建议
-              </Typography>
-            </li>
-          )}
+              <li>
+                <Typography variant="body2" color="success.main">
+                  系统性能良好，暂无优化建议
+                </Typography>
+              </li>
+            )}
         </ul>
       </AppleCard>
 
@@ -358,8 +349,8 @@ export default function PerformancePage() {
                       <Typography
                         variant="body2"
                         sx={{
-                          color: endpoint.avg_response_time < 200 ? 'success.main' : 
-                                 endpoint.avg_response_time < 500 ? 'warning.main' : 'error.main'
+                          color: endpoint.avg_response_time < 200 ? 'success.main' :
+                            endpoint.avg_response_time < 500 ? 'warning.main' : 'error.main'
                         }}
                       >
                         {endpoint.avg_response_time.toFixed(2)}

@@ -1,5 +1,6 @@
 /**
- * Statistics Page - 数据统计页面
+ * Analytics Page - 数据统计页面
+ * 路由: /analytics
  * 
  * Week 6: 数据可视化统计页面
  * 整合Recharts图表组件和AI洞察面板
@@ -46,13 +47,13 @@ export default function StatsPage() {
     setLoading(true);
     setError(null);
     try {
-      // 调用综合统计API（启用中等缓存）
+      // 调用综合统计API（启用中等缓存，需要认证）
       const statsData = await api.get<any>(
-        '/api/stats/comprehensive?time_period=month&months=6',
+        '/stats/comprehensive?time_period=month&months=6',
         true,
         CachePresets.MEDIUM // 5分钟缓存
       );
-      
+
       // 适配后端数据格式
       const adaptedData: StatsData = {
         watchTime: statsData.time_trend.data.map((point: any) => ({
@@ -85,48 +86,13 @@ export default function StatsPage() {
           thisMonthItems: statsData.overview.this_month_added,
         },
       };
-      
+
       setData(adaptedData);
     } catch (err) {
       if (err instanceof APIError) {
         console.error('Failed to fetch stats:', err.detail);
-        setError(err);
-      } else if (err instanceof Error) {
-        setError(err);
       }
-      // 使用模拟数据作为后备（仅开发环境）
-      if (process.env.NODE_ENV === 'development') {
-        setData({
-          watchTime: [
-            { month: '1月', hours: 45, items: 12 },
-            { month: '2月', hours: 52, items: 15 },
-            { month: '3月', hours: 38, items: 10 },
-            { month: '4月', hours: 65, items: 18 },
-            { month: '5月', hours: 58, items: 16 },
-            { month: '6月', hours: 72, items: 20 },
-          ],
-          contentType: [
-            { type: 'movie', count: 45, percentage: 40 },
-            { type: 'tv', count: 35, percentage: 31 },
-            { type: 'anime', count: 20, percentage: 18 },
-            { type: 'book', count: 8, percentage: 7 },
-            { type: 'game', count: 5, percentage: 4 },
-          ],
-          rating: [
-            { range: '9-10分', count: 25, avgRating: 9.5 },
-            { range: '8-9分', count: 40, avgRating: 8.5 },
-            { range: '7-8分', count: 30, avgRating: 7.5 },
-            { range: '6-7分', count: 15, avgRating: 6.5 },
-            { range: '0-6分', count: 3, avgRating: 5.0 },
-          ],
-          overview: {
-            totalItems: 113,
-            totalHours: 330,
-            avgRating: 8.2,
-            thisMonthItems: 20,
-          },
-        });
-      }
+      setError(err instanceof Error ? err : new Error('获取统计数据失败'));
     } finally {
       setLoading(false);
     }

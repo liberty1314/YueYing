@@ -26,8 +26,6 @@ export default function DiscoverPage() {
                 // const response = await recommendationsApi.get(recommendationType);
                 // setRecommendations(response);
 
-                // 模拟数据
-                await new Promise((resolve) => setTimeout(resolve, 500));
                 setRecommendations([]);
             } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : '获取推荐失败');

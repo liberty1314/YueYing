@@ -53,9 +53,11 @@ class CacheManager:
 
             # 尝试解析 JSON
             try:
-                return json.loads(value)
+                decoded = json.loads(value)
+                return decoded
             except (json.JSONDecodeError, TypeError):
-                return value
+                # 如果不是 JSON，直接返回原始值
+                return value.decode('utf-8') if isinstance(value, bytes) else value
 
         except Exception as e:
             logger.error(f"获取缓存失败: key={key}, error={e}")
@@ -89,7 +91,14 @@ class CacheManager:
             if isinstance(value, (dict, list, tuple)):
                 value = json.dumps(value, ensure_ascii=False)
             elif not isinstance(value, (str, bytes, int, float)):
-                value = str(value)
+                # 尝试使用 Pydantic 的 model_dump 方法
+                if hasattr(value, 'model_dump'):
+                    value = json.dumps(value.model_dump(), ensure_ascii=False)
+                # 尝试使用 dict() 方法
+                elif hasattr(value, 'dict'):
+                    value = json.dumps(value.dict(), ensure_ascii=False)
+                else:
+                    value = str(value)
 
             # 设置缓存
             result = self.redis.set(key, value, ex=expire, nx=nx, xx=xx)

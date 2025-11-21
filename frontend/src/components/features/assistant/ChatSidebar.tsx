@@ -171,7 +171,7 @@ export function ChatSidebar({
                         )}
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="default" size="sm" className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                            {conv.message_count} 条
+                            {conv.message_count}
                           </Badge>
                         </div>
                       </div>
@@ -213,7 +213,7 @@ export function ChatSidebar({
       </div>
 
       {/* Footer - Quick Actions */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      {/* <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="text-xs text-gray-500 dark:text-gray-400">
           💡 快捷提问
         </div>
@@ -231,7 +231,7 @@ export function ChatSidebar({
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

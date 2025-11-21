@@ -113,13 +113,13 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
             'w-10 h-10 rounded-full flex items-center justify-center',
             isUser
               ? 'bg-blue-600 dark:bg-blue-500 text-white'
-              : 'bg-gradient-to-br from-blue-500 to-purple-600 text-white'
+              : 'bg-gray-200 dark:bg-gray-700'
           )}
         >
           {isUser ? (
             <UserIcon className="w-5 h-5 text-white" />
           ) : (
-            <SparklesIcon className="w-5 h-5 text-white" />
+            <SparklesIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           )}
         </div>
       </div>
@@ -172,9 +172,24 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
                   : 'text-gray-900 dark:text-white'
               )}
             >
-              {renderContent(displayedContent)}
-              {isStreaming && message.role === 'assistant' && (
-                <span className="inline-block w-2 h-4 ml-1 bg-primary-500 animate-pulse" />
+              {displayedContent === '' && message.role === 'assistant' ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    AI 正在思考中...
+                  </span>
+                </div>
+              ) : (
+                <>
+                  {renderContent(displayedContent)}
+                  {isStreaming && message.role === 'assistant' && displayedContent !== '' && (
+                    <span className="inline-block w-2 h-4 ml-1 bg-primary-500 animate-pulse" />
+                  )}
+                </>
               )}
             </div>
 

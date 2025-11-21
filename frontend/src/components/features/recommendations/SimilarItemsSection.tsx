@@ -26,8 +26,6 @@ export default function SimilarItemsSection({ itemId, contentType }: SimilarItem
                 // const response = await recommendationsApi.getSimilar(itemId);
                 // setSimilarItems(response);
 
-                // 模拟数据
-                await new Promise((resolve) => setTimeout(resolve, 500));
                 setSimilarItems([]);
             } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : '获取相似内容失败');
