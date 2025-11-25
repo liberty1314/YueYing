@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { Input, Button, Badge } from '@/components/ui';
-import { SearchIcon, SparklesIcon, FilterIcon } from 'lucide-react';
+import { SearchIcon, SparklesIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UnifiedSearchBarProps {
@@ -48,7 +48,7 @@ export function UnifiedSearchBar({
           className={cn(
             'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
             searchMode === 'keyword'
-              ? 'bg-primary-500 text-white dark:text-white'
+              ? 'bg-blue-600 dark:bg-blue-500 text-white'
               : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
           )}
         >
@@ -60,7 +60,7 @@ export function UnifiedSearchBar({
           className={cn(
             'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
             searchMode === 'semantic'
-              ? 'bg-primary-500 text-white dark:text-white'
+              ? 'bg-blue-600 dark:bg-blue-500 text-white'
               : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
           )}
         >

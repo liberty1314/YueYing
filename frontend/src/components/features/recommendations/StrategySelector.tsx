@@ -90,7 +90,7 @@ export function StrategySelector({
                 className={`
                   w-12 h-12 rounded-lg flex items-center justify-center mb-4
                   ${isActive
-                    ? 'bg-primary-500 text-white dark:text-white'
+                    ? 'bg-blue-600 dark:bg-blue-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                   }
                 `}
@@ -117,13 +117,15 @@ export function StrategySelector({
               </div>
 
               {/* Active Indicator */}
-              {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-500 rounded-b-lg" />
-              )}
+              {
+                isActive && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-500 rounded-b-lg" />
+                )
+              }
             </button>
           );
         })}
       </div>
-    </div>
+    </div >
   );
 }

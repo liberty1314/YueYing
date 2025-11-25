@@ -276,7 +276,7 @@ export function AdvancedFilterPanel({
                         className={cn(
                           'px-2.5 py-1 text-xs font-medium rounded-full transition-all',
                           isSelected
-                            ? 'bg-primary-500 text-white dark:text-white'
+                            ? 'bg-blue-600 dark:bg-blue-500 text-white'
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         )}
                       >

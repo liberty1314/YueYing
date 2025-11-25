@@ -52,7 +52,7 @@ export function UserFilterBar({ filters, onFilterChange, onReset }: UserFilterBa
         </div>
         <button
           type="submit"
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+          className="px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors font-medium"
         >
           搜索
         </button>
@@ -83,8 +83,8 @@ export function UserFilterBar({ filters, onFilterChange, onReset }: UserFilterBa
               filters.is_active === undefined
                 ? 'all'
                 : filters.is_active
-                ? 'active'
-                : 'inactive'
+                  ? 'active'
+                  : 'inactive'
             }
             onChange={(e) => handleStatusChange(e.target.value)}
             className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"

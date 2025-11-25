@@ -162,10 +162,10 @@ export default function LibraryPage() {
                             </h1>
                             <button
                                 onClick={() => setAddDialogOpen(true)}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white dark:text-white rounded-lg hover:bg-primary-600 transition-colors"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors"
                             >
-                                <PlusIcon className="w-5 h-5 text-white dark:text-white" />
-                                <span className="text-white dark:text-white">添加记录</span>
+                                <PlusIcon className="w-5 h-5 text-white" />
+                                <span className="text-white">添加记录</span>
                             </button>
                         </div>
                     </div>

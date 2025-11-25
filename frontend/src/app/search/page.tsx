@@ -269,7 +269,7 @@ export default function SearchPage() {
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
-                    ? 'bg-primary-500 text-white'
+                    ? 'bg-blue-600 dark:bg-blue-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   title="卡片视图"
@@ -281,7 +281,7 @@ export default function SearchPage() {
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
-                    ? 'bg-primary-500 text-white'
+                    ? 'bg-blue-600 dark:bg-blue-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   title="列表视图"
