@@ -65,7 +65,8 @@ class HomeDataCacheService:
         await self.cache.set(
             last_update_key,
             datetime.utcnow().isoformat(),
-            expire=None  # 永不过期
+            l1_ttl=None,  # 使用默认 TTL
+            l2_ttl=None   # 使用默认 TTL
         )
     
     async def _get_last_update(self, data_type: str) -> Optional[datetime]:
