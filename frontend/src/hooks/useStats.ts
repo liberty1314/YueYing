@@ -87,12 +87,12 @@ export function useStatsOverview(options: UseStatsOptions = {}): UseStatsResult<
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const result = await api.get<OverviewStats>(
-        '/api/stats/overview',
+        '/stats/overview',
         true,
         CachePresets.MEDIUM // 5分钟缓存
       );
@@ -108,7 +108,7 @@ export function useStatsOverview(options: UseStatsOptions = {}): UseStatsResult<
 
   useEffect(() => {
     fetchData();
-    
+
     if (refetchInterval) {
       const interval = setInterval(fetchData, refetchInterval);
       return () => clearInterval(interval);
@@ -129,12 +129,12 @@ export function useTypeDistribution(options: UseStatsOptions = {}): UseStatsResu
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const result = await api.get<TypeDistribution[]>(
-        '/api/stats/type-distribution',
+        '/stats/type-distribution',
         true,
         CachePresets.MEDIUM
       );
@@ -150,7 +150,7 @@ export function useTypeDistribution(options: UseStatsOptions = {}): UseStatsResu
 
   useEffect(() => {
     fetchData();
-    
+
     if (refetchInterval) {
       const interval = setInterval(fetchData, refetchInterval);
       return () => clearInterval(interval);
@@ -171,12 +171,12 @@ export function useRatingDistribution(options: UseStatsOptions = {}): UseStatsRe
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const result = await api.get<RatingDistribution[]>(
-        '/api/stats/rating-distribution',
+        '/stats/rating-distribution',
         true,
         CachePresets.MEDIUM
       );
@@ -192,7 +192,7 @@ export function useRatingDistribution(options: UseStatsOptions = {}): UseStatsRe
 
   useEffect(() => {
     fetchData();
-    
+
     if (refetchInterval) {
       const interval = setInterval(fetchData, refetchInterval);
       return () => clearInterval(interval);
@@ -217,12 +217,12 @@ export function useTimeTrend(
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const result = await api.get<TimeTrend>(
-        `/api/stats/time-trend?time_period=${timePeriod}&months=${months}`,
+        `/stats/time-trend?time_period=${timePeriod}&months=${months}`,
         true,
         CachePresets.MEDIUM
       );
@@ -238,7 +238,7 @@ export function useTimeTrend(
 
   useEffect(() => {
     fetchData();
-    
+
     if (refetchInterval) {
       const interval = setInterval(fetchData, refetchInterval);
       return () => clearInterval(interval);
@@ -259,12 +259,12 @@ export function useTopTags(limit: number = 20, options: UseStatsOptions = {}): U
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const result = await api.get<TagStats[]>(
-        `/api/stats/top-tags?limit=${limit}`,
+        `/stats/top-tags?limit=${limit}`,
         true,
         CachePresets.MEDIUM
       );
@@ -280,7 +280,7 @@ export function useTopTags(limit: number = 20, options: UseStatsOptions = {}): U
 
   useEffect(() => {
     fetchData();
-    
+
     if (refetchInterval) {
       const interval = setInterval(fetchData, refetchInterval);
       return () => clearInterval(interval);
@@ -305,12 +305,12 @@ export function useComprehensiveStats(
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const result = await api.get<ComprehensiveStats>(
-        `/api/stats/comprehensive?time_period=${timePeriod}&months=${months}`,
+        `/stats/comprehensive?time_period=${timePeriod}&months=${months}`,
         true,
         CachePresets.MEDIUM
       );
@@ -326,7 +326,7 @@ export function useComprehensiveStats(
 
   useEffect(() => {
     fetchData();
-    
+
     if (refetchInterval) {
       const interval = setInterval(fetchData, refetchInterval);
       return () => clearInterval(interval);

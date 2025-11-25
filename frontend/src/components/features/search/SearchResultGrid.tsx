@@ -29,6 +29,7 @@ interface SearchResultGridProps {
   loading?: boolean;
   onAdd?: (result: SearchResult) => void;
   onView?: (result: SearchResult) => void;
+  viewMode?: 'grid' | 'list';
 }
 
 const sourceLabels = {
@@ -38,23 +39,33 @@ const sourceLabels = {
   google_books: 'Google Books',
 };
 
-export function SearchResultGrid({ results, loading, onAdd, onView }: SearchResultGridProps) {
+export function SearchResultGrid({ results, loading, onAdd, onView, viewMode = 'grid' }: SearchResultGridProps) {
   if (loading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' : 'space-y-4'}>
+        {Array.from({ length: 10 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-gray-800 rounded-lg p-4 animate-pulse"
+            className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden animate-pulse"
           >
-            <div className="flex gap-4">
-              <div className="w-24 h-36 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-              <div className="flex-1 space-y-3">
-                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+            {viewMode === 'grid' ? (
+              <>
+                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700" />
+                <div className="p-3 space-y-2">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                </div>
+              </>
+            ) : (
+              <div className="flex gap-4 p-4">
+                <div className="w-24 h-36 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         ))}
       </div>
@@ -77,56 +88,18 @@ export function SearchResultGrid({ results, loading, onAdd, onView }: SearchResu
     );
   }
 
-  // 按数据源分组
-  const groupedResults = results.reduce((acc, result) => {
-    const source = result.source;
-    if (!acc[source]) {
-      acc[source] = [];
-    }
-    acc[source].push(result);
-    return acc;
-  }, {} as Record<string, SearchResult[]>);
-
-  // 排序：library优先
-  const sourceOrder: Array<keyof typeof sourceLabels> = [
-    'library',
-    'tmdb',
-    'bangumi',
-    'google_books',
-  ];
-  const sortedSources = sourceOrder.filter((source) => groupedResults[source]?.length > 0);
-
+  // 统一列表，不按来源分组
   return (
-    <div className="space-y-8">
-      {sortedSources.map((source) => {
-        const sourceResults = groupedResults[source];
-
-        return (
-          <div key={source} className="space-y-4">
-            {/* Section Header */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                {sourceLabels[source]}
-                <Badge variant="primary" size="sm">
-                  {sourceResults.length}
-                </Badge>
-              </h3>
-            </div>
-
-            {/* Results */}
-            <div className="space-y-3">
-              {sourceResults.map((result) => (
-                <SearchResultCard
-                  key={`${result.source}-${result.id}`}
-                  result={result}
-                  onAdd={onAdd}
-                  onView={onView}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
+    <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' : 'space-y-3'}>
+      {results.map((result) => (
+        <SearchResultCard
+          key={`${result.source}-${result.id}`}
+          result={result}
+          onAdd={onAdd}
+          onView={onView}
+          viewMode={viewMode}
+        />
+      ))}
     </div>
   );
 }

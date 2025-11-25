@@ -57,7 +57,12 @@ interface UseLLMConfigResult {
   refetch: () => Promise<void>;
   updateConfig: (data: LLMConfigUpdate) => Promise<LLMConfig>;
   createConfig: (data: LLMConfigUpdate) => Promise<LLMConfig>;
-  testConnection: () => Promise<boolean>;
+  testConnection: (testData?: {
+    provider: LLMProvider;
+    api_key: string;
+    base_url?: string;
+    model?: string;
+  }) => Promise<boolean>;
 }
 
 // ========== Hook 实现 ==========
@@ -73,8 +78,8 @@ export function useLLMConfig(): UseLLMConfigResult {
     setError(null);
     try {
       const [configData, presetsData] = await Promise.all([
-        api.get<LLMConfig>('/api/llm-config', true, CachePresets.SHORT).catch(() => null),
-        api.get<Record<string, ProviderPreset>>('/api/llm-config/presets', true, CachePresets.MEDIUM),
+        api.get<LLMConfig>('/llm-config', true, CachePresets.SHORT).catch(() => null),
+        api.get<Record<string, ProviderPreset>>('/llm-config/presets', true, CachePresets.MEDIUM),
       ]);
       setConfig(configData);
       setPresets(presetsData);
@@ -92,22 +97,40 @@ export function useLLMConfig(): UseLLMConfigResult {
   }, [fetchConfig]);
 
   const updateConfig = useCallback(async (data: LLMConfigUpdate): Promise<LLMConfig> => {
-    const updated = await api.put<LLMConfig>('/api/llm-config', data, true);
+    const updated = await api.put<LLMConfig>('/llm-config', data, true);
     setConfig(updated);
     return updated;
   }, []);
 
   const createConfig = useCallback(async (data: LLMConfigUpdate): Promise<LLMConfig> => {
-    const created = await api.post<LLMConfig>('/api/llm-config', data, true);
+    const created = await api.post<LLMConfig>('/llm-config', data, true);
     setConfig(created);
     return created;
   }, []);
 
-  const testConnection = useCallback(async (): Promise<boolean> => {
+  const testConnection = useCallback(async (testData?: {
+    provider: LLMProvider;
+    api_key: string;
+    base_url?: string;
+    model?: string;
+  }): Promise<boolean> => {
     try {
-      await api.get('/api/llm/models', true);
+      // 如果提供了测试数据，使用测试接口
+      if (testData) {
+        const response = await api.post<{ success: boolean; message: string }>('/llm-config/test', {
+          provider: testData.provider,
+          api_key: testData.api_key,
+          base_url: testData.base_url || null,
+          model: testData.model || null,
+        }, true);
+        return response.success;
+      }
+
+      // 否则使用当前配置测试
+      await api.get('/llm/models', true);
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Test connection failed:', err);
       return false;
     }
   }, []);

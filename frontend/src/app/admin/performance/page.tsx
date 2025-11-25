@@ -57,7 +57,7 @@ export default function PerformancePage() {
     setError(null);
     try {
       const data = await api.get<PerformanceMetrics>(
-        '/api/health/performance',
+        '/health/performance',
         true,
         CachePresets.NONE
       );

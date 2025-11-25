@@ -101,114 +101,120 @@ export function ContentCard({
         </div>
       )}
 
-      <Card
-        variant="elevated"
-        className={cn(
-          'overflow-hidden transition-all duration-300',
-          isHovered && 'ring-2 ring-primary-500 shadow-xl',
-          isSelected && 'ring-2 ring-primary-500'
-        )}
+      <div
+        className="group cursor-pointer"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* 封面图片区域 */}
-        <div className="relative aspect-[2/3] overflow-hidden bg-gray-200 dark:bg-gray-800">
-          {coverImage ? (
-            <img
-              src={coverImage}
-              alt={item.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-600">
-              <span className="text-4xl">{typeEmojis[item.content_type]}</span>
-            </div>
+        {/* 图片卡片 - 独立容器，带圆角、阴影和 hover 效果 */}
+        <Card
+          variant="elevated"
+          className={cn(
+            'overflow-hidden transition-all duration-300',
+            'hover:shadow-xl hover:-translate-y-1',
+            isHovered && 'ring-2 ring-primary-500',
+            isSelected && 'ring-2 ring-primary-500'
           )}
-
-          {/* 悬停遮罩层 */}
-          {isHovered && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-300 animate-fadeIn">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => onView(item)}
-                  className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
-                  title="查看详情"
-                >
-                  <EyeIcon className="w-5 h-5 text-gray-900" />
-                </button>
-                <button
-                  onClick={() => onEdit(item)}
-                  className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
-                  title="编辑"
-                >
-                  <Edit2Icon className="w-5 h-5 text-gray-900" />
-                </button>
-                <button
-                  onClick={() => setShowActions(!showActions)}
-                  className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
-                  title="更多操作"
-                >
-                  <MoreVerticalIcon className="w-5 h-5 text-gray-900" />
-                </button>
+        >
+          <div className="relative aspect-[2/3] overflow-hidden bg-gray-200 dark:bg-gray-800">
+            {coverImage ? (
+              <img
+                src={coverImage}
+                alt={item.title}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-600">
+                <span className="text-5xl">{typeEmojis[item.content_type]}</span>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* 状态徽章 */}
-          <div className="absolute top-2 left-2">
-            <Badge variant="default" size="sm" className={statusInfo.color}>
-              <StatusIcon className="w-3 h-3 mr-1" />
-              {statusInfo.label}
-            </Badge>
-          </div>
+            {/* Hover 遮罩层 */}
+            {isHovered && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-300">
+                <div className="flex gap-3">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onView(item);
+                    }}
+                    className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
+                    title="查看详情"
+                  >
+                    <EyeIcon className="w-5 h-5 text-gray-900" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(item);
+                    }}
+                    className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
+                    title="编辑"
+                  >
+                    <Edit2Icon className="w-5 h-5 text-gray-900" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowActions(!showActions);
+                    }}
+                    className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
+                    title="更多操作"
+                  >
+                    <MoreVerticalIcon className="w-5 h-5 text-gray-900" />
+                  </button>
+                </div>
+              </div>
+            )}
 
-          {/* AI标签 */}
-          {showAITags && aiTags.length > 0 && (
-            <div className="absolute top-2 right-2">
-              <Badge variant="default" size="sm" className="bg-gradient-to-r from-primary-500 to-purple-500 text-white dark:text-white">
-                <SparklesIcon className="w-3 h-3 mr-1 text-white dark:text-white" />
-                AI推荐
+            {/* 状态徽章 */}
+            <div className="absolute top-2 left-2">
+              <Badge variant="default" size="sm" className={statusInfo.color}>
+                <StatusIcon className="w-3 h-3 mr-1" />
+                {statusInfo.label}
               </Badge>
             </div>
-          )}
 
-          {/* 观看进度条 */}
-          {progress > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800/50">
-              <div
-                className="h-full bg-primary-500 transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          )}
-        </div>
+            {/* AI标签 */}
+            {showAITags && aiTags.length > 0 && (
+              <div className="absolute top-2 right-2">
+                <Badge variant="default" size="sm" className="bg-gradient-to-r from-primary-500 to-purple-500 text-white dark:text-white">
+                  <SparklesIcon className="w-3 h-3 mr-1 text-white dark:text-white" />
+                  AI推荐
+                </Badge>
+              </div>
+            )}
 
-        {/* 内容信息区域 */}
-        <div className="p-3">
+            {/* 观看进度条 */}
+            {progress > 0 && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800/50">
+                <div
+                  className="h-full bg-primary-500 transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* 信息区域 - 独立容器，透明背景 */}
+        <div className="mt-2 px-1">
           {/* 标题 */}
-          <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2 min-h-[2.5rem]">
+          <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 text-sm leading-tight">
             {item.title}
           </h3>
 
-          {/* 评分和类型 */}
-          <div className="flex items-center justify-between">
+          {/* 元数据行 */}
+          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <span>{item.year || '未知'}</span>
             {item.rating ? (
-              <div className="flex items-center gap-1">
-                <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {item.rating.toFixed(1)}
-                </span>
-              </div>
+              <span className="text-yellow-500 font-medium">
+                ⭐ {item.rating.toFixed(1)}
+              </span>
             ) : (
-              <span className="text-xs text-gray-500 dark:text-gray-400">未评分</span>
+              <span>未评分</span>
             )}
-
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {typeEmojis[item.content_type]}
-            </span>
           </div>
-
-          {/* 用户标签功能待后端API支持 */}
         </div>
 
         {/* 快捷操作菜单 */}
@@ -246,7 +252,7 @@ export function ContentCard({
             </button>
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }

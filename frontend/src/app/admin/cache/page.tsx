@@ -20,7 +20,7 @@ export default function CachePage() {
   const fetchStats = async () => {
     setRefreshing(true);
     try {
-      const data = await api.get('/api/admin/cache/stats', true);
+      const data = await api.get('/admin/cache/stats', true);
       setStats(data);
     } catch (error) {
       console.error('Failed to fetch cache stats:', error);
@@ -39,7 +39,7 @@ export default function CachePage() {
   const handleClear = async () => {
     if (!confirm('确定要清空所有缓存吗？')) return;
     try {
-      await api.post('/api/admin/cache/clear', { clear_l1: true, clear_l2: true }, true);
+      await api.post('/admin/cache/clear', { clear_l1: true, clear_l2: true }, true);
       await fetchStats();
     } catch (error) {
       console.error('Failed to clear cache:', error);
@@ -48,7 +48,7 @@ export default function CachePage() {
 
   const handleWarm = async () => {
     try {
-      await api.post('/api/admin/cache-warming/warm', {}, true);
+      await api.post('/admin/cache-warming/warm', {}, true);
       alert('缓存预热已启动');
     } catch (error) {
       console.error('Failed to warm cache:', error);

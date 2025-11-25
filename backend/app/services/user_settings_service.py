@@ -31,6 +31,7 @@ class UserSettingsService:
             settings = UserSettings(
                 user_id=user_id,
                 auto_generate_tags=False,  # 默认关闭
+                enable_strict_search_filter=True,  # 默认启用
             )
             db.add(settings)
             db.commit()
@@ -59,6 +60,8 @@ class UserSettingsService:
         settings = UserSettingsService.get_or_create_settings(db, user_id)
 
         # 更新字段
+        if settings_data.enable_strict_search_filter is not None:
+            settings.enable_strict_search_filter = settings_data.enable_strict_search_filter
         update_data = settings_data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(settings, key, value)

@@ -22,8 +22,8 @@ import {
   CategoryRecommendationsSkeleton,
 } from '@/components/features/home';
 import { ErrorDisplay } from '@/components/ui';
+import ExternalContentDialog from '@/components/features/detail/ExternalContentDialog';
 import { api, CachePresets } from '@/lib/apiClient';
-import { navigateToDetail } from '@/utils/navigation';
 import { addToLibrary } from '@/utils/library';
 import { Box, Snackbar, Alert } from '@mui/material';
 
@@ -56,9 +56,25 @@ export default function HomePage() {
     severity: 'info',
   });
 
+  // 详情弹窗
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<any>(null);
+
   useEffect(() => {
     loadHomeData();
   }, []);
+
+  // 处理打开详情
+  const handleOpenDetail = (item: any) => {
+    setSelectedContent(item);
+    setDetailDialogOpen(true);
+  };
+
+  // 处理关闭详情
+  const handleCloseDetail = () => {
+    setDetailDialogOpen(false);
+    setSelectedContent(null);
+  };
 
   // 处理添加到库
   const handleAddToLibrary = async (item: any) => {
@@ -70,6 +86,8 @@ export default function HomePage() {
           message: '添加成功！',
           severity: 'success',
         });
+        // 关闭详情弹窗
+        handleCloseDetail();
       } else {
         setToast({
           open: true,
@@ -197,7 +215,7 @@ export default function HomePage() {
         {/* 英雄轮播图 - 今日热门前5条 */}
         <HeroCarousel
           items={heroItems}
-          onViewDetail={(item) => navigateToDetail(router, item)}
+          onViewDetail={handleOpenDetail}
           onAddToLibrary={handleAddToLibrary}
         />
 
@@ -205,7 +223,7 @@ export default function HomePage() {
         {recommendations.length > 0 && (
           <AIRecommendations
             items={recommendations}
-            onItemClick={(item) => navigateToDetail(router, item)}
+            onItemClick={handleOpenDetail}
           />
         )}
 
@@ -213,14 +231,14 @@ export default function HomePage() {
         <TrendingSection
           dailyItems={trendingToday}
           weeklyItems={trendingWeek}
-          onItemClick={(item) => navigateToDetail(router, item)}
+          onItemClick={handleOpenDetail}
         />
 
         {/* 番剧日历 - 仅当存在Bangumi数据时显示 */}
         {animeCalendar.length > 0 && (
           <AnimeTimeline
             calendarData={animeCalendar}
-            onAnimeClick={(anime) => navigateToDetail(router, { ...anime, media_type: 'anime' })}
+            onAnimeClick={(anime) => handleOpenDetail({ ...anime, media_type: 'anime' })}
           />
         )}
 
@@ -228,10 +246,18 @@ export default function HomePage() {
         <CategoryRecommendations
           movies={popularMovies}
           tvShows={popularTvShows}
-          onMovieClick={(movie) => navigateToDetail(router, { ...movie, media_type: 'movie' })}
-          onTvShowClick={(tvShow) => navigateToDetail(router, { ...tvShow, media_type: 'tv' })}
+          onMovieClick={(movie) => handleOpenDetail({ ...movie, media_type: 'movie' })}
+          onTvShowClick={(tvShow) => handleOpenDetail({ ...tvShow, media_type: 'tv' })}
         />
       </Box>
+
+      {/* 详情弹窗 */}
+      <ExternalContentDialog
+        open={detailDialogOpen}
+        content={selectedContent}
+        onClose={handleCloseDetail}
+        onAddToLibrary={handleAddToLibrary}
+      />
 
       {/* Toast提示 */}
       <Snackbar

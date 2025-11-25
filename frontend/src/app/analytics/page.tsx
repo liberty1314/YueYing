@@ -32,7 +32,7 @@ interface StatsData {
   };
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function StatsPage() {
   const [data, setData] = useState<StatsData | null>(null);

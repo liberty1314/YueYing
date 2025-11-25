@@ -13,6 +13,7 @@ import { useTheme } from '@mui/material/styles';
 const loginSchema = z.object({
     email: z.string().email('请输入有效的邮箱地址'),
     password: z.string().min(6, '密码至少 6 位'),
+    remember_me: z.boolean().optional().default(true),  // 默认勾选，保留7天
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -31,6 +32,9 @@ export default function LoginPage() {
         formState: { errors },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
+        defaultValues: {
+            remember_me: true,  // 默认勾选
+        },
     });
 
     const onSubmit = async (data: LoginFormData) => {
@@ -193,6 +197,24 @@ export default function LoginPage() {
                                 {errors.password && (
                                     <p className="mt-1 text-xs text-red-300">{errors.password.message}</p>
                                 )}
+                            </div>
+
+                            <div className="flex items-center">
+                                <input
+                                    id="remember_me"
+                                    type="checkbox"
+                                    className={`h-4 w-4 rounded border transition focus:ring-2 focus:ring-offset-0 ${isDark
+                                        ? 'border-white/10 bg-slate-900/60 text-sky-500 focus:ring-sky-500/40'
+                                        : 'border-gray-300 bg-white text-blue-600 focus:ring-blue-500/40'
+                                        }`}
+                                    {...register('remember_me')}
+                                />
+                                <label
+                                    htmlFor="remember_me"
+                                    className={`ml-2 text-xs ${isDark ? 'text-slate-300' : 'text-gray-700'}`}
+                                >
+                                    记住我（保持登录 7 天）
+                                </label>
                             </div>
 
                             <button

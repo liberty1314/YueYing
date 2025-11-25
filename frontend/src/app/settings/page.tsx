@@ -1,41 +1,74 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
     FormControlLabel,
     Switch,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
     Button,
     CircularProgress,
     Alert,
 } from '@mui/material';
 import { AppleCard } from '@/components/ui';
-import { useUiStore } from '@/stores/uiStore';
+import { api, APIError } from '@/lib/apiClient';
 
 export default function SettingsPage() {
-    const { theme, setTheme } = useUiStore();
-    const [language, setLanguage] = useState('zh-CN');
     const [autoSave, setAutoSave] = useState(true);
     const [notifications, setNotifications] = useState(true);
+    const [strictSearchFilter, setStrictSearchFilter] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // 加载用户设置
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            setIsLoading(true);
+            const data = await api.get<{
+                auto_generate_tags: boolean;
+                enable_strict_search_filter: boolean;
+            }>('/settings', true);
+
+            setStrictSearchFilter(data.enable_strict_search_filter);
+            // 可以在这里加载其他设置
+        } catch (err) {
+            if (err instanceof APIError) {
+                setError(err.detail);
+            } else {
+                setError('加载设置失败');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSave = async () => {
         setIsSaving(true);
         setSaveSuccess(false);
+        setError(null);
 
         try {
-            // 模拟保存
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await api.put(
+                '/settings',
+                {
+                    enable_strict_search_filter: strictSearchFilter,
+                },
+                true
+            );
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
-        } catch (error) {
-            console.error('保存设置失败:', error);
+        } catch (err) {
+            if (err instanceof APIError) {
+                setError(err.detail);
+            } else {
+                setError('保存设置失败');
+            }
         } finally {
             setIsSaving(false);
         }
@@ -53,62 +86,78 @@ export default function SettingsPage() {
                 </Alert>
             )}
 
-            {/* 外观设置 */}
-            <AppleCard sx={{ p: 3, mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                    外观
-                </Typography>
+            {error && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                    {error}
+                </Alert>
+            )}
 
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel>主题模式</InputLabel>
-                    <Select
-                        value={theme}
-                        label="主题模式"
-                        onChange={(e) => setTheme(e.target.value as 'light' | 'dark')}
-                    >
-                        <MenuItem value="light">浅色</MenuItem>
-                        <MenuItem value="dark">深色</MenuItem>
-                    </Select>
-                </FormControl>
+            {isLoading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress />
+                </Box>
+            )}
 
-                <FormControl fullWidth>
-                    <InputLabel>语言</InputLabel>
-                    <Select
-                        value={language}
-                        label="语言"
-                        onChange={(e) => setLanguage(e.target.value)}
-                    >
-                        <MenuItem value="zh-CN">简体中文</MenuItem>
-                        <MenuItem value="en-US">English</MenuItem>
-                    </Select>
-                </FormControl>
-            </AppleCard>
+            {!isLoading && (
+                <>
+                    {/* 行为设置 */}
+                    <AppleCard sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+                            行为
+                        </Typography>
 
-            {/* 行为设置 */}
-            <AppleCard sx={{ p: 3, mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                    行为
-                </Typography>
+                        <Box sx={{ mb: 3 }}>
+                            <FormControlLabel
+                                control={
+                                    <Switch checked={autoSave} onChange={(e) => setAutoSave(e.target.checked)} />
+                                }
+                                label="自动保存"
+                                sx={{ display: 'block' }}
+                            />
+                            <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
+                                编辑内容时自动保存，无需手动点击保存按钮
+                            </Typography>
+                        </Box>
 
-                <FormControlLabel
-                    control={
-                        <Switch checked={autoSave} onChange={(e) => setAutoSave(e.target.checked)} />
-                    }
-                    label="自动保存"
-                    sx={{ mb: 2, display: 'block' }}
-                />
+                        <Box>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={notifications}
+                                        onChange={(e) => setNotifications(e.target.checked)}
+                                    />
+                                }
+                                label="启用通知"
+                                sx={{ display: 'block' }}
+                            />
+                            <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
+                                接收系统通知和更新提醒
+                            </Typography>
+                        </Box>
+                    </AppleCard>
 
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={notifications}
-                            onChange={(e) => setNotifications(e.target.checked)}
+                    {/* 搜索设置 */}
+                    <AppleCard sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+                            搜索
+                        </Typography>
+
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={strictSearchFilter}
+                                    onChange={(e) => setStrictSearchFilter(e.target.checked)}
+                                />
+                            }
+                            label="严格搜索过滤"
+                            sx={{ display: 'block' }}
                         />
-                    }
-                    label="启用通知"
-                    sx={{ display: 'block' }}
-                />
-            </AppleCard>
+                        <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
+                            启用后，搜索结果只显示标题中包含关键词的内容，可以有效减少不相关的结果
+                        </Typography>
+                    </AppleCard>
+                </>
+            )}
 
             {/* 保存按钮 */}
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

@@ -7,20 +7,38 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Button, Input, Badge } from '@/components/ui';
-import { useLLMConfig, type LLMProvider, type LLMConfigUpdate } from '@/hooks/useLLMConfig';
+import { useLLMConfig, type LLMProvider, type LLMConfigUpdate, type LLMConfig } from '@/hooks/useLLMConfig';
 import { BrainCircuitIcon, CheckCircleIcon, XCircleIcon, EyeIcon, EyeOffIcon, SaveIcon } from 'lucide-react';
 
 export default function LLMConfigPage() {
   const { config, presets, loading, error, updateConfig, createConfig, testConnection } = useLLMConfig();
-  
+
   const [formData, setFormData] = useState<LLMConfigUpdate>({});
   const [showApiKey, setShowApiKey] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // 当 config 加载完成时，初始化 formData
+  useEffect(() => {
+    if (config && Object.keys(formData).length === 0) {
+      setFormData({
+        provider: config.provider,
+        api_key: config.api_key,
+        base_url: config.base_url,
+        default_model: config.default_model,
+        temperature: config.temperature,
+        max_tokens: config.max_tokens,
+        top_p: config.top_p,
+        enabled: config.enabled,
+        auto_tag_enabled: config.auto_tag_enabled,
+        description: config.description,
+      });
+    }
+  }, [config]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -31,10 +49,20 @@ export default function LLMConfigPage() {
     setTesting(true);
     setTestResult(null);
     try {
-      const success = await testConnection();
+      // 使用当前表单数据进行测试
+      const testData = {
+        provider: getCurrentValue('provider') as LLMProvider,
+        api_key: getCurrentValue('api_key') as string,
+        base_url: getCurrentValue('base_url') as string | undefined,
+        model: getCurrentValue('default_model') as string | undefined,
+      };
+
+      const success = await testConnection(testData);
       setTestResult(success ? 'success' : 'error');
-    } catch {
+      showToast(success ? '连接测试成功' : '连接测试失败', success ? 'success' : 'error');
+    } catch (err) {
       setTestResult('error');
+      showToast(err instanceof Error ? err.message : '连接测试失败', 'error');
     } finally {
       setTesting(false);
     }
@@ -43,13 +71,27 @@ export default function LLMConfigPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      let savedConfig: LLMConfig;
       if (config) {
-        await updateConfig(formData);
+        savedConfig = await updateConfig(formData);
       } else {
-        await createConfig(formData as Required<LLMConfigUpdate>);
+        savedConfig = await createConfig(formData as Required<LLMConfigUpdate>);
       }
       showToast('配置已保存', 'success');
-      setFormData({});
+
+      // 保存成功后，用返回的配置更新 formData
+      setFormData({
+        provider: savedConfig.provider,
+        api_key: savedConfig.api_key,
+        base_url: savedConfig.base_url,
+        default_model: savedConfig.default_model,
+        temperature: savedConfig.temperature,
+        max_tokens: savedConfig.max_tokens,
+        top_p: savedConfig.top_p,
+        enabled: savedConfig.enabled,
+        auto_tag_enabled: savedConfig.auto_tag_enabled,
+        description: savedConfig.description,
+      });
     } catch (err) {
       showToast(err instanceof Error ? err.message : '保存失败', 'error');
     } finally {
@@ -74,9 +116,8 @@ export default function LLMConfigPage() {
       {/* Toast 通知 */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-            toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-          }`}
+          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`}
         >
           {toast.message}
         </div>
@@ -111,8 +152,28 @@ export default function LLMConfigPage() {
               LLM提供商
             </label>
             <select
-              value={getCurrentValue('provider') as string}
-              onChange={(e) => setFormData({ ...formData, provider: e.target.value as LLMProvider })}
+              value={getCurrentValue('provider') as string || 'siliconflow'}
+              onChange={(e) => {
+                const newProvider = e.target.value as LLMProvider;
+                const preset = presets?.[newProvider];
+
+                // 切换提供商时自动填充预设配置（包括 API Key）
+                if (preset) {
+                  setFormData({
+                    ...formData,
+                    provider: newProvider,
+                    api_key: preset.api_key || '',  // 从预设中读取 API Key
+                    base_url: preset.base_url,
+                    default_model: preset.default_model,
+                  });
+                } else {
+                  setFormData({
+                    ...formData,
+                    provider: newProvider,
+                    api_key: '',  // 清空 API Key
+                  });
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="siliconflow">SiliconFlow</option>

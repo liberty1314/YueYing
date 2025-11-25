@@ -78,7 +78,7 @@ export default function SystemSettingsPage() {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const data = await api.get<SystemSettings>('/api/system-settings', true);
+      const data = await api.get<SystemSettings>('/system-settings', true);
       setSettings(data);
       setOriginalSettings(data);
     } catch (error) {
@@ -103,8 +103,8 @@ export default function SystemSettingsPage() {
         allow_user_ai_tag_settings: settings.allow_user_ai_tag_settings,
         allow_anonymous_home_access: settings.allow_anonymous_home_access,
       };
-      
-      const updated = await api.put<SystemSettings>('/api/system-settings', updateData, true);
+
+      const updated = await api.put<SystemSettings>('/system-settings', updateData, true);
       setSettings(updated);
       setOriginalSettings(updated);
       showToast('系统设置已保存', 'success');
@@ -141,15 +141,14 @@ export default function SystemSettingsPage() {
     <div className="space-y-6">
       {/* Toast 通知 */}
       {toast && (
-          <div className="fixed top-4 right-4 z-50">
-            <div className={`px-4 py-3 rounded-lg shadow-lg ${
-              toast.type === 'success' ? 'bg-green-500 text-white' : 
-              toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
+        <div className="fixed top-4 right-4 z-50">
+          <div className={`px-4 py-3 rounded-lg shadow-lg ${toast.type === 'success' ? 'bg-green-500 text-white' :
+            toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
             }`}>
-              {toast.message}
-            </div>
+            {toast.message}
           </div>
-        )}
+        </div>
+      )}
 
       {/* 页面头部 */}
       <div className="flex items-center justify-between">
@@ -210,14 +209,14 @@ export default function SystemSettingsPage() {
             checked={settings.enable_explore}
             onChange={(checked) => setSettings({ ...settings, enable_explore: checked })}
           />
-            
+
           <SettingCard
             title="允许用户自行设置 AI 自动标签"
             description="开启后，用户可以在个人设置中控制是否启用 AI 自动标签功能"
             checked={settings.allow_user_ai_tag_settings}
             onChange={(checked) => setSettings({ ...settings, allow_user_ai_tag_settings: checked })}
           />
-            
+
           <SettingCard
             title="允许未登录用户访问首页"
             description="开启后，未登录用户可以访问首页并查看公开内容；关闭后将强制登录"

@@ -32,7 +32,7 @@ interface SearchResult {
   external_id?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 const currentYear = new Date().getFullYear();
 
 export default function SearchPage() {
@@ -45,6 +45,24 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState('');
   const [yearRange, setYearRange] = useState<[number, number]>([1990, currentYear]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // 默认卡片视图
+  const [strictFilter, setStrictFilter] = useState(true); // 默认启用严格过滤
+
+  // 加载用户设置
+  useEffect(() => {
+    const loadUserSettings = async () => {
+      try {
+        const data = await api.get<{
+          enable_strict_search_filter: boolean;
+        }>('/settings', true);
+        setStrictFilter(data.enable_strict_search_filter);
+      } catch (error) {
+        console.error('Failed to load user settings:', error);
+        // 使用默认值
+      }
+    };
+    loadUserSettings();
+  }, []);
 
   // 初始搜索
   useEffect(() => {
@@ -63,29 +81,21 @@ export default function SearchPage() {
     try {
       const allResults: SearchResult[] = [];
 
-      // 1. 搜索本地库
-      const localResults = await searchLocal(searchQuery);
-      allResults.push(...localResults);
-
-      // 2. 如果是关键词搜索，调用多个外部源
       if (mode === 'keyword') {
-        const [tmdbResults, bangumiResults, booksResults] = await Promise.allSettled([
-          searchTMDB(searchQuery),
-          searchBangumi(searchQuery),
-          searchGoogleBooks(searchQuery),
+        // 关键词搜索：并行调用本地库和统一搜索接口
+        const [localResults, externalResults] = await Promise.allSettled([
+          searchLocal(searchQuery),
+          searchUnified(searchQuery, selectedType || 'all'),
         ]);
 
-        if (tmdbResults.status === 'fulfilled') {
-          allResults.push(...tmdbResults.value);
+        if (localResults.status === 'fulfilled') {
+          allResults.push(...localResults.value);
         }
-        if (bangumiResults.status === 'fulfilled') {
-          allResults.push(...bangumiResults.value);
-        }
-        if (booksResults.status === 'fulfilled') {
-          allResults.push(...booksResults.value);
+        if (externalResults.status === 'fulfilled') {
+          allResults.push(...externalResults.value);
         }
       } else {
-        // 3. AI 语义搜索
+        // AI 语义搜索
         const semanticResults = await searchSemantic(searchQuery);
         allResults.push(...semanticResults);
       }
@@ -102,10 +112,10 @@ export default function SearchPage() {
   const searchLocal = async (searchQuery: string): Promise<SearchResult[]> => {
     try {
       const data = await api.get<{ items: any[] }>(
-        `/api/user-items?search=${encodeURIComponent(searchQuery)}`,
-        false // 本地搜索不需要认证？或者需要根据后端实际情况调整
+        `/user-items?search=${encodeURIComponent(searchQuery)}`,
+        true // 本地搜索需要认证
       );
-      
+
       return (
         data.items?.map((item: any) => ({
           ...item,
@@ -120,98 +130,41 @@ export default function SearchPage() {
     }
   };
 
-  // 搜索 TMDB
-  const searchTMDB = async (searchQuery: string): Promise<SearchResult[]> => {
+  // 使用统一搜索接口（整合 TMDB、Bangumi、Google Books）
+  const searchUnified = async (
+    searchQuery: string,
+    contentType: string = 'all'
+  ): Promise<SearchResult[]> => {
     try {
-      const data = await api.get<{ results: any[] }>(
-        `/api/tmdb/search/multi?query=${encodeURIComponent(searchQuery)}`,
-        false
+      const data = await api.get<{
+        results: any[];
+        total: number;
+        page: number;
+        page_size: number;
+      }>(
+        `/search?q=${encodeURIComponent(searchQuery)}&type=${contentType}&page=1&page_size=50&strict_filter=${strictFilter}`,
+        true
       );
-      
+
+      // 后端已经标准化了数据格式，直接映射即可
       return (
         data.results?.map((item: any) => ({
           id: item.id,
-          title: item.title || item.name,
-          original_title: item.original_title || item.original_name,
-          content_type: item.media_type === 'movie' ? 'movie' : 'tv',
-          poster_url: item.poster_path
-            ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-            : undefined,
-          year: item.release_date
-            ? new Date(item.release_date).getFullYear()
-            : item.first_air_date
-            ? new Date(item.first_air_date).getFullYear()
-            : undefined,
-          rating: item.vote_average,
-          overview: item.overview,
-          source: 'tmdb' as const,
-          external_id: item.id.toString(),
+          title: item.title,
+          original_title: item.original_title,
+          content_type: item.content_type,
+          poster_url: item.poster_url,
+          backdrop_url: item.backdrop_url,
+          year: item.year ? parseInt(item.year) : undefined,
+          rating: item.rating,
+          overview: item.description,
+          source: item.source,
+          external_id: item.external_id,
         })) || []
       );
     } catch (error) {
       if (error instanceof APIError) {
-        console.error('TMDB search error:', error.detail);
-      }
-      return [];
-    }
-  };
-
-  // 搜索 Bangumi
-  const searchBangumi = async (searchQuery: string): Promise<SearchResult[]> => {
-    try {
-      const data = await api.get<{ list: any[] }>(
-        `/api/bangumi/search/subject?keyword=${encodeURIComponent(searchQuery)}`,
-        false
-      );
-      
-      return (
-        data.list?.map((item: any) => ({
-          id: item.id,
-          title: item.name_cn || item.name,
-          original_title: item.name,
-          content_type: 'anime' as const,
-          poster_url: item.image,
-          year: item.air_date ? new Date(item.air_date).getFullYear() : undefined,
-          rating: item.score,
-          overview: item.summary,
-          source: 'bangumi' as const,
-          external_id: item.id.toString(),
-        })) || []
-      );
-    } catch (error) {
-      if (error instanceof APIError) {
-        console.error('Bangumi search error:', error.detail);
-      }
-      return [];
-    }
-  };
-
-  // 搜索 Google Books
-  const searchGoogleBooks = async (searchQuery: string): Promise<SearchResult[]> => {
-    try {
-      const data = await api.get<{ items: any[] }>(
-        `/api/google-books/search?q=${encodeURIComponent(searchQuery)}`,
-        false
-      );
-      
-      return (
-        data.items?.map((item: any) => ({
-          id: item.id,
-          title: item.volumeInfo.title,
-          content_type: 'book' as const,
-          poster_url: item.volumeInfo.imageLinks?.thumbnail,
-          year: item.volumeInfo.publishedDate
-            ? new Date(item.volumeInfo.publishedDate).getFullYear()
-            : undefined,
-          rating: item.volumeInfo.averageRating,
-          overview: item.volumeInfo.description,
-          source: 'google_books' as const,
-          external_id: item.id,
-        })) || []
-      );
-    } catch (error) {
-      if (error instanceof APIError) {
-        console.error('Google Books search error:', error.detail);
+        console.error('Unified search error:', error.detail);
       }
       return [];
     }
@@ -220,12 +173,12 @@ export default function SearchPage() {
   // AI 语义搜索
   const searchSemantic = async (searchQuery: string): Promise<SearchResult[]> => {
     try {
-      const data = await api.post<any[]>('/api/rag/search', {
+      const data = await api.post<any[]>('/rag/search', {
         query: searchQuery,
         limit: 20,
         min_similarity: 0.3,
       });
-      
+
       // 适配RAG搜索结果格式
       return (data || []).map((item: any) => ({
         id: item.user_item?.id || item.item?.id,
@@ -298,17 +251,46 @@ export default function SearchPage() {
             />
           )}
 
-          {/* Results Summary */}
+          {/* Results Summary & View Toggle */}
           {query && !loading && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                找到 <strong className="text-gray-900 dark:text-white">{filteredResults.length}</strong> 条结果
-              </span>
-              {searchMode === 'semantic' && (
-                <Badge variant="primary" size="sm">
-                  AI 语义搜索
-                </Badge>
-              )}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  找到 <strong className="text-gray-900 dark:text-white">{filteredResults.length}</strong> 条结果
+                </span>
+                {searchMode === 'semantic' && (
+                  <Badge variant="primary" size="sm">
+                    AI 语义搜索
+                  </Badge>
+                )}
+              </div>
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  title="卡片视图"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  title="列表视图"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           )}
 
@@ -317,6 +299,7 @@ export default function SearchPage() {
             results={filteredResults}
             loading={loading}
             onAdd={handleAddToLibrary}
+            viewMode={viewMode}
           />
         </div>
       </MainLayout>

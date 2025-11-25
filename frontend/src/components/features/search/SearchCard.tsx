@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, Chip, Rating, Stack, IconButton } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import CheckIcon from '@mui/icons-material/Check';
-import { AppleCard } from '@/components/ui';
+import { Card, Badge, Button } from '@/components/ui';
+import { PlusIcon, CheckIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { userItemsApi } from '@/lib/api';
 import type { ItemType } from '@/types';
 
@@ -27,11 +26,23 @@ interface SearchCardProps {
     source: string;
 }
 
+const typeEmojis: Record<ItemType, string> = {
+    movie: '🎬',
+    tv: '📺',
+    anime: '🎌',
+    book: '📚',
+    game: '🎮',
+};
+
 export default function SearchCard({ result, contentType, source }: SearchCardProps) {
     const [added, setAdded] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
-    const handleAdd = async () => {
+    const handleAdd = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (added || loading) return;
+
         try {
             setLoading(true);
 
@@ -59,120 +70,78 @@ export default function SearchCard({ result, contentType, source }: SearchCardPr
     };
 
     return (
-        <AppleCard hover sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {/* Poster */}
-            <Box
-                sx={{
-                    height: 300,
-                    bgcolor: 'grey.200',
-                    borderRadius: '12px 12px 0 0',
-                    overflow: 'hidden',
-                    position: 'relative',
-                }}
+        <div
+            className="group cursor-pointer"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {/* 图片卡片 - 独立容器，带圆角、阴影和 hover 效果 */}
+            <Card
+                variant="elevated"
+                className={cn(
+                    "overflow-hidden transition-all duration-300",
+                    "hover:shadow-xl hover:-translate-y-1"
+                )}
             >
-                {result.poster_url ? (
-                    <img
-                        src={result.poster_url}
-                        alt={result.title}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                        }}
-                    />
-                ) : (
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%',
-                            color: 'text.secondary',
-                        }}
-                    >
-                        <Typography variant="body2">暂无封面</Typography>
-                    </Box>
-                )}
-
-                {/* Add Button */}
-                <IconButton
-                    onClick={handleAdd}
-                    disabled={loading || added}
-                    sx={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        bgcolor: added ? 'success.main' : 'rgba(255, 255, 255, 0.9)',
-                        color: added ? 'white' : 'primary.main',
-                        '&:hover': {
-                            bgcolor: added ? 'success.dark' : 'rgba(255, 255, 255, 1)',
-                        },
-                        '&.Mui-disabled': {
-                            bgcolor: 'success.main',
-                            color: 'white',
-                        },
-                    }}
-                >
-                    {added ? <CheckIcon /> : <AddIcon />}
-                </IconButton>
-            </Box>
-
-            {/* Content */}
-            <Box sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Typography
-                    variant="h6"
-                    sx={{
-                        fontWeight: 600,
-                        mb: 1,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                    }}
-                >
-                    {result.title}
-                </Typography>
-
-                {result.original_title && result.original_title !== result.title && (
-                    <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mb: 1, display: 'block' }}
-                    >
-                        {result.original_title}
-                    </Typography>
-                )}
-
-                {result.description && (
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                            mb: 2,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                        }}
-                    >
-                        {result.description}
-                    </Typography>
-                )}
-
-                <Box sx={{ mt: 'auto' }}>
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                        {result.year && (
-                            <Chip label={result.year} size="small" variant="outlined" sx={{ borderRadius: 1 }} />
-                        )}
-                    </Stack>
-
-                    {result.rating && (
-                        <Rating value={result.rating / 2} readOnly size="small" precision={0.5} />
+                <div className="relative aspect-[2/3] bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                    {result.poster_url ? (
+                        <img
+                            src={result.poster_url}
+                            alt={result.title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-600">
+                            <span className="text-5xl">{typeEmojis[contentType]}</span>
+                        </div>
                     )}
-                </Box>
-            </Box>
-        </AppleCard>
+
+                    {/* Hover 遮罩层 */}
+                    {isHovered && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-300">
+                            <Button
+                                variant={added ? 'outline' : 'primary'}
+                                size="sm"
+                                onClick={handleAdd}
+                                disabled={added || loading}
+                                className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-white dark:text-gray-900"
+                            >
+                                {added ? (
+                                    <>
+                                        <CheckIcon className="w-4 h-4 mr-1" />
+                                        已添加
+                                    </>
+                                ) : (
+                                    <>
+                                        <PlusIcon className="w-4 h-4 mr-1" />
+                                        添加到库
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </Card>
+
+            {/* 信息区域 - 独立容器，透明背景 */}
+            <div className="mt-2 px-1">
+                {/* 标题 */}
+                <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 text-sm leading-tight">
+                    {result.title}
+                </h3>
+
+                {/* 元数据行 */}
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>{result.year || '未知'}</span>
+                    {result.rating ? (
+                        <span className="text-yellow-500 font-medium">
+                            ⭐ {result.rating.toFixed(1)}
+                        </span>
+                    ) : (
+                        <span>未评分</span>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }

@@ -4,7 +4,7 @@
  * 用于测试前端与后端API的对接情况
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export interface TestResult {
   endpoint: string;
@@ -137,25 +137,25 @@ export async function runAPITests(): Promise<TestReport> {
     // 1. 推荐系统测试
     {
       name: '个性化推荐 - weighted策略',
-      endpoint: '/api/recommendations/for-you?strategy=weighted&limit=10',
+      endpoint: '/recommendations/for-you?strategy=weighted&limit=10',
       method: 'GET',
       requiresAuth: true,
     },
     {
       name: '个性化推荐 - cascade策略',
-      endpoint: '/api/recommendations/for-you?strategy=cascade&limit=10',
+      endpoint: '/recommendations/for-you?strategy=cascade&limit=10',
       method: 'GET',
       requiresAuth: true,
     },
     {
       name: '个性化推荐 - switch策略',
-      endpoint: '/api/recommendations/for-you?strategy=switch&limit=10',
+      endpoint: '/recommendations/for-you?strategy=switch&limit=10',
       method: 'GET',
       requiresAuth: true,
     },
     {
       name: '探索发现推荐',
-      endpoint: '/api/recommendations/discover?limit=20',
+      endpoint: '/recommendations/discover?limit=20',
       method: 'GET',
       requiresAuth: true,
     },
@@ -163,13 +163,13 @@ export async function runAPITests(): Promise<TestReport> {
     // 2. 统一搜索测试
     {
       name: '统一搜索 - 全类型',
-      endpoint: '/api/search?q=星际穿越&type=all&page=1&page_size=20',
+      endpoint: '/search?q=星际穿越&type=all&page=1&page_size=20',
       method: 'GET',
       requiresAuth: false,
     },
     {
       name: '统一搜索 - 电影类型',
-      endpoint: '/api/search?q=盗梦空间&type=movie&page=1&page_size=10',
+      endpoint: '/search?q=盗梦空间&type=movie&page=1&page_size=10',
       method: 'GET',
       requiresAuth: false,
     },
@@ -177,25 +177,25 @@ export async function runAPITests(): Promise<TestReport> {
     // 3. 统计数据测试
     {
       name: '统计概览',
-      endpoint: '/api/stats/overview',
+      endpoint: '/stats/overview',
       method: 'GET',
       requiresAuth: true,
     },
     {
       name: '类型分布',
-      endpoint: '/api/stats/type-distribution',
+      endpoint: '/stats/type-distribution',
       method: 'GET',
       requiresAuth: true,
     },
     {
       name: '评分分布',
-      endpoint: '/api/stats/rating-distribution',
+      endpoint: '/stats/rating-distribution',
       method: 'GET',
       requiresAuth: true,
     },
     {
       name: '时间趋势',
-      endpoint: '/api/stats/time-trend?period=month&months=6',
+      endpoint: '/stats/time-trend?period=month&months=6',
       method: 'GET',
       requiresAuth: true,
     },
@@ -203,7 +203,7 @@ export async function runAPITests(): Promise<TestReport> {
     // 4. 用户收藏库测试
     {
       name: '获取用户收藏列表',
-      endpoint: '/api/user-items?page=1&page_size=20',
+      endpoint: '/user-items?page=1&page_size=20',
       method: 'GET',
       requiresAuth: true,
     },
@@ -211,7 +211,7 @@ export async function runAPITests(): Promise<TestReport> {
     // 5. AI功能测试
     {
       name: 'AI标签生成',
-      endpoint: '/api/ai-tags/generate',
+      endpoint: '/ai-tags/generate',
       method: 'POST',
       body: { text: '这是一部精彩的科幻电影，讲述了时间旅行的故事' },
       requiresAuth: true,

@@ -101,64 +101,60 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
             const reason = item.reason || `推荐分数: ${((item.score || 0) * 100).toFixed(0)}%`;
 
             return (
-              <AppleCard
+              <Box
                 key={item.id}
-                variant="elevated"
-                hover
                 onClick={() => onItemClick?.(item)}
                 sx={{
                   minWidth: 250,
                   maxWidth: 250,
                   cursor: 'pointer',
                   flexShrink: 0,
+                  '&:hover .image-card': {
+                    boxShadow: 6,
+                    transform: 'translateY(-4px)',
+                  },
+                  '&:hover img': {
+                    transform: 'scale(1.05)',
+                  },
                 }}
               >
-                {/* 海报图片 */}
-                <Box
+                {/* 图片卡片 - 独立容器 */}
+                <AppleCard
+                  variant="elevated"
+                  className="image-card"
                   sx={{
-                    position: 'relative',
-                    paddingTop: '150%',
                     overflow: 'hidden',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   <Box
-                    component="img"
-                    src={imageUrl}
-                    alt={title}
                     sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
+                      position: 'relative',
+                      paddingTop: '150%',
+                      overflow: 'hidden',
                     }}
-                  />
-                  {item.vote_average && (
+                  >
                     <Box
+                      component="img"
+                      src={imageUrl}
+                      alt={title}
                       sx={{
                         position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        bgcolor: 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.5,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        backdropFilter: 'blur(10px)',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'transform 0.3s ease',
                       }}
-                    >
-                      ⭐ {item.vote_average.toFixed(1)}
-                    </Box>
-                  )}
-                </Box>
+                    />
+                  </Box>
+                </AppleCard>
 
-                {/* 内容信息 */}
-                <Box sx={{ p: 2 }}>
+                {/* 信息区域 - 独立容器，透明背景 */}
+                <Box sx={{ mt: 1, px: 0.5 }}>
                   <Typography
-                    variant="body1"
+                    variant="body2"
                     sx={{
                       fontWeight: 600,
                       overflow: 'hidden',
@@ -166,12 +162,20 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
-                      minHeight: '3em',
-                      mb: 1,
+                      minHeight: '2.4em',
+                      lineHeight: 1.2,
+                      mb: 0.25,
                     }}
                   >
                     {title}
                   </Typography>
+
+                  {/* 评分 */}
+                  {item.vote_average && (
+                    <Typography variant="caption" sx={{ color: '#facc15', fontWeight: 600, display: 'block', mb: 0.25 }}>
+                      ⭐ {item.vote_average.toFixed(1)}
+                    </Typography>
+                  )}
 
                   {/* AI推荐理由 */}
                   <Box
@@ -179,17 +183,17 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
                       display: 'flex',
                       alignItems: 'flex-start',
                       gap: 0.5,
-                      bgcolor: (theme) => 
-                        theme.palette.mode === 'dark' 
-                          ? 'rgba(138, 43, 226, 0.1)' 
+                      bgcolor: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(138, 43, 226, 0.1)'
                           : 'rgba(138, 43, 226, 0.05)',
-                      p: 1,
+                      p: 0.75,
                       borderRadius: 1,
-                      borderLeft: 3,
+                      borderLeft: 2,
                       borderColor: 'primary.main',
                     }}
                   >
-                    <AutoAwesomeIcon sx={{ fontSize: 16, color: 'primary.main', mt: 0.2 }} />
+                    <AutoAwesomeIcon sx={{ fontSize: 14, color: 'primary.main', mt: 0.1 }} />
                     <Typography
                       variant="caption"
                       color="text.secondary"
@@ -199,14 +203,15 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
-                        lineHeight: 1.4,
+                        lineHeight: 1.3,
+                        fontSize: '0.7rem',
                       }}
                     >
                       {reason}
                     </Typography>
                   </Box>
                 </Box>
-              </AppleCard>
+              </Box>
             );
           })}
         </Box>

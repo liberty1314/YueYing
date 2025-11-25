@@ -6,6 +6,7 @@
 """
 
 import asyncio
+import re
 from typing import List, Dict, Any, Optional
 from enum import Enum
 from loguru import logger
@@ -48,6 +49,7 @@ class UnifiedSearchService:
         content_type: ContentType = ContentType.ALL,
         max_results: int = 20,
         page: int = 1,
+        enable_strict_filter: bool = True,
     ) -> Dict[str, Any]:
         """
         统一搜索入口
@@ -57,6 +59,7 @@ class UnifiedSearchService:
             content_type: 内容类型（movie/tv/anime/book/all）
             max_results: 每个来源的最大结果数
             page: 页码
+            enable_strict_filter: 是否启用严格标题匹配过滤（默认启用）
 
         Returns:
             统一格式的搜索结果
@@ -94,6 +97,16 @@ class UnifiedSearchService:
 
         # 去重和排序
         deduplicated_results = self._deduplicate_results(valid_results)
+        
+        # 严格标题匹配过滤（可选）
+        if enable_strict_filter:
+            deduplicated_results = self._filter_by_title_match(
+                deduplicated_results, query
+            )
+            logger.info(
+                f"Strict filter applied: {len(deduplicated_results)} results remaining"
+            )
+        
         sorted_results = self._sort_by_relevance(deduplicated_results, query)
 
         # 分页
@@ -342,6 +355,73 @@ class UnifiedSearchService:
                 "categories": volume_info.get("categories", []),
             },
         }
+
+    def _normalize_text(self, text: str) -> str:
+        """
+        标准化文本：移除标点符号并转小写
+        
+        Args:
+            text: 原始文本
+            
+        Returns:
+            清理后的文本
+        """
+        if not text:
+            return ""
+        
+        # 转小写
+        text = text.lower()
+        
+        # 移除所有标点符号和特殊字符，只保留字母、数字、空格和中文字符
+        text = re.sub(r'[^\w\s\u4e00-\u9fff]', '', text)
+        
+        # 移除多余空格
+        text = ' '.join(text.split())
+        
+        return text
+
+    def _filter_by_title_match(
+        self, results: List[Dict[str, Any]], query: str
+    ) -> List[Dict[str, Any]]:
+        """
+        严格标题匹配过滤
+        
+        只保留标题中包含搜索关键词的结果（不区分大小写，移除标点符号）
+        
+        Args:
+            results: 搜索结果列表
+            query: 搜索关键词
+            
+        Returns:
+            过滤后的结果列表
+        """
+        if not results or not query:
+            return results
+        
+        # 标准化搜索关键词
+        normalized_query = self._normalize_text(query)
+        
+        filtered = []
+        for result in results:
+            # 获取标题和原始标题
+            title = result.get("title") or ""
+            original_title = result.get("original_title") or ""
+            
+            # 标准化标题
+            normalized_title = self._normalize_text(title)
+            normalized_original = self._normalize_text(original_title)
+            
+            # 检查是否包含关键词
+            if (normalized_query in normalized_title or 
+                normalized_query in normalized_original):
+                filtered.append(result)
+        
+        logger.info(
+            f"Title match filter: {len(results)} -> {len(filtered)} results "
+            f"(removed {len(results) - len(filtered)} irrelevant items)"
+        )
+        
+        return filtered
 
     def _deduplicate_results(
         self, results: List[Dict[str, Any]]

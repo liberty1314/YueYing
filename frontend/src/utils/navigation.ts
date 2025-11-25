@@ -21,24 +21,11 @@ export interface ContentItem {
  * 获取内容详情页URL
  */
 export function getContentDetailUrl(item: ContentItem): string {
-  // 优先使用media_type，其次使用content_type
-  const type = item.media_type || item.content_type || 'movie';
+  // 优先使用 external_id，其次使用 id
   const id = item.external_id || item.id;
-  
-  // 根据类型返回不同的URL
-  switch (type) {
-    case 'movie':
-      return `/detail/movie/${id}`;
-    case 'tv':
-      return `/detail/tv/${id}`;
-    case 'book':
-      return `/detail/book/${id}`;
-    case 'anime':
-      return `/detail/anime/${id}`;
-    default:
-      // 默认使用通用详情页
-      return `/item/${id}`;
-  }
+
+  // 统一使用 /item/${id} 路由
+  return `/item/${id}`;
 }
 
 /**

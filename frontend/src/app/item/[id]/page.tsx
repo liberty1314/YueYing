@@ -38,7 +38,7 @@ interface ItemDetail {
   notes?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function ItemDetailPage() {
   const params = useParams();
@@ -59,7 +59,7 @@ export default function ItemDetailPage() {
     setLoading(true);
     try {
       // 尝试从用户收藏库获取
-      const libraryResponse = await fetch(`${API_BASE_URL}/api/user-items/${itemId}`);
+      const libraryResponse = await fetch(`${API_BASE_URL}/user-items/${itemId}`);
       if (libraryResponse.ok) {
         const data = await libraryResponse.json();
         setItem(data);
@@ -67,7 +67,7 @@ export default function ItemDetailPage() {
       } else {
         // 如果不在收藏库，从外部源获取
         // TODO: 根据来源参数调用不同API
-        const externalResponse = await fetch(`${API_BASE_URL}/api/items/${itemId}`);
+        const externalResponse = await fetch(`${API_BASE_URL}/items/${itemId}`);
         if (externalResponse.ok) {
           const data = await externalResponse.json();
           setItem(data);
@@ -83,11 +83,11 @@ export default function ItemDetailPage() {
 
   const handleAddToLibrary = async () => {
     try {
-      await api.post('/api/user-items', {
+      await api.post('/user-items', {
         ...item,
         status: 'want_to_watch',
       });
-      
+
       setInLibrary(true);
       fetchItemDetail(); // 刷新数据
     } catch (error) {
@@ -101,7 +101,7 @@ export default function ItemDetailPage() {
     if (!item) return;
 
     try {
-      await api.put(`/api/user-items/${item.id}`, { tags });
+      await api.put(`/user-items/${item.id}`, { tags });
       setItem({ ...item, tags });
     } catch (error) {
       if (error instanceof APIError) {

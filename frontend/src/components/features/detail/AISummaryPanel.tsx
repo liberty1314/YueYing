@@ -35,10 +35,10 @@ export function AISummaryPanel({ itemId, overview, className }: AISummaryPanelPr
     try {
       // 调用AI内容摘要API
       const data = await api.post<{ summary: string; highlights: string[] }>(
-        '/api/ai/content-summary',
+        '/ai/content-summary',
         { item_id: itemId }
       );
-      
+
       setSummary(data.summary || overview || '');
     } catch (err) {
       console.error('Failed to generate summary:', err);
@@ -58,7 +58,7 @@ export function AISummaryPanel({ itemId, overview, className }: AISummaryPanelPr
 
   const handleFeedback = async (isPositive: boolean) => {
     try {
-      await api.post('/api/ai/summary/feedback', {
+      await api.post('/ai/summary/feedback', {
         item_id: itemId,
         summary: summary,
         is_positive: isPositive,

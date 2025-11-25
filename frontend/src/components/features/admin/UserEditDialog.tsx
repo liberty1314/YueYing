@@ -29,7 +29,7 @@ export function UserEditDialog({ user, isOpen, onClose, onSubmit }: UserEditDial
         username: user.username || '',
         full_name: user.full_name || '',
         role: user.role as 'user' | 'admin',
-        is_active: user.is_active,
+        is_active: user.is_active ?? true, // 确保是布尔值，默认为 true
       });
     }
   }, [user]);
@@ -127,7 +127,7 @@ export function UserEditDialog({ user, isOpen, onClose, onSubmit }: UserEditDial
             <input
               type="checkbox"
               id="is_active"
-              checked={formData.is_active}
+              checked={formData.is_active ?? true}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
               className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
             />

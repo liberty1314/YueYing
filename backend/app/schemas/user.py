@@ -96,11 +96,32 @@ class UserResponse(UserBase):
     avatar_url: Optional[str] = None
     is_verified: bool = False
     role: str = "user"  # 用户角色：user 或 admin
+    is_admin: bool = False  # 是否为管理员（将从 role 字段计算）
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True  # Pydantic v2 (orm_mode in v1)
+        
+    @validator('is_admin', pre=True, always=True)
+    def compute_is_admin(cls, v, values):
+        """根据 role 字段计算 is_admin"""
+        # 如果 v 是方法，调用它
+        if callable(v):
+            return v()
+        # 如果已经是布尔值，直接返回
+        if isinstance(v, bool):
+            return v
+        # 否则根据 role 判断
+        role = values.get('role', 'user')
+        return role == 'admin' or str(role).endswith('ADMIN')
+    
+    @validator('role', pre=True)
+    def convert_role_enum(cls, v):
+        """转换 UserRole 枚举为字符串"""
+        if hasattr(v, 'value'):
+            return v.value
+        return str(v)
 
 
 class UserInDB(UserBase):

@@ -27,7 +27,7 @@ export interface MediaItem {
 /**
  * 添加到库的状态
  */
-export type LibraryStatus = 
+export type LibraryStatus =
   | 'want_to_watch'  // 想看
   | 'watching'       // 在看
   | 'watched'        // 看过
@@ -51,11 +51,13 @@ interface AddToLibraryParams {
 }
 
 /**
- * 将TMDB图片路径转换为完整URL
+ * 将图片路径转换为完整URL
  */
 function getImageUrl(path?: string): string | undefined {
   if (!path) return undefined;
+  // 如果已经是完整URL，直接返回
   if (path.startsWith('http')) return path;
+  // 否则假设是TMDB路径
   return `https://image.tmdb.org/t/p/w500${path}`;
 }
 
@@ -63,21 +65,52 @@ function getImageUrl(path?: string): string | undefined {
  * 添加内容到库
  */
 export async function addToLibrary(
-  item: MediaItem,
+  item: any,
   status: LibraryStatus = 'want_to_watch'
 ): Promise<{ success: boolean; message: string; data?: any }> {
   try {
+    // 提取海报URL（支持TMDB和Bangumi格式）
+    let posterUrl: string | undefined = undefined;
+    if (item.poster_path) {
+      posterUrl = getImageUrl(item.poster_path);
+    } else if (item.poster_url) {
+      posterUrl = item.poster_url;
+    } else if (item.images?.large) {
+      posterUrl = item.images.large;
+    } else if (item.images?.common) {
+      posterUrl = item.images.common;
+    }
+
+    // 提取背景图URL
+    let backdropUrl: string | undefined = undefined;
+    if (item.backdrop_path) {
+      backdropUrl = getImageUrl(item.backdrop_path);
+    }
+
+    // 提取标题
+    const title = item.title || item.name || item.name_cn || '未知标题';
+    const originalTitle = item.original_title || item.original_name || item.name;
+
+    // 提取简介
+    const overview = item.overview || item.summary;
+
+    // 提取评分
+    const rating = item.vote_average || item.rating?.score;
+
+    // 提取发布日期
+    const releaseDate = item.release_date || item.first_air_date || item.air_date;
+
     // 构建请求参数
     const params: AddToLibraryParams = {
       external_id: item.external_id || item.id,
       content_type: item.media_type || item.content_type || 'movie',
-      title: item.title || item.name || '未知标题',
-      original_title: item.original_title,
-      poster_url: getImageUrl(item.poster_path),
-      backdrop_url: getImageUrl(item.backdrop_path),
-      overview: item.overview,
-      rating: item.vote_average,
-      release_date: item.release_date || item.first_air_date,
+      title,
+      original_title: originalTitle,
+      poster_url: posterUrl,
+      backdrop_url: backdropUrl,
+      overview,
+      rating,
+      release_date: releaseDate,
       status,
     };
 

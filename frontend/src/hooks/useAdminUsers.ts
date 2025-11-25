@@ -105,7 +105,7 @@ export function useAdminUsers(options: UseUsersOptions = {}): UseUsersResult {
       if (filters.sort_desc !== undefined) params.append('sort_desc', filters.sort_desc.toString());
 
       const result = await api.get<UserListResponse>(
-        `/api/admin/users?${params.toString()}`,
+        `/admin/users?${params.toString()}`,
         true,
         CachePresets.SHORT // 1分钟缓存
       );
@@ -129,7 +129,7 @@ export function useAdminUsers(options: UseUsersOptions = {}): UseUsersResult {
   const updateUser = useCallback(async (userId: number, updateData: UserUpdateRequest): Promise<User> => {
     try {
       const user = await api.put<User>(
-        `/api/admin/users/${userId}`,
+        `/admin/users/${userId}`,
         updateData,
         true
       );
@@ -148,7 +148,7 @@ export function useAdminUsers(options: UseUsersOptions = {}): UseUsersResult {
   const deleteUser = useCallback(async (userId: number, hardDelete: boolean = false): Promise<void> => {
     try {
       await api.delete(
-        `/api/admin/users/${userId}?hard_delete=${hardDelete}`,
+        `/admin/users/${userId}?hard_delete=${hardDelete}`,
         true
       );
       // 刷新列表
@@ -165,7 +165,7 @@ export function useAdminUsers(options: UseUsersOptions = {}): UseUsersResult {
   const createAdmin = useCallback(async (adminData: CreateAdminRequest): Promise<User> => {
     try {
       const user = await api.post<User>(
-        '/api/admin/users/create-admin',
+        '/admin/users/create-admin',
         adminData,
         true
       );

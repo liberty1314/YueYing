@@ -37,6 +37,11 @@ router = APIRouter(prefix="/search", tags=["统一搜索"])
     - all: 所有类型
     
     搜索结果会自动去重、排序并分页。
+    
+    严格过滤模式：
+    - 启用后，只返回标题中包含搜索关键词的结果
+    - 不区分大小写，移除标点符号后匹配
+    - 可以有效减少不相关的搜索结果
     """,
 )
 @limiter.limit("20/minute")
@@ -67,6 +72,11 @@ async def unified_search(
         description="每页结果数",
         alias="page_size",
     ),
+    strict_filter: bool = Query(
+        True,
+        description="是否启用严格标题匹配过滤（默认启用）",
+        alias="strict_filter",
+    ),
     use_cache: bool = Query(
         True,
         description="是否使用缓存",
@@ -79,8 +89,8 @@ async def unified_search(
     整合 TMDB、Google Books、Bangumi 的搜索结果
     """
     try:
-        # 生成缓存键
-        cache_key = f"unified_search:{q}:{type}:{page}:{page_size}"
+        # 生成缓存键（包含 strict_filter 参数）
+        cache_key = f"unified_search:{q}:{type}:{page}:{page_size}:{strict_filter}"
 
         # 尝试从缓存获取
         if use_cache and cache_manager:
@@ -95,6 +105,7 @@ async def unified_search(
             content_type=type,
             max_results=page_size,
             page=page,
+            enable_strict_filter=strict_filter,
         )
 
         # 转换为响应模型

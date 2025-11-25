@@ -76,57 +76,55 @@ export default function TrendingSection({ dailyItems, weeklyItems, onItemClick }
 
           return (
             <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
-              <AppleCard
-                variant="elevated"
-                hover
+              {/* 分离式布局：图片卡片和信息区域 */}
+              <Box
                 onClick={() => onItemClick?.(item)}
                 sx={{
                   cursor: 'pointer',
-                  height: '100%',
-                  overflow: 'hidden',
+                  '&:hover .image-card': {
+                    boxShadow: 6,
+                    transform: 'translateY(-4px)',
+                  },
+                  '&:hover img': {
+                    transform: 'scale(1.05)',
+                  },
                 }}
               >
-                <Box
+                {/* 图片卡片 - 独立容器 */}
+                <AppleCard
+                  variant="elevated"
+                  className="image-card"
                   sx={{
-                    position: 'relative',
-                    paddingTop: '150%',
                     overflow: 'hidden',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   <Box
-                    component="img"
-                    src={imageUrl}
-                    alt={title}
                     sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
+                      position: 'relative',
+                      paddingTop: '150%',
+                      overflow: 'hidden',
                     }}
-                  />
-                  {item.vote_average && (
+                  >
                     <Box
+                      component="img"
+                      src={imageUrl}
+                      alt={title}
                       sx={{
                         position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        bgcolor: 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.5,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        backdropFilter: 'blur(10px)',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'transform 0.3s ease',
                       }}
-                    >
-                      ⭐ {item.vote_average.toFixed(1)}
-                    </Box>
-                  )}
-                </Box>
-                <Box sx={{ p: 1.5 }}>
+                    />
+                  </Box>
+                </AppleCard>
+
+                {/* 信息区域 - 独立容器，透明背景 */}
+                <Box sx={{ mt: 1, px: 0.5 }}>
                   <Typography
                     variant="body2"
                     sx={{
@@ -137,17 +135,24 @@ export default function TrendingSection({ dailyItems, weeklyItems, onItemClick }
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
                       minHeight: '2.4em',
+                      lineHeight: 1.2,
+                      mb: 0.25,
                     }}
                   >
                     {title}
                   </Typography>
-                  {year && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
-                      {year}
+                      {year || '未知'}
                     </Typography>
-                  )}
+                    {item.vote_average && (
+                      <Typography variant="caption" sx={{ color: '#facc15', fontWeight: 600 }}>
+                        ⭐ {item.vote_average.toFixed(1)}
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
-              </AppleCard>
+              </Box>
             </Grid>
           );
         })}

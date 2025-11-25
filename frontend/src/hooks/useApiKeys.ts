@@ -63,8 +63,8 @@ export function useApiKeys(): UseApiKeysResult {
     setError(null);
     try {
       const [configsData, presetsData] = await Promise.all([
-        api.get<{ configs: ApiKeyConfig[] }>('/api/admin/api-keys', true, CachePresets.SHORT),
-        api.get<Record<string, any>>('/api/admin/api-keys/presets', true, CachePresets.MEDIUM),
+        api.get<{ configs: ApiKeyConfig[] }>('/admin/api-keys', true, CachePresets.SHORT),
+        api.get<Record<string, any>>('/admin/api-keys/presets', true, CachePresets.MEDIUM),
       ]);
       setConfigs(configsData.configs);
       setPresets(presetsData);
@@ -82,13 +82,13 @@ export function useApiKeys(): UseApiKeysResult {
   }, [fetchConfigs]);
 
   const updateConfig = useCallback(async (service: string, data: ApiKeyConfigUpdate): Promise<ApiKeyConfig> => {
-    const updated = await api.put<ApiKeyConfig>(`/api/admin/api-keys/${service}`, data, true);
+    const updated = await api.put<ApiKeyConfig>(`/admin/api-keys/${service}`, data, true);
     await fetchConfigs();
     return updated;
   }, [fetchConfigs]);
 
   const testConnection = useCallback(async (service: string): Promise<ApiKeyTestResponse> => {
-    return await api.post<ApiKeyTestResponse>(`/api/admin/api-keys/${service}/test`, {}, true);
+    return await api.post<ApiKeyTestResponse>(`/admin/api-keys/${service}/test`, {}, true);
   }, []);
 
   return {

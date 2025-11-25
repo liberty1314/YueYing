@@ -46,47 +46,47 @@ export function useAdminAuth(
   const checkAdminPermission = async (): Promise<boolean> => {
     try {
       // 获取当前用户信息
-      const userData = await api.get<User>('/api/auth/me', true);
-      
+      const userData = await api.get<User>('/auth/me', true);
+
       setUser(userData);
       setIsAdmin(userData.is_admin);
-      
+
       // 检查是否需要管理员权限
       if (requireAdmin && !userData.is_admin) {
         console.warn('User is not an admin, redirecting...');
         router.push('/403'); // 重定向到403权限不足页面
         return false;
       }
-      
+
       // 检查账户是否激活
       if (!userData.is_active) {
         console.warn('User account is not active');
         router.push('/login');
         return false;
       }
-      
+
       return true;
     } catch (err) {
       console.error('Admin auth check failed:', err);
-      
+
       if (err instanceof APIError) {
         // 401未授权 - 重定向到登录页
         if (err.statusCode === 401) {
           router.push(redirectTo);
           return false;
         }
-        
+
         // 403权限不足
         if (err.statusCode === 403) {
           router.push('/403');
           return false;
         }
-        
+
         setError(err);
       } else if (err instanceof Error) {
         setError(err);
       }
-      
+
       return false;
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ export function useAdminAuth(
  */
 export async function checkIsAdmin(): Promise<boolean> {
   try {
-    const userData = await api.get<User>('/api/auth/me', true);
+    const userData = await api.get<User>('/auth/me', true);
     return userData.is_admin;
   } catch (error) {
     console.error('Failed to check admin status:', error);

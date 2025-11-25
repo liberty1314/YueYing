@@ -160,8 +160,8 @@ class LogService:
         if current_log:
             logs.append(current_log)
         
-        # 返回最新的 n 条
-        return logs[-n:]
+        # 返回最新的 n 条，倒序排列（最新的在前）
+        return list(reversed(logs[-n:]))
     
     def read_logs(
         self,

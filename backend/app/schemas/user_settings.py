@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 class UserSettingsBase(BaseModel):
     """用户设置基类"""
     auto_generate_tags: bool = Field(False, description="创建记录时自动生成标签")
+    enable_strict_search_filter: bool = Field(True, description="启用严格搜索过滤（只返回标题包含关键词的结果）")
 
 
 class UserSettingsCreate(UserSettingsBase):
@@ -19,6 +20,7 @@ class UserSettingsCreate(UserSettingsBase):
 class UserSettingsUpdate(BaseModel):
     """更新用户设置"""
     auto_generate_tags: Optional[bool] = Field(None, description="创建记录时自动生成标签")
+    enable_strict_search_filter: Optional[bool] = Field(None, description="启用严格搜索过滤")
 
 
 class UserSettingsResponse(UserSettingsBase):

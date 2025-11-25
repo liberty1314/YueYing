@@ -36,10 +36,10 @@ export function AITagsPanel({ itemId, existingTags = [], onTagsUpdate, className
     try {
       // 调用AI标签生成API
       const data = await api.post<{ tags: Array<{ tag_name: string; confidence: number }> }>(
-        '/api/ai-tags/generate-tags',
+        '/ai-tags/generate-tags',
         { user_item_id: itemId }
       );
-      
+
       // 提取标签名称
       const newTags = (data.tags || []).map(t => t.tag_name);
       setSuggestedTags(newTags);
