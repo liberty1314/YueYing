@@ -111,9 +111,9 @@ export function ContentCard({
           variant="elevated"
           className={cn(
             'overflow-hidden transition-all duration-300',
-            'hover:shadow-xl hover:-translate-y-1',
-            isHovered && 'ring-2 ring-primary-500',
-            isSelected && 'ring-2 ring-primary-500'
+            'hover:shadow-2xl hover:-translate-y-2',
+            isHovered && 'ring-2 ring-primary',
+            isSelected && 'ring-2 ring-primary'
           )}
         >
           <div className="relative aspect-[2/3] overflow-hidden bg-gray-200 dark:bg-gray-800">
@@ -121,7 +121,7 @@ export function ContentCard({
               <img
                 src={coverImage}
                 alt={item.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-600">
@@ -131,14 +131,14 @@ export function ContentCard({
 
             {/* Hover 遮罩层 */}
             {isHovered && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-300">
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center transition-all duration-300 animate-fadeIn">
                 <div className="flex gap-3">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onView(item);
                     }}
-                    className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
+                    className="p-3 rounded-full bg-white/95 hover:bg-white transition-all transform hover:scale-110 shadow-lg"
                     title="查看详情"
                   >
                     <EyeIcon className="w-5 h-5 text-gray-900" />
@@ -148,7 +148,7 @@ export function ContentCard({
                       e.stopPropagation();
                       onEdit(item);
                     }}
-                    className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
+                    className="p-3 rounded-full bg-white/95 hover:bg-white transition-all transform hover:scale-110 shadow-lg"
                     title="编辑"
                   >
                     <Edit2Icon className="w-5 h-5 text-gray-900" />
@@ -158,7 +158,7 @@ export function ContentCard({
                       e.stopPropagation();
                       setShowActions(!showActions);
                     }}
-                    className="p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
+                    className="p-3 rounded-full bg-white/95 hover:bg-white transition-all transform hover:scale-110 shadow-lg"
                     title="更多操作"
                   >
                     <MoreVerticalIcon className="w-5 h-5 text-gray-900" />
@@ -178,7 +178,7 @@ export function ContentCard({
             {/* AI标签 */}
             {showAITags && aiTags.length > 0 && (
               <div className="absolute top-2 right-2">
-                <Badge variant="default" size="sm" className="bg-gradient-to-r from-primary-500 to-purple-500 text-white dark:text-white">
+                <Badge variant="default" size="sm" className="bg-gradient-to-r from-primary to-purple-500 text-white dark:text-white">
                   <SparklesIcon className="w-3 h-3 mr-1 text-white dark:text-white" />
                   AI推荐
                 </Badge>
@@ -189,7 +189,7 @@ export function ContentCard({
             {progress > 0 && (
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800/50">
                 <div
-                  className="h-full bg-primary-500 transition-all"
+                  className="h-full bg-primary transition-all"
                   style={{ width: `${progress}%` }}
                 />
               </div>

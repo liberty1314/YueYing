@@ -8,12 +8,12 @@
 import { Card } from '@/components/ui';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, Sector } from 'recharts';
 import { PieChartIcon } from 'lucide-react';
-import { 
-  contentTypeColors, 
-  contentTypeLabels, 
-  getTooltipStyle, 
+import {
+  contentTypeColors,
+  contentTypeLabels,
+  getTooltipStyle,
   chartHeights,
-  getColorPalette 
+  getColorPalette
 } from '@/lib/chart-theme';
 import { useState } from 'react';
 
@@ -86,12 +86,12 @@ export function PieChartWidget({
   // 处理饼图数据，添加颜色
   const chartData = data.map((item, index) => {
     let color = item.color;
-    
+
     // 如果数据有type属性，尝试从contentTypeColors获取颜色
     if (!color && (item as any).type && contentTypeColors[(item as any).type as keyof typeof contentTypeColors]) {
       color = contentTypeColors[(item as any).type as keyof typeof contentTypeColors];
     }
-    
+
     // 如果还没有颜色，从调色板获取
     if (!color) {
       const palette = getColorPalette(data.length);
@@ -156,9 +156,9 @@ export function PieChartWidget({
               cursor={onSliceClick ? 'pointer' : 'default'}
             >
               {chartData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.color} 
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.color}
                   opacity={activeIndex === null || activeIndex === index ? 1 : 0.6}
                 />
               ))}
@@ -177,8 +177,8 @@ export function PieChartWidget({
         {/* Details List */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
           {chartData.map((item, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className={`flex items-center justify-between ${onSliceClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded px-2 py-1' : ''}`}
               onClick={() => onSliceClick && handlePieClick(item, index)}
             >

@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PlusIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { PlusIcon, Film } from 'lucide-react';
 import { useLibraryStore } from '@/stores/libraryStore';
-import { userItemsApi } from '@/lib/api';
+import { userItemsApi, tagsApi } from '@/lib/api';
 import type { UserItem } from '@/types';
+import type { Tag } from '@/lib/api/tags';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { PosterGridSkeleton } from '@/components/shared/LoadingSkeletons';
 import { AdvancedFilterPanel, ContentCard, BatchOperationsBar, BatchEditDialog, type BatchUpdateData } from '@/components/features/library';
 import QuickAddForm from '@/components/features/library/QuickAddForm';
 import EditForm from '@/components/features/library/EditForm';
@@ -13,6 +17,7 @@ import DeleteConfirmDialog from '@/components/features/library/DeleteConfirmDial
 import ItemDetailDialog from '@/components/features/library/ItemDetailDialog';
 
 export default function LibraryPage() {
+    const router = useRouter();
     const [items, setItems] = useState<UserItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -32,8 +37,8 @@ export default function LibraryPage() {
 
     const { filters, sortBy, page, pageSize, updateFilter, clearFilters } = useLibraryStore();
 
-    // 模拟标签数据（实际应从API获取）
-    const activeTags = ['科幻', '动作', '日漫', '美剧'];
+    // 活跃标签数据
+    const [activeTags, setActiveTags] = useState<string[]>([]);
 
     const fetchItems = async () => {
         try {
@@ -46,7 +51,7 @@ export default function LibraryPage() {
             const response = await userItemsApi.getAll({
                 ...filters,
                 sort_by,
-                sort_order: sortOrder,
+                sort_order: (sortOrder as 'asc' | 'desc'),
                 page,
                 page_size: pageSize,
             });
@@ -58,8 +63,20 @@ export default function LibraryPage() {
         }
     };
 
+    // 获取活跃标签
+    const fetchActiveTags = async () => {
+        try {
+            const tags = await tagsApi.getPopular(6);
+            setActiveTags(tags.map(tag => tag.name));
+        } catch (err) {
+            console.error('获取活跃标签失败:', err);
+            setActiveTags([]);
+        }
+    };
+
     useEffect(() => {
         fetchItems();
+        fetchActiveTags();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters, sortBy, page, pageSize]);
 
@@ -203,23 +220,30 @@ export default function LibraryPage() {
                     {/* Main Content */}
                     <div className="flex-1 p-6">
                         {loading ? (
-                            <div className="text-center py-20">
-                                <div className="inline-block w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                                <p className="mt-4 text-gray-600 dark:text-gray-400">加载中...</p>
-                            </div>
+                            <PosterGridSkeleton count={12} />
                         ) : error ? (
                             <div className="text-center py-20">
                                 <p className="text-red-600 dark:text-red-400">{error}</p>
                             </div>
                         ) : items.length === 0 ? (
-                            <div className="text-center py-20">
-                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                                    还没有收藏任何内容
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    点击上方的 + 按钮开始添加
-                                </p>
-                            </div>
+                            <EmptyState
+                                icon={Film}
+                                title="开始你的观影记录"
+                                description="在这里记录你看过、在看或想看的电影和剧集，建立专属于你的影视收藏库。"
+                                primaryAction={{
+                                    label: '浏览热门内容',
+                                    onClick: () => router.push('/'),
+                                }}
+                                secondaryAction={{
+                                    label: '搜索添加',
+                                    onClick: () => router.push('/search'),
+                                }}
+                                hints={[
+                                    '使用筛选器快速找到想看的内容',
+                                    '为每部作品添加评分和笔记',
+                                    '查看你的观影统计和趋势分析',
+                                ]}
+                            />
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
                                 {items.map((item) => (

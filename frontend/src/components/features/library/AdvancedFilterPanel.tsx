@@ -18,7 +18,15 @@ import {
   StarIcon,
   ClockIcon,
   TrendingUpIcon,
-  TagIcon
+  TagIcon,
+  SearchIcon,
+  ZapIcon,
+  FilmIcon,
+  TvIcon,
+  ClapperboardIcon,
+  BookOpenIcon,
+  GamepadIcon,
+  BarChart3Icon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ItemType, ItemStatus } from '@/types';
@@ -70,12 +78,12 @@ const filterPresets: FilterPreset[] = [
   },
 ];
 
-const itemTypes: { value: ItemType; label: string; emoji: string }[] = [
-  { value: 'movie', label: '电影', emoji: '🎬' },
-  { value: 'tv', label: '剧集', emoji: '📺' },
-  { value: 'anime', label: '动画', emoji: '🎌' },
-  { value: 'book', label: '书籍', emoji: '📚' },
-  { value: 'game', label: '游戏', emoji: '🎮' },
+const itemTypes: { value: ItemType; label: string; icon: typeof FilmIcon }[] = [
+  { value: 'movie', label: '电影', icon: FilmIcon },
+  { value: 'tv', label: '剧集', icon: TvIcon },
+  { value: 'anime', label: '动画', icon: ClapperboardIcon },
+  { value: 'book', label: '书籍', icon: BookOpenIcon },
+  { value: 'game', label: '游戏', icon: GamepadIcon },
 ];
 
 const itemStatuses: { value: ItemStatus; label: string; color: string }[] = [
@@ -181,8 +189,9 @@ export function AdvancedFilterPanel({
           <CardContent className="space-y-6">
             {/* 智能搜索 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                🔍 智能搜索
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+                <SearchIcon className="w-4 h-4" />
+                智能搜索
               </h4>
               <SmartSearchBar
                 onSearch={(query) => onFilterChange({ ...filters, search: query })}
@@ -192,19 +201,26 @@ export function AdvancedFilterPanel({
 
             {/* 快速筛选预设 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ⚡ 快速筛选
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+                <ZapIcon className="w-4 h-4" />
+                快速筛选
               </h4>
               <div className="flex flex-wrap gap-2">
                 {filterPresets.map((preset) => {
                   const Icon = preset.icon;
+                  const isActive = preset.id === 'high_rated' && filters.rating_min === 8;
                   return (
                     <button
                       key={preset.id}
                       onClick={() => handlePresetClick(preset)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className={cn(
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border-2 transition-all',
+                        isActive
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-500'
+                          : 'border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      )}
                     >
-                      <Icon className="w-3 h-3" />
+                      <Icon className="w-3.5 h-3.5" />
                       {preset.name}
                     </button>
                   );
@@ -214,32 +230,37 @@ export function AdvancedFilterPanel({
 
             {/* 类型筛选 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                🎬 类型
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+                <FilmIcon className="w-4 h-4" />
+                类型
               </h4>
               <div className="flex flex-wrap gap-2">
-                {itemTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => handleTypeToggle(type.value)}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all',
-                      filters.content_type === type.value
-                        ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-2 border-primary-500'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
-                    )}
-                  >
-                    <span>{type.emoji}</span>
-                    {type.label}
-                  </button>
-                ))}
+                {itemTypes.map((type) => {
+                  const Icon = type.icon;
+                  return (
+                    <button
+                      key={type.value}
+                      onClick={() => handleTypeToggle(type.value)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all',
+                        filters.content_type === type.value
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-500'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {type.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* 状态筛选 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                📊 状态
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+                <BarChart3Icon className="w-4 h-4" />
+                状态
               </h4>
               <div className="flex flex-wrap gap-2">
                 {itemStatuses.map((status) => (

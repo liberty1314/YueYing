@@ -21,7 +21,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
     return (
         <ProtectedRoute>
-            <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default', pt: 8 }}>
+            <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
                 {/* 侧边栏 */}
                 <Box
                     sx={{

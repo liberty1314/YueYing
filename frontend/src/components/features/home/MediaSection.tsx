@@ -73,9 +73,10 @@ export default function MediaSection({ title, icon, items, onViewAll }: MediaSec
                   cursor: 'pointer',
                   height: '100%',
                   overflow: 'hidden',
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   '&:hover': {
-                    transform: 'translateY(-4px)',
+                    transform: 'translateY(-6px) scale(1.03)',
+                    boxShadow: '0 12px 48px rgba(0, 0, 0, 0.15)',
                   },
                 }}
               >
@@ -97,6 +98,7 @@ export default function MediaSection({ title, icon, items, onViewAll }: MediaSec
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
+                      transition: 'transform 0.5s ease',
                     }}
                     onError={(e) => {
                       e.currentTarget.src = '/placeholder.jpg';
@@ -108,17 +110,21 @@ export default function MediaSection({ title, icon, items, onViewAll }: MediaSec
                         position: 'absolute',
                         top: 8,
                         right: 8,
-                        bgcolor: 'rgba(0,0,0,0.8)',
+                        bgcolor: 'rgba(0,0,0,0.85)',
                         color: 'white',
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.5,
+                        borderRadius: 1.5,
+                        px: 1.5,
+                        py: 0.75,
                         fontSize: '0.75rem',
                         fontWeight: 600,
                         backdropFilter: 'blur(10px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
                       }}
                     >
-                      ⭐ {item.vote_average.toFixed(1)}
+                      <span>⭐</span>
+                      <span>{item.vote_average.toFixed(1)}</span>
                     </Box>
                   )}
                 </Box>
