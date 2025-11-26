@@ -170,23 +170,6 @@ export default function LibraryPage() {
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-gray-50 dark:bg-black">
-                {/* Header */}
-                {/* <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <div className="max-w-[1920px] mx-auto px-6 py-4">
-                        <div className="flex items-center justify-between">
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                                我的收藏
-                            </h1>
-                            <button
-                                onClick={() => setAddDialogOpen(true)}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors"
-                            >
-                                <PlusIcon className="w-5 h-5 text-white" />
-                                <span className="text-white">添加记录</span>
-                            </button>
-                        </div>
-                    </div>
-                </div> */}
 
                 {/* Batch Operations Bar */}
                 <BatchOperationsBar

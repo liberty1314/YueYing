@@ -16,11 +16,8 @@ import {
   FilterIcon,
   XIcon,
   StarIcon,
-  ClockIcon,
-  TrendingUpIcon,
   TagIcon,
   SearchIcon,
-  ZapIcon,
   FilmIcon,
   TvIcon,
   ClapperboardIcon,
@@ -35,17 +32,14 @@ interface FilterState {
   status?: ItemStatus;
   search?: string;
   rating_min?: number;
+  rating_max?: number;
   tags?: string[];
   year_min?: number;
   year_max?: number;
+  sortBy?: string;
 }
 
-interface FilterPreset {
-  id: string;
-  name: string;
-  icon: typeof StarIcon;
-  filters: Partial<FilterState>;
-}
+
 
 interface AdvancedFilterPanelProps {
   filters: FilterState;
@@ -55,39 +49,26 @@ interface AdvancedFilterPanelProps {
 
 const STORAGE_KEY = 'library_filters';
 
-// 快速筛选预设
-const filterPresets: FilterPreset[] = [
-  {
-    id: 'high_rated',
-    name: '高分(>8)',
-    icon: StarIcon,
-    filters: { rating_min: 8 },
-  },
-  {
-    id: 'recent',
-    name: '最近添加',
-    icon: ClockIcon,
-    filters: {}, // 通过sortBy处理
-  },
-  {
-    id: 'unrated',
-    name: '未评分',
-    icon: TrendingUpIcon,
-    filters: { rating_min: 0 },
-  },
+// 评分范围配置
+const ratingRanges: { label: string; min?: number; max?: number; color: string }[] = [
+  { label: '9-10分', min: 9, max: 10, color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-500' },
+  { label: '8-9分', min: 8, max: 9, color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-500' },
+  { label: '7-8分', min: 7, max: 8, color: 'bg-lime-100 dark:bg-lime-900/30 text-lime-700 dark:text-lime-300 border-lime-500' },
+  { label: '6-7分', min: 6, max: 7, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-500' },
+  { label: '6分以下', min: 0, max: 6, color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-500' },
 ];
 
-const itemTypes: { value: ItemType; label: string; icon: typeof FilmIcon }[] = [
-  { value: 'movie', label: '电影', icon: FilmIcon },
-  { value: 'tv', label: '剧集', icon: TvIcon },
-  { value: 'anime', label: '动画', icon: ClapperboardIcon },
-  { value: 'book', label: '书籍', icon: BookOpenIcon },
+const itemTypes: { value: ItemType; label: string; icon: typeof FilmIcon; activeColor: string }[] = [
+  { value: 'movie', label: '电影', icon: FilmIcon, activeColor: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-500' },
+  { value: 'tv', label: '剧集', icon: TvIcon, activeColor: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-500' },
+  { value: 'anime', label: '动画', icon: ClapperboardIcon, activeColor: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-500' },
+  { value: 'book', label: '书籍', icon: BookOpenIcon, activeColor: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-500' },
 ];
 
 const itemStatuses: { value: ItemStatus; label: string; color: string }[] = [
-  { value: 'want_to_watch', label: '想看', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
-  { value: 'watching', label: '在看', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
-  { value: 'watched', label: '看过', color: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' },
+  { value: 'want_to_watch', label: '想看', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-500' },
+  { value: 'watching', label: '在看', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-500' },
+  { value: 'watched', label: '看过', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-500' },
 ];
 
 export function AdvancedFilterPanel({
@@ -131,11 +112,23 @@ export function AdvancedFilterPanel({
     });
   };
 
-  const handlePresetClick = (preset: FilterPreset) => {
-    onFilterChange({
-      ...filters,
-      ...preset.filters,
-    });
+  const handleRatingToggle = (min?: number, max?: number) => {
+    const isActive = filters.rating_min === min && filters.rating_max === max;
+
+    if (isActive) {
+      // 取消激活：清除评分筛选
+      const newFilters = { ...filters };
+      delete newFilters.rating_min;
+      delete newFilters.rating_max;
+      onFilterChange(newFilters);
+    } else {
+      // 激活：设置评分范围
+      onFilterChange({
+        ...filters,
+        rating_min: min,
+        rating_max: max,
+      });
+    }
   };
 
   const handleTagToggle = (tag: string) => {
@@ -160,8 +153,8 @@ export function AdvancedFilterPanel({
   ).length;
 
   return (
-    <div className="w-64 flex-shrink-0">
-      <Card variant="elevated">
+    <div className="w-64 flex-shrink-0 sticky top-20 self-start">
+      <Card variant="elevated" className="max-h-[calc(100vh-100px)] overflow-y-auto">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -197,32 +190,27 @@ export function AdvancedFilterPanel({
               />
             </div>
 
-            {/* 快速筛选预设 */}
+            {/* 状态筛选 */}
             <div>
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                <ZapIcon className="w-4 h-4" />
-                快速筛选
+                <BarChart3Icon className="w-4 h-4" />
+                状态
               </h4>
               <div className="flex flex-wrap gap-2">
-                {filterPresets.map((preset) => {
-                  const Icon = preset.icon;
-                  const isActive = preset.id === 'high_rated' && filters.rating_min === 8;
-                  return (
-                    <button
-                      key={preset.id}
-                      onClick={() => handlePresetClick(preset)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border-2 transition-all',
-                        isActive
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-500'
-                          : 'border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-                      )}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      {preset.name}
-                    </button>
-                  );
-                })}
+                {itemStatuses.map((status) => (
+                  <button
+                    key={status.value}
+                    onClick={() => handleStatusToggle(status.value)}
+                    className={cn(
+                      'px-3 py-1.5 text-sm font-medium rounded-lg border-2 transition-all',
+                      filters.status === status.value
+                        ? status.color
+                        : 'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                    )}
+                  >
+                    {status.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -240,10 +228,10 @@ export function AdvancedFilterPanel({
                       key={type.value}
                       onClick={() => handleTypeToggle(type.value)}
                       className={cn(
-                        'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all',
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border-2 transition-all',
                         filters.content_type === type.value
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-500'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                          ? type.activeColor
+                          : 'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
                       )}
                     >
                       <Icon className="w-4 h-4" />
@@ -254,27 +242,30 @@ export function AdvancedFilterPanel({
               </div>
             </div>
 
-            {/* 状态筛选 */}
+            {/* 评分筛选 */}
             <div>
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                <BarChart3Icon className="w-4 h-4" />
-                状态
+                <StarIcon className="w-4 h-4" />
+                评分
               </h4>
               <div className="flex flex-wrap gap-2">
-                {itemStatuses.map((status) => (
-                  <button
-                    key={status.value}
-                    onClick={() => handleStatusToggle(status.value)}
-                    className={cn(
-                      'px-3 py-1.5 text-sm font-medium rounded-lg transition-all',
-                      filters.status === status.value
-                        ? status.color + ' border-2 border-current'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
-                    )}
-                  >
-                    {status.label}
-                  </button>
-                ))}
+                {ratingRanges.map((range) => {
+                  const isActive = filters.rating_min === range.min && filters.rating_max === range.max;
+                  return (
+                    <button
+                      key={range.label}
+                      onClick={() => handleRatingToggle(range.min, range.max)}
+                      className={cn(
+                        'px-3 py-1.5 text-sm font-medium rounded-lg border-2 transition-all',
+                        isActive
+                          ? range.color
+                          : 'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                      )}
+                    >
+                      {range.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
