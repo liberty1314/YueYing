@@ -111,7 +111,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
               <div className="flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-gray-800">
                 <div className="hidden sm:block text-right">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.full_name || user?.username || '管理员'}
+                    {user?.fullName || user?.username || '管理员'}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {user?.email}

@@ -45,6 +45,7 @@ class Token(BaseModel):
     access_token: str = Field(..., description="访问令牌")
     refresh_token: str = Field(..., description="刷新令牌")
     token_type: str = Field(default="bearer", description="令牌类型")
+    user: Optional['UserResponse'] = Field(None, description="用户信息")  # 添加用户信息，便于前端直接使用
 
 
 class TokenRefresh(BaseModel):
@@ -172,7 +173,12 @@ class PasswordResetConfirm(BaseModel):
 class TokenData(BaseModel):
     """Token 中的数据"""
 
+
     user_id: Optional[int] = None
     email: Optional[str] = None
     type: Optional[str] = None  # "access" or "refresh"
+
+
+# Update forward references for Token to include UserResponse
+Token.model_rebuild()
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +25,19 @@ export default function LoginPage() {
     const isDark = theme.palette.mode === 'dark';
     const [error, setError] = useState<string>('');
     const [loading, setLoading] = useState(false);
+    const [showToast, setShowToast] = useState(false);
+
+    // 当错误信息变化时，显示Toast
+    useEffect(() => {
+        if (error) {
+            setShowToast(true);
+            // 5秒后自动隐藏Toast
+            const timer = setTimeout(() => {
+                setShowToast(false);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     const {
         register,
@@ -168,7 +181,7 @@ export default function LoginPage() {
                                     id="email"
                                     type="email"
                                     autoComplete="email"
-                                    placeholder="name@example.com"
+                                    placeholder="请输入邮箱"
                                     className={`${inputClassName}${errors.email ? ' ring-1 ring-red-400/60 focus:ring-red-400/40' : ''
                                         }`}
                                     {...register('email')}
@@ -231,6 +244,48 @@ export default function LoginPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Toast 错误提示 */}
+            {showToast && error && (
+                <div
+                    className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-fadeIn"
+                    role="alert"
+                >
+                    <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl ${
+                        isDark
+                            ? 'bg-red-500/90 text-white border border-red-400/20'
+                            : 'bg-red-50/90 text-red-800 border border-red-200'
+                    }`}>
+                        <svg
+                            className="w-5 h-5 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                        >
+                            <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+                        <span className="text-sm font-medium">{error}</span>
+                        <button
+                            onClick={() => {
+                                setShowToast(false);
+                                setError('');
+                            }}
+                            className="ml-2 hover:opacity-75 transition-opacity"
+                        >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

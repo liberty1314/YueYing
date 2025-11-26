@@ -24,9 +24,12 @@ export interface User {
     id: string;
     username: string;
     email: string;
-    avatar?: string;
+    fullName?: string;    // 全名
+    avatarUrl?: string;   // 头像URL (统一使用camelCase)
+    isActive?: boolean;   // 是否激活
+    isVerified?: boolean; // 是否验证
     role: UserRole;
-    is_admin: boolean;
+    isAdmin: boolean;     // 是否管理员 (统一使用camelCase)
     createdAt: string;
     updatedAt: string;
 }

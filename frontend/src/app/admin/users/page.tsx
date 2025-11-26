@@ -14,7 +14,7 @@ import {
   UserEditDialog,
   CreateAdminDialog,
 } from '@/components/features/admin';
-import { useAdminUsers, type User, type UserListFilters } from '@/hooks/useAdminUsers';
+import { useAdminUsers, type AdminUserResponse, type UserListFilters } from '@/hooks/useAdminUsers';
 import { PlusIcon, AlertTriangleIcon } from 'lucide-react';
 import { Button } from '@/components/ui';
 
@@ -22,8 +22,8 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [filters, setFilters] = useState<UserListFilters>({});
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<AdminUserResponse | null>(null);
+  const [deletingUser, setDeletingUser] = useState<AdminUserResponse | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -48,11 +48,11 @@ export default function UsersPage() {
     setPage(1);
   };
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: AdminUserResponse) => {
     setEditingUser(user);
   };
 
-  const handleDelete = (user: User) => {
+  const handleDelete = (user: AdminUserResponse) => {
     setDeletingUser(user);
   };
 

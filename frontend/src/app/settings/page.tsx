@@ -4,14 +4,110 @@ import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    FormControlLabel,
     Switch,
     Button,
     CircularProgress,
     Alert,
+    Snackbar,
+    Divider,
 } from '@mui/material';
-import { AppleCard } from '@/components/ui';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { api, APIError } from '@/lib/apiClient';
+
+interface SettingItemProps {
+    title: string;
+    description: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+    disabled?: boolean;
+}
+
+function SettingItem({ title, description, checked, onChange, disabled }: SettingItemProps) {
+    return (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                py: 2.5,
+                px: 3,
+                transition: 'background-color 0.2s ease',
+                '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.01)',
+                },
+            }}
+        >
+            <Box sx={{ flex: 1, pr: 3 }}>
+                <Typography
+                    sx={{
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        color: '#1d1d1f',
+                        mb: 0.5,
+                    }}
+                >
+                    {title}
+                </Typography>
+                <Typography
+                    sx={{
+                        fontSize: '0.875rem',
+                        color: '#6e6e73',
+                        lineHeight: 1.5,
+                    }}
+                >
+                    {description}
+                </Typography>
+            </Box>
+            <Switch
+                checked={checked}
+                onChange={(e) => onChange(e.target.checked)}
+                disabled={disabled}
+                sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                        color: '#0071e3',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                        backgroundColor: '#0071e3',
+                    },
+                }}
+            />
+        </Box>
+    );
+}
+
+interface SettingSectionProps {
+    title: string;
+    children: React.ReactNode;
+}
+
+function SettingSection({ title, children }: SettingSectionProps) {
+    return (
+        <Box
+            sx={{
+                bgcolor: 'white',
+                borderRadius: '18px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                mb: 3,
+            }}
+        >
+            <Box sx={{ px: 3, pt: 3, pb: 1 }}>
+                <Typography
+                    sx={{
+                        fontSize: '1.125rem',
+                        fontWeight: 600,
+                        color: '#1d1d1f',
+                        letterSpacing: '-0.01em',
+                    }}
+                >
+                    {title}
+                </Typography>
+            </Box>
+            <Divider sx={{ borderColor: 'rgba(0,0,0,0.06)' }} />
+            {children}
+        </Box>
+    );
+}
 
 export default function SettingsPage() {
     const [autoSave, setAutoSave] = useState(true);
@@ -22,7 +118,6 @@ export default function SettingsPage() {
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // 加载用户设置
     useEffect(() => {
         loadSettings();
     }, []);
@@ -36,7 +131,6 @@ export default function SettingsPage() {
             }>('/settings', true);
 
             setStrictSearchFilter(data.enable_strict_search_filter);
-            // 可以在这里加载其他设置
         } catch (err) {
             if (err instanceof APIError) {
                 setError(err.detail);
@@ -62,7 +156,6 @@ export default function SettingsPage() {
                 true
             );
             setSaveSuccess(true);
-            setTimeout(() => setSaveSuccess(false), 3000);
         } catch (err) {
             if (err instanceof APIError) {
                 setError(err.detail);
@@ -74,103 +167,124 @@ export default function SettingsPage() {
         }
     };
 
+    if (isLoading) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: 400,
+                }}
+            >
+                <CircularProgress sx={{ color: '#0071e3' }} />
+            </Box>
+        );
+    }
+
     return (
         <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
-                通用设置
-            </Typography>
-
-            {saveSuccess && (
-                <Alert severity="success" sx={{ mb: 3 }}>
-                    设置已保存
-                </Alert>
-            )}
-
             {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
+                <Alert
+                    severity="error"
+                    sx={{
+                        mb: 3,
+                        borderRadius: '12px',
+                        bgcolor: '#fff5f5',
+                        border: '1px solid #feb2b2',
+                    }}
+                >
                     {error}
                 </Alert>
             )}
 
-            {isLoading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                    <CircularProgress />
-                </Box>
-            )}
+            {/* 行为设置 */}
+            <SettingSection title="行为">
+                <SettingItem
+                    title="自动保存"
+                    description="编辑内容时自动保存，无需手动点击保存按钮"
+                    checked={autoSave}
+                    onChange={setAutoSave}
+                />
+                <Divider sx={{ borderColor: 'rgba(0,0,0,0.06)' }} />
+                <SettingItem
+                    title="启用通知"
+                    description="接收系统通知和更新提醒"
+                    checked={notifications}
+                    onChange={setNotifications}
+                />
+            </SettingSection>
 
-            {!isLoading && (
-                <>
-                    {/* 行为设置 */}
-                    <AppleCard sx={{ p: 3, mb: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                            行为
-                        </Typography>
-
-                        <Box sx={{ mb: 3 }}>
-                            <FormControlLabel
-                                control={
-                                    <Switch checked={autoSave} onChange={(e) => setAutoSave(e.target.checked)} />
-                                }
-                                label="自动保存"
-                                sx={{ display: 'block' }}
-                            />
-                            <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
-                                编辑内容时自动保存，无需手动点击保存按钮
-                            </Typography>
-                        </Box>
-
-                        <Box>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={notifications}
-                                        onChange={(e) => setNotifications(e.target.checked)}
-                                    />
-                                }
-                                label="启用通知"
-                                sx={{ display: 'block' }}
-                            />
-                            <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
-                                接收系统通知和更新提醒
-                            </Typography>
-                        </Box>
-                    </AppleCard>
-
-                    {/* 搜索设置 */}
-                    <AppleCard sx={{ p: 3, mb: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                            搜索
-                        </Typography>
-
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={strictSearchFilter}
-                                    onChange={(e) => setStrictSearchFilter(e.target.checked)}
-                                />
-                            }
-                            label="严格搜索过滤"
-                            sx={{ display: 'block' }}
-                        />
-                        <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
-                            启用后，搜索结果只显示标题中包含关键词的内容，可以有效减少不相关的结果
-                        </Typography>
-                    </AppleCard>
-                </>
-            )}
+            {/* 搜索设置 */}
+            <SettingSection title="搜索">
+                <SettingItem
+                    title="严格搜索过滤"
+                    description="启用后，搜索结果只显示标题中包含关键词的内容，可以有效减少不相关的结果"
+                    checked={strictSearchFilter}
+                    onChange={setStrictSearchFilter}
+                />
+            </SettingSection>
 
             {/* 保存按钮 */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    pt: 2,
+                }}
+            >
                 <Button
                     variant="contained"
                     size="large"
                     onClick={handleSave}
                     disabled={isSaving}
-                    sx={{ minWidth: 120 }}
+                    sx={{
+                        minWidth: 140,
+                        height: 48,
+                        borderRadius: '24px',
+                        bgcolor: '#0071e3',
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        boxShadow: 'none',
+                        '&:hover': {
+                            bgcolor: '#0077ed',
+                            boxShadow: '0 4px 12px rgba(0,113,227,0.25)',
+                        },
+                        '&:active': {
+                            bgcolor: '#006edb',
+                        },
+                        '&.Mui-disabled': {
+                            bgcolor: '#e5e5e7',
+                            color: '#86868b',
+                        },
+                    }}
                 >
-                    {isSaving ? <CircularProgress size={24} /> : '保存设置'}
+                    {isSaving ? <CircularProgress size={24} sx={{ color: 'white' }} /> : '保存设置'}
                 </Button>
             </Box>
+
+            {/* 成功提示 */}
+            <Snackbar
+                open={saveSuccess}
+                autoHideDuration={3000}
+                onClose={() => setSaveSuccess(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert
+                    icon={<CheckCircleIcon />}
+                    sx={{
+                        borderRadius: '12px',
+                        bgcolor: '#34c759',
+                        color: 'white',
+                        '& .MuiAlert-icon': {
+                            color: 'white',
+                        },
+                    }}
+                >
+                    设置已保存
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }

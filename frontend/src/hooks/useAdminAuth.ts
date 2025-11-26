@@ -8,15 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, APIError } from '@/lib/apiClient';
-
-interface User {
-  id: number;
-  email: string;
-  username: string;
-  full_name?: string;
-  is_admin: boolean;
-  is_active: boolean;
-}
+import type { User } from '@/types';
 
 interface UseAdminAuthResult {
   user: User | null;
@@ -49,17 +41,17 @@ export function useAdminAuth(
       const userData = await api.get<User>('/auth/me', true);
 
       setUser(userData);
-      setIsAdmin(userData.is_admin);
+      setIsAdmin(userData.isAdmin);
 
       // 检查是否需要管理员权限
-      if (requireAdmin && !userData.is_admin) {
+      if (requireAdmin && !userData.isAdmin) {
         console.warn('User is not an admin, redirecting...');
         router.push('/403'); // 重定向到403权限不足页面
         return false;
       }
 
       // 检查账户是否激活
-      if (!userData.is_active) {
+      if (!userData.isActive) {
         console.warn('User account is not active');
         router.push('/login');
         return false;
@@ -112,7 +104,7 @@ export function useAdminAuth(
 export async function checkIsAdmin(): Promise<boolean> {
   try {
     const userData = await api.get<User>('/auth/me', true);
-    return userData.is_admin;
+    return userData.isAdmin;
   } catch (error) {
     console.error('Failed to check admin status:', error);
     return false;

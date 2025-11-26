@@ -154,15 +154,27 @@ export function Navbar() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center justify-center w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                 >
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.username}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <UserIcon className="w-5 h-5 text-blue-700 dark:text-blue-300" />
-                  )}
+                  {(() => {
+                    // Check all possible avatar field names
+                    const userObj = user as any;
+                    const avatarUrl = userObj?.avatar_url || userObj?.avatarUrl || userObj?.avatar;
+
+                    if (avatarUrl) {
+                      const src = avatarUrl.startsWith('/')
+                        ? `${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api').replace(/\/api$/, '')}${avatarUrl}`
+                        : avatarUrl;
+
+                      return (
+                        <img
+                          src={src}
+                          alt={user.username}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      );
+                    }
+
+                    return <UserIcon className="w-5 h-5 text-blue-700 dark:text-blue-300" />;
+                  })()}
                 </button>
 
                 {/* 用户下拉菜单 */}
@@ -181,7 +193,7 @@ export function Navbar() {
                         <SettingsIcon className="w-4 h-4" />
                         设置
                       </Link>
-                      {user.is_admin && (
+                      {user.isAdmin && (
                         <Link
                           href="/admin"
                           onClick={() => setUserMenuOpen(false)}

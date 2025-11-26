@@ -8,10 +8,10 @@
 import { useState, useEffect } from 'react';
 import { XIcon } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
-import type { User, UserUpdateRequest } from '@/hooks/useAdminUsers';
+import type { AdminUserResponse, UserUpdateRequest } from '@/hooks/useAdminUsers';
 
 export interface UserEditDialogProps {
-  user: User | null;
+  user: AdminUserResponse | null;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (userId: number, data: UserUpdateRequest) => Promise<void>;

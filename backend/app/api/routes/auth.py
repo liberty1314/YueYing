@@ -78,6 +78,11 @@ def login(
     # 这里不需要手动更新，以避免重复写入
 
     tokens = auth_service.create_user_tokens(user, remember_me=login_data.remember_me)
+    
+    # 将用户信息添加到响应中
+    from app.schemas.user import UserResponse
+    tokens.user = UserResponse.from_orm(user)
+    
     return tokens
 
 

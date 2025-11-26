@@ -73,15 +73,15 @@ export default function RegisterPage() {
 
             <div className="relative z-10 flex w-full items-center justify-center px-4 py-10 md:px-6 lg:px-8">
                 <div className={`mx-auto grid w-full max-w-5xl gap-10 rounded-3xl p-6 ring-1 backdrop-blur-2xl lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:p-10 xl:gap-12 xl:p-12 ${isDark
-                        ? 'bg-slate-950/70 shadow-[0_18px_60px_rgba(15,23,42,0.9)] ring-white/10'
-                        : 'bg-white/70 shadow-[0_18px_60px_rgba(0,0,0,0.1)] ring-gray-200/50'
+                    ? 'bg-slate-950/70 shadow-[0_18px_60px_rgba(15,23,42,0.9)] ring-white/10'
+                    : 'bg-white/70 shadow-[0_18px_60px_rgba(0,0,0,0.1)] ring-gray-200/50'
                     }`}>
                     <div className={`flex flex-col justify-between gap-8 border-b pb-8 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-10 ${isDark ? 'border-white/5' : 'border-gray-200'
                         }`}>
                         <div className="space-y-6">
                             <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium shadow-sm ${isDark
-                                    ? 'border-white/10 bg-slate-900/70 text-slate-200 shadow-sky-900/40'
-                                    : 'border-gray-200 bg-white/70 text-gray-700 shadow-blue-500/10'
+                                ? 'border-white/10 bg-slate-900/70 text-slate-200 shadow-sky-900/40'
+                                : 'border-gray-200 bg-white/70 text-gray-700 shadow-blue-500/10'
                                 }`}>
                                 <span className="inline-flex h-1.5 w-1.5 rounded-full bg-gradient-to-r from-sky-400 to-violet-400" />
                                 <span>YueYing 阅影·log</span>
@@ -156,8 +156,8 @@ export default function RegisterPage() {
 
                         {error && (
                             <div className={`mb-4 rounded-2xl border px-4 py-3 text-xs ${isDark
-                                    ? 'border-red-500/40 bg-red-500/10 text-red-200'
-                                    : 'border-red-300 bg-red-50 text-red-700'
+                                ? 'border-red-500/40 bg-red-500/10 text-red-200'
+                                : 'border-red-300 bg-red-50 text-red-700'
                                 }`}>
                                 {error}
                             </div>
@@ -192,7 +192,7 @@ export default function RegisterPage() {
                                     id="email"
                                     type="email"
                                     autoComplete="email"
-                                    placeholder="name@example.com"
+                                    placeholder="请输入邮箱"
                                     className={`${inputClassName}${errors.email ? ' ring-1 ring-red-400/60 focus:ring-red-400/40' : ''
                                         }`}
                                     {...register('email')}
@@ -235,8 +235,8 @@ export default function RegisterPage() {
                                     autoComplete="new-password"
                                     placeholder="请再次输入密码"
                                     className={`${inputClassName}${errors.confirmPassword
-                                            ? ' ring-1 ring-red-400/60 focus:ring-red-400/40'
-                                            : ''
+                                        ? ' ring-1 ring-red-400/60 focus:ring-red-400/40'
+                                        : ''
                                         }`}
                                     {...register('confirmPassword')}
                                 />
@@ -251,8 +251,8 @@ export default function RegisterPage() {
                                 type="submit"
                                 disabled={loading}
                                 className={`flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${isDark
-                                        ? 'bg-gradient-to-br from-sky-400 via-sky-500 to-violet-500 text-slate-950 shadow-[0_14px_35px_rgba(56,189,248,0.55)] hover:from-sky-300 hover:via-sky-500 hover:to-violet-400 hover:shadow-[0_18px_45px_rgba(56,189,248,0.75)]'
-                                        : 'bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white shadow-[0_14px_35px_rgba(59,130,246,0.4)] hover:from-blue-400 hover:via-blue-500 hover:to-purple-500 hover:shadow-[0_18px_45px_rgba(59,130,246,0.6)]'
+                                    ? 'bg-gradient-to-br from-sky-400 via-sky-500 to-violet-500 text-slate-950 shadow-[0_14px_35px_rgba(56,189,248,0.55)] hover:from-sky-300 hover:via-sky-500 hover:to-violet-400 hover:shadow-[0_18px_45px_rgba(56,189,248,0.75)]'
+                                    : 'bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white shadow-[0_14px_35px_rgba(59,130,246,0.4)] hover:from-blue-400 hover:via-blue-500 hover:to-purple-500 hover:shadow-[0_18px_45px_rgba(59,130,246,0.6)]'
                                     }`}
                             >
                                 {loading ? '注册中...' : '创建账户'}

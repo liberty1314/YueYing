@@ -4,14 +4,110 @@ import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    FormControlLabel,
     Switch,
     Button,
     CircularProgress,
     Alert,
+    Snackbar,
+    Divider,
 } from '@mui/material';
-import { AppleCard } from '@/components/ui';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { userSettingsApi, type UserSettings } from '@/lib/api/userSettings';
+
+interface SettingItemProps {
+    title: string;
+    description: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+    disabled?: boolean;
+}
+
+function SettingItem({ title, description, checked, onChange, disabled }: SettingItemProps) {
+    return (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                py: 2.5,
+                px: 3,
+                transition: 'background-color 0.2s ease',
+                '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.01)',
+                },
+            }}
+        >
+            <Box sx={{ flex: 1, pr: 3 }}>
+                <Typography
+                    sx={{
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        color: '#1d1d1f',
+                        mb: 0.5,
+                    }}
+                >
+                    {title}
+                </Typography>
+                <Typography
+                    sx={{
+                        fontSize: '0.875rem',
+                        color: '#6e6e73',
+                        lineHeight: 1.5,
+                    }}
+                >
+                    {description}
+                </Typography>
+            </Box>
+            <Switch
+                checked={checked}
+                onChange={(e) => onChange(e.target.checked)}
+                disabled={disabled}
+                sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                        color: '#0071e3',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                        backgroundColor: '#0071e3',
+                    },
+                }}
+            />
+        </Box>
+    );
+}
+
+interface SettingSectionProps {
+    title: string;
+    children: React.ReactNode;
+}
+
+function SettingSection({ title, children }: SettingSectionProps) {
+    return (
+        <Box
+            sx={{
+                bgcolor: 'white',
+                borderRadius: '18px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                mb: 3,
+            }}
+        >
+            <Box sx={{ px: 3, pt: 3, pb: 1 }}>
+                <Typography
+                    sx={{
+                        fontSize: '1.125rem',
+                        fontWeight: 600,
+                        color: '#1d1d1f',
+                        letterSpacing: '-0.01em',
+                    }}
+                >
+                    {title}
+                </Typography>
+            </Box>
+            <Divider sx={{ borderColor: 'rgba(0,0,0,0.06)' }} />
+            {children}
+        </Box>
+    );
+}
 
 export default function AISettingsPage() {
     const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -49,7 +145,6 @@ export default function AISettingsPage() {
                 auto_generate_tags: settings.auto_generate_tags,
             });
             setSaveSuccess(true);
-            setTimeout(() => setSaveSuccess(false), 3000);
         } catch (err) {
             setError('保存设置失败');
             console.error(err);
@@ -60,76 +155,125 @@ export default function AISettingsPage() {
 
     if (isLoading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                <CircularProgress />
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: 400,
+                }}
+            >
+                <CircularProgress sx={{ color: '#0071e3' }} />
             </Box>
         );
     }
 
     if (!settings) {
         return (
-            <Box>
-                <Alert severity="error">加载设置失败</Alert>
-            </Box>
+            <Alert
+                severity="error"
+                sx={{
+                    borderRadius: '12px',
+                    bgcolor: '#fff5f5',
+                    border: '1px solid #feb2b2',
+                }}
+            >
+                加载设置失败
+            </Alert>
         );
     }
 
     return (
         <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
-                AI 设置
-            </Typography>
-
-            {saveSuccess && (
-                <Alert severity="success" sx={{ mb: 3 }}>
-                    设置已保存
-                </Alert>
-            )}
-
             {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
+                <Alert
+                    severity="error"
+                    sx={{
+                        mb: 3,
+                        borderRadius: '12px',
+                        bgcolor: '#fff5f5',
+                        border: '1px solid #feb2b2',
+                    }}
+                >
                     {error}
                 </Alert>
             )}
 
             {/* AI 功能设置 */}
-            <AppleCard sx={{ p: 3, mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                    自动化功能
-                </Typography>
-
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={settings.auto_generate_tags}
-                            onChange={(e) =>
-                                setSettings({
-                                    ...settings,
-                                    auto_generate_tags: e.target.checked,
-                                })
-                            }
-                        />
+            <SettingSection title="自动化功能">
+                <SettingItem
+                    title="自动生成标签"
+                    description="添加新内容时自动使用 AI 生成相关标签"
+                    checked={settings.auto_generate_tags}
+                    onChange={(checked) =>
+                        setSettings({
+                            ...settings,
+                            auto_generate_tags: checked,
+                        })
                     }
-                    label="自动生成标签"
-                    sx={{ mb: 1, display: 'block' }}
                 />
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-                    添加新内容时自动使用 AI 生成相关标签
-                </Typography>
-            </AppleCard>
+            </SettingSection>
 
             {/* 保存按钮 */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    pt: 2,
+                }}
+            >
                 <Button
                     variant="contained"
                     size="large"
                     onClick={handleSave}
                     disabled={isSaving}
-                    sx={{ minWidth: 120 }}
+                    sx={{
+                        minWidth: 140,
+                        height: 48,
+                        borderRadius: '24px',
+                        bgcolor: '#0071e3',
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        boxShadow: 'none',
+                        '&:hover': {
+                            bgcolor: '#0077ed',
+                            boxShadow: '0 4px 12px rgba(0,113,227,0.25)',
+                        },
+                        '&:active': {
+                            bgcolor: '#006edb',
+                        },
+                        '&.Mui-disabled': {
+                            bgcolor: '#e5e5e7',
+                            color: '#86868b',
+                        },
+                    }}
                 >
-                    {isSaving ? <CircularProgress size={24} /> : '保存设置'}
+                    {isSaving ? <CircularProgress size={24} sx={{ color: 'white' }} /> : '保存设置'}
                 </Button>
             </Box>
+
+            {/* 成功提示 */}
+            <Snackbar
+                open={saveSuccess}
+                autoHideDuration={3000}
+                onClose={() => setSaveSuccess(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert
+                    icon={<CheckCircleIcon />}
+                    sx={{
+                        borderRadius: '12px',
+                        bgcolor: '#34c759',
+                        color: 'white',
+                        '& .MuiAlert-icon': {
+                            color: 'white',
+                        },
+                    }}
+                >
+                    设置已保存
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }

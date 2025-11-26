@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 # 配置高性能JSON编码器
 try:
@@ -185,6 +187,26 @@ app.include_router(system_settings.router, prefix="/api")
 # WebSocket 路由
 from app.api.routes import websocket
 app.include_router(websocket.router, prefix="/api")
+
+# 用户头像路由
+from app.api.routes import user
+app.include_router(user.router, prefix="/api")
+
+
+# ====================================
+# 静态文件服务
+# ====================================
+# 配置静态文件服务，用于访问上传的头像等资源
+try:
+    # 确保 uploads 目录存在
+    uploads_dir = Path(__file__).parent.parent / "uploads"
+    uploads_dir.mkdir(exist_ok=True)
+    
+    # 挂载静态文件目录
+    app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+    logger.info(f"✓ 静态文件服务已配置: /uploads -> {uploads_dir}")
+except Exception as e:
+    logger.warning(f"⚠️ 静态文件服务配置失败: {e}")
 
 
 # ====================================

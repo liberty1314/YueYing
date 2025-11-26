@@ -7,10 +7,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { api, APIError, CachePresets } from '@/lib/apiClient';
+import type { User } from '@/types';
 
 // ========== 类型定义 ==========
 
-export interface User {
+// 后端返回的User数据结构 (snake_case)
+export interface AdminUserResponse {
   id: number;
   email: string;
   username: string | null;
@@ -23,8 +25,10 @@ export interface User {
   updated_at: string;
 }
 
+// 前端使用的User类型已在 @/types 中定义 (camelCase)
+
 export interface UserListResponse {
-  users: User[];
+  users: AdminUserResponse[];
   total: number;
   page: number;
   page_size: number;
@@ -68,6 +72,27 @@ interface UseUsersResult {
   updateUser: (userId: number, data: UserUpdateRequest) => Promise<User>;
   deleteUser: (userId: number, hardDelete?: boolean) => Promise<void>;
   createAdmin: (data: CreateAdminRequest) => Promise<User>;
+}
+
+// ========== 转换函数 ==========
+
+/**
+ * 将后端返回的AdminUserResponse转换为前端User类型
+ */
+function convertAdminUserToUser(adminUser: AdminUserResponse): User {
+  return {
+    id: String(adminUser.id),
+    username: adminUser.username || '',
+    email: adminUser.email,
+    fullName: adminUser.full_name || undefined,
+    avatarUrl: adminUser.avatar_url || undefined,
+    isActive: adminUser.is_active,
+    isVerified: adminUser.is_verified,
+    role: adminUser.role as 'user' | 'admin',
+    isAdmin: adminUser.role === 'admin',
+    createdAt: adminUser.created_at,
+    updatedAt: adminUser.updated_at,
+  };
 }
 
 // ========== Hook 实现 ==========
@@ -128,14 +153,15 @@ export function useAdminUsers(options: UseUsersOptions = {}): UseUsersResult {
    */
   const updateUser = useCallback(async (userId: number, updateData: UserUpdateRequest): Promise<User> => {
     try {
-      const user = await api.put<User>(
+      const adminUser = await api.put<AdminUserResponse>(
         `/admin/users/${userId}`,
         updateData,
         true
       );
       // 刷新列表
       await fetchUsers();
-      return user;
+      // 转换为前端User类型
+      return convertAdminUserToUser(adminUser);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to update user');
       throw error;
@@ -164,14 +190,15 @@ export function useAdminUsers(options: UseUsersOptions = {}): UseUsersResult {
    */
   const createAdmin = useCallback(async (adminData: CreateAdminRequest): Promise<User> => {
     try {
-      const user = await api.post<User>(
+      const adminUser = await api.post<AdminUserResponse>(
         '/admin/users/create-admin',
         adminData,
         true
       );
       // 刷新列表
       await fetchUsers();
-      return user;
+      // 转换为前端User类型
+      return convertAdminUserToUser(adminUser);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to create admin');
       throw error;

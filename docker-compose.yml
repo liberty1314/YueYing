@@ -143,6 +143,7 @@ services:
     volumes:
       - ./backend:/app
       - backend_cache:/app/.cache
+      - backend_uploads:/app/uploads  # 持久化上传的文件（包括头像）
     depends_on:
       postgres:
         condition: service_healthy
@@ -226,6 +227,8 @@ volumes:
   minio_data:
     driver: local
   backend_cache:
+    driver: local
+  backend_uploads:
     driver: local
   nginx_logs:
     driver: local

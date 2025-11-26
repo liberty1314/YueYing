@@ -17,13 +17,13 @@ import {
   ShieldIcon,
   UserIcon
 } from 'lucide-react';
-import type { User } from '@/hooks/useAdminUsers';
+import type { AdminUserResponse } from '@/hooks/useAdminUsers';
 
 export interface UserTableProps {
-  users: User[];
+  users: AdminUserResponse[];
   loading?: boolean;
-  onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
+  onEdit: (user: AdminUserResponse) => void;
+  onDelete: (user: AdminUserResponse) => void;
   currentPage: number;
   pageSize: number;
   total: number;
