@@ -43,7 +43,7 @@ export const arbitraries = {
     }),
 
     // 内容类型
-    itemType: fc.constantFrom('movie', 'tv', 'anime', 'game', 'book'),
+    itemType: fc.constantFrom('movie', 'tv', 'anime', 'book'),
 
     // 状态
     status: fc.constantFrom('want', 'in_progress', 'completed'),

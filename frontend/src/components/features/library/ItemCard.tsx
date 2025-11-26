@@ -21,7 +21,6 @@ const typeEmojis = {
     tv: '📺',
     anime: '🎌',
     book: '📚',
-    game: '🎮',
 };
 
 const statusColorMap: Record<string, string> = {

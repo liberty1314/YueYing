@@ -21,7 +21,6 @@ class ContentType(str, Enum):
     TV = "tv"
     ANIME = "anime"
     BOOK = "book"
-    GAME = "game"
 
 
 class UserItemBase(BaseModel):

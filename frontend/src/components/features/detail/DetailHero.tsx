@@ -17,7 +17,7 @@ interface DetailHeroProps {
   backdropUrl?: string;
   year?: number;
   rating?: number;
-  contentType: 'movie' | 'tv' | 'anime' | 'book' | 'game';
+  contentType: 'movie' | 'tv' | 'anime' | 'book';
   genres?: string[];
   runtime?: number;
 }
@@ -27,7 +27,6 @@ const typeLabels = {
   tv: '剧集',
   anime: '动画',
   book: '书籍',
-  game: '游戏',
 };
 
 export function DetailHero({

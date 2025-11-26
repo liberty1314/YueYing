@@ -14,7 +14,7 @@ import Link from 'next/link';
 interface RecommendationItem {
   id: number;
   title: string;
-  type: 'movie' | 'tv' | 'anime' | 'book' | 'game';
+  type: 'movie' | 'tv' | 'anime' | 'book';
   poster_url?: string;
   rating?: number;
   reason: string;
@@ -84,7 +84,7 @@ export function SmartRecommendations({ items = [] }: SmartRecommendationsProps) 
                     <span className="text-sm">无图</span>
                   </div>
                 )}
-                
+
                 {/* 匹配度 */}
                 <div className="absolute top-2 right-2">
                   <Badge variant="primary" size="sm" className="backdrop-blur-sm bg-primary-500/90">

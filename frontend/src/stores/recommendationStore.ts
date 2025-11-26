@@ -12,7 +12,7 @@ export interface RecommendationItem {
   id: number;
   title: string;
   original_title?: string;
-  content_type: 'movie' | 'tv' | 'anime' | 'book' | 'game';
+  content_type: 'movie' | 'tv' | 'anime' | 'book';
   poster_url?: string;
   backdrop_url?: string;
   overview?: string;

@@ -50,7 +50,6 @@ const typeEmojis = {
   tv: '📺',
   anime: '🎌',
   book: '📚',
-  game: '🎮',
 };
 
 export function ContentCard({

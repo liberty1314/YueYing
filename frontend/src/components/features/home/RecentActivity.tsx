@@ -14,7 +14,7 @@ import Link from 'next/link';
 interface ActivityItem {
   id: number;
   title: string;
-  type: 'movie' | 'tv' | 'anime' | 'book' | 'game';
+  type: 'movie' | 'tv' | 'anime' | 'book';
   poster_url?: string;
   status: string;
   rating?: number;
@@ -30,7 +30,6 @@ const typeLabels = {
   tv: '剧集',
   anime: '动画',
   book: '书籍',
-  game: '游戏',
 };
 
 const typeColors = {
@@ -38,7 +37,6 @@ const typeColors = {
   tv: 'primary' as const,
   anime: 'warning' as const,
   book: 'success' as const,
-  game: 'error' as const,
 };
 
 export function RecentActivity({ items = [] }: RecentActivityProps) {

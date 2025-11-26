@@ -20,7 +20,7 @@ import { createUpdateItemRequest, typeLabels, statusLabels } from '@/lib/adapter
 
 const editItemSchema = z.object({
     title: z.string().min(1, '请输入标题'),
-    content_type: z.enum(['movie', 'tv', 'anime', 'game', 'book']),
+    content_type: z.enum(['movie', 'tv', 'anime', 'book']),
     status: z.enum(['want_to_watch', 'watching', 'watched']),
     rating: z.number().min(0).max(10).optional(),
     notes: z.string().optional(),
@@ -39,7 +39,6 @@ const itemTypes: { value: ItemType; label: string }[] = [
     { value: 'movie', label: typeLabels.movie },
     { value: 'tv', label: typeLabels.tv },
     { value: 'anime', label: typeLabels.anime },
-    { value: 'game', label: typeLabels.game },
     { value: 'book', label: typeLabels.book },
 ];
 

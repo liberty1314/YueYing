@@ -26,7 +26,6 @@ const COLORS = {
   tv: '#10b981',
   anime: '#f59e0b',
   book: '#ef4444',
-  game: '#8b5cf6',
 };
 
 const TYPE_LABELS = {
@@ -34,7 +33,6 @@ const TYPE_LABELS = {
   tv: '剧集',
   anime: '动画',
   book: '书籍',
-  game: '游戏',
 };
 
 export function ContentTypeDistribution({ data, className }: ContentTypeDistributionProps) {

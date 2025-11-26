@@ -22,7 +22,6 @@ const contentTypes = [
   { value: 'tv', label: '剧集' },
   { value: 'anime', label: '动画' },
   { value: 'book', label: '书籍' },
-  { value: 'game', label: '游戏' },
 ];
 
 const currentYear = new Date().getFullYear();

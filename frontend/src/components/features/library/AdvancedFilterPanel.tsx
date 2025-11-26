@@ -25,7 +25,6 @@ import {
   TvIcon,
   ClapperboardIcon,
   BookOpenIcon,
-  GamepadIcon,
   BarChart3Icon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -83,7 +82,6 @@ const itemTypes: { value: ItemType; label: string; icon: typeof FilmIcon }[] = [
   { value: 'tv', label: '剧集', icon: TvIcon },
   { value: 'anime', label: '动画', icon: ClapperboardIcon },
   { value: 'book', label: '书籍', icon: BookOpenIcon },
-  { value: 'game', label: '游戏', icon: GamepadIcon },
 ];
 
 const itemStatuses: { value: ItemStatus; label: string; color: string }[] = [

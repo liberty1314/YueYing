@@ -23,7 +23,6 @@ const typeLabels = {
   tv: '剧集',
   anime: '动画',
   book: '书籍',
-  game: '游戏',
 };
 
 export function RecommendationSection({

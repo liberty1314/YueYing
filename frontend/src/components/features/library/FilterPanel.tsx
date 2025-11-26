@@ -9,7 +9,6 @@ const itemTypes: { value: ItemType; label: string }[] = [
     { value: 'movie', label: '电影' },
     { value: 'tv', label: '电视剧' },
     { value: 'anime', label: '动漫' },
-    { value: 'game', label: '游戏' },
     { value: 'book', label: '书籍' },
 ];
 

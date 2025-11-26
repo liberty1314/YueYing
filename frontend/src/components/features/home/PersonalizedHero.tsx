@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 interface RecommendationItem {
   id: number;
   title: string;
-  type: 'movie' | 'tv' | 'anime' | 'book' | 'game';
+  type: 'movie' | 'tv' | 'anime' | 'book';
   backdrop_url?: string;
   poster_url?: string;
   overview?: string;
@@ -35,7 +35,6 @@ const typeLabels = {
   tv: '剧集',
   anime: '动画',
   book: '书籍',
-  game: '游戏',
 };
 
 export function PersonalizedHero({ items = [] }: PersonalizedHeroProps) {

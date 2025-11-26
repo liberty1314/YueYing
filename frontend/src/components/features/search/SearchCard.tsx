@@ -31,7 +31,6 @@ const typeEmojis: Record<ItemType, string> = {
     tv: '📺',
     anime: '🎌',
     book: '📚',
-    game: '🎮',
 };
 
 export default function SearchCard({ result, contentType, source }: SearchCardProps) {

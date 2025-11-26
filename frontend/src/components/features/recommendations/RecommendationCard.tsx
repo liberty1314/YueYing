@@ -17,7 +17,6 @@ const typeEmojis = {
     tv: '📺',
     anime: '🎌',
     book: '📚',
-    game: '🎮',
 };
 
 export default function RecommendationCard({ item }: RecommendationCardProps) {

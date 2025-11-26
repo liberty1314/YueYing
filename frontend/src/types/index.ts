@@ -1,5 +1,5 @@
 // Common types
-export type ItemType = 'movie' | 'tv' | 'anime' | 'game' | 'book';
+export type ItemType = 'movie' | 'tv' | 'anime' | 'book';
 export type ItemStatus = 'want_to_watch' | 'watching' | 'watched';
 export type UserRole = 'user' | 'admin';
 

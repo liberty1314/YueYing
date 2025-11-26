@@ -3,7 +3,6 @@
 import { ToggleButtonGroup, ToggleButton } from '@mui/material';
 import MovieIcon from '@mui/icons-material/Movie';
 import TvIcon from '@mui/icons-material/Tv';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import AnimationIcon from '@mui/icons-material/Animation';
 import type { ItemType } from '@/types';
@@ -17,7 +16,6 @@ const contentTypes = [
     { value: 'movie' as ItemType, label: '电影', icon: <MovieIcon /> },
     { value: 'tv' as ItemType, label: '电视剧', icon: <TvIcon /> },
     { value: 'anime' as ItemType, label: '动漫', icon: <AnimationIcon /> },
-    { value: 'game' as ItemType, label: '游戏', icon: <SportsEsportsIcon /> },
     { value: 'book' as ItemType, label: '书籍', icon: <MenuBookIcon /> },
 ];
 
