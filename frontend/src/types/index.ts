@@ -24,14 +24,14 @@ export interface User {
     id: string;
     username: string;
     email: string;
-    fullName?: string;    // 全名
-    avatarUrl?: string;   // 头像URL (统一使用camelCase)
-    isActive?: boolean;   // 是否激活
-    isVerified?: boolean; // 是否验证
+    full_name?: string;    // 全名
+    avatar_url?: string;   // 头像URL
+    is_active?: boolean;   // 是否激活
+    is_verified?: boolean; // 是否验证
     role: UserRole;
-    isAdmin: boolean;     // 是否管理员 (统一使用camelCase)
-    createdAt: string;
-    updatedAt: string;
+    is_admin: boolean;     // 是否管理员
+    created_at: string;
+    updated_at: string;
 }
 
 // User Item types
@@ -53,6 +53,7 @@ export interface UserItem {
     status: ItemStatus;
     rating?: number; // 0-10, integer
     notes?: string;
+    progress?: number; // 观看进度（第几集/第几页）
     started_at?: string;
     completed_at?: string;
     created_at: string;
@@ -90,6 +91,7 @@ export interface CreateUserItemRequest {
     status: ItemStatus;
     rating?: number;
     notes?: string;
+    progress?: number;
     started_at?: string;
     completed_at?: string;
 }
@@ -100,6 +102,7 @@ export interface UpdateUserItemRequest {
     status?: ItemStatus;
     rating?: number;
     notes?: string;
+    progress?: number;
     started_at?: string;
     completed_at?: string;
 }

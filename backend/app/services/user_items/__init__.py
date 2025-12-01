@@ -17,6 +17,7 @@ from .crud import (
     get_user_item,
     update_user_item,
     delete_user_item,
+    check_user_item,
 )
 from .business import (
     get_user_items,
@@ -33,6 +34,7 @@ class UserItemService:
     get_user_item = staticmethod(get_user_item)
     update_user_item = staticmethod(update_user_item)
     delete_user_item = staticmethod(delete_user_item)
+    check_user_item = staticmethod(check_user_item)
 
     # 业务逻辑
     get_user_items = staticmethod(get_user_items)
@@ -47,6 +49,7 @@ __all__ = [
     "get_user_item",
     "update_user_item",
     "delete_user_item",
+    "check_user_item",
     # 业务逻辑
     "get_user_items",
     "get_user_items_with_cursor",

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    Switch,
     Button,
     CircularProgress,
     Alert,
@@ -13,6 +12,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { api, APIError } from '@/lib/apiClient';
+import { Switch } from '@/components/ui';
 
 interface SettingItemProps {
     title: string;
@@ -33,7 +33,9 @@ function SettingItem({ title, description, checked, onChange, disabled }: Settin
                 px: 3,
                 transition: 'background-color 0.2s ease',
                 '&:hover': {
-                    bgcolor: 'rgba(0,0,0,0.01)',
+                    bgcolor: (theme) => theme.palette.mode === 'dark'
+                        ? 'rgba(255,255,255,0.03)'
+                        : 'rgba(0,0,0,0.01)',
                 },
             }}
         >
@@ -42,7 +44,7 @@ function SettingItem({ title, description, checked, onChange, disabled }: Settin
                     sx={{
                         fontSize: '1rem',
                         fontWeight: 500,
-                        color: '#1d1d1f',
+                        color: (theme) => theme.palette.mode === 'dark' ? '#ffffff' : '#1d1d1f',
                         mb: 0.5,
                     }}
                 >
@@ -51,7 +53,7 @@ function SettingItem({ title, description, checked, onChange, disabled }: Settin
                 <Typography
                     sx={{
                         fontSize: '0.875rem',
-                        color: '#6e6e73',
+                        color: (theme) => theme.palette.mode === 'dark' ? '#a0a0a0' : '#6e6e73',
                         lineHeight: 1.5,
                     }}
                 >
@@ -60,16 +62,8 @@ function SettingItem({ title, description, checked, onChange, disabled }: Settin
             </Box>
             <Switch
                 checked={checked}
-                onChange={(e) => onChange(e.target.checked)}
+                onChange={onChange}
                 disabled={disabled}
-                sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                        color: '#0071e3',
-                    },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                        backgroundColor: '#0071e3',
-                    },
-                }}
             />
         </Box>
     );
@@ -84,10 +78,12 @@ function SettingSection({ title, children }: SettingSectionProps) {
     return (
         <Box
             sx={{
-                bgcolor: 'white',
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? '#1a1a1a' : 'white',
                 borderRadius: '18px',
                 overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                boxShadow: (theme) => theme.palette.mode === 'dark'
+                    ? '0 2px 8px rgba(0,0,0,0.3)'
+                    : '0 2px 8px rgba(0,0,0,0.04)',
                 mb: 3,
             }}
         >
@@ -96,14 +92,18 @@ function SettingSection({ title, children }: SettingSectionProps) {
                     sx={{
                         fontSize: '1.125rem',
                         fontWeight: 600,
-                        color: '#1d1d1f',
+                        color: (theme) => theme.palette.mode === 'dark' ? '#ffffff' : '#1d1d1f',
                         letterSpacing: '-0.01em',
                     }}
                 >
                     {title}
                 </Typography>
             </Box>
-            <Divider sx={{ borderColor: 'rgba(0,0,0,0.06)' }} />
+            <Divider sx={{
+                borderColor: (theme) => theme.palette.mode === 'dark'
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'rgba(0,0,0,0.06)'
+            }} />
             {children}
         </Box>
     );

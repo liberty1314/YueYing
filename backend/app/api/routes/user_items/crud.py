@@ -108,6 +108,42 @@ async def create_user_item(
 
 
 @router.get(
+    "/check",
+    summary="检查条目是否在收藏库中",
+    description="根据 external_id 和 content_type 检查条目是否已被用户收藏",
+)
+async def check_user_item(
+    external_id: str = Query(..., description="外部ID"),
+    content_type: str = Query(..., description="内容类型（movie/tv/anime/book）"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    检查条目是否在收藏库中
+    
+    - **external_id**: 外部ID（来自TMDB/Google Books等）
+    - **content_type**: 内容类型（movie/tv/anime/book）
+    
+    返回：
+    - **in_library**: 是否在收藏库中
+    - **item_id**: UserItem ID（如果存在）
+    """
+    from app.schemas.user_item import CheckUserItemResponse
+    
+    in_library, item_id = UserItemService.check_user_item(
+        db=db,
+        user_id=current_user.id,
+        external_id=external_id,
+        content_type=content_type,
+    )
+    
+    return CheckUserItemResponse(
+        in_library=in_library,
+        item_id=item_id,
+    )
+
+
+@router.get(
     "/{user_item_id}",
     summary="获取用户记录详情",
     description="根据ID获取单个用户记录的详细信息，支持字段选择和条件请求",
@@ -273,3 +309,5 @@ async def delete_user_item(
     
     logger.info(f"User {current_user.id} deleted user_item {user_item_id}")
     return None
+
+

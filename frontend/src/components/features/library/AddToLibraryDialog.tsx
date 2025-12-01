@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,15 +12,14 @@ import {
     MenuItem,
     Alert,
     Collapse,
+    Typography,
 } from '@mui/material';
 import { AppleButton, AppleInput, AppleDialog } from '@/components/ui';
-import { userItemsApi } from '@/lib/api';
-import type { UserItem, ItemType, ItemStatus } from '@/types';
-import { createUpdateItemRequest, typeLabels, statusLabels } from '@/lib/adapters/userItemAdapter';
+import { addToLibrary } from '@/utils/library';
+import type { ItemStatus } from '@/types';
+import { statusLabels } from '@/lib/adapters/userItemAdapter';
 
-const editItemSchema = z.object({
-    title: z.string().min(1, '请输入标题'),
-    content_type: z.enum(['movie', 'tv', 'anime', 'book']),
+const addToLibrarySchema = z.object({
     status: z.enum(['want_to_watch', 'watching', 'watched']),
     rating: z.number().min(0).max(10).optional().nullable(),
     notes: z.string().optional(),
@@ -29,21 +28,14 @@ const editItemSchema = z.object({
     completed_at: z.string().optional(),
 });
 
-type EditItemFormData = z.infer<typeof editItemSchema>;
+type AddToLibraryFormData = z.infer<typeof addToLibrarySchema>;
 
-interface EditFormProps {
+interface AddToLibraryDialogProps {
     open: boolean;
-    item: UserItem | null;
+    content: any;
     onClose: () => void;
     onSuccess: () => void;
 }
-
-const itemTypes: { value: ItemType; label: string }[] = [
-    { value: 'movie', label: typeLabels.movie },
-    { value: 'tv', label: typeLabels.tv },
-    { value: 'anime', label: typeLabels.anime },
-    { value: 'book', label: typeLabels.book },
-];
 
 const itemStatuses: { value: ItemStatus; label: string }[] = [
     { value: 'want_to_watch', label: statusLabels.want_to_watch },
@@ -51,7 +43,12 @@ const itemStatuses: { value: ItemStatus; label: string }[] = [
     { value: 'watched', label: statusLabels.watched },
 ];
 
-export default function EditForm({ open, item, onClose, onSuccess }: EditFormProps) {
+export default function AddToLibraryDialog({
+    open,
+    content,
+    onClose,
+    onSuccess,
+}: AddToLibraryDialogProps) {
     const [error, setError] = useState<string>('');
     const [loading, setLoading] = useState(false);
 
@@ -62,11 +59,9 @@ export default function EditForm({ open, item, onClose, onSuccess }: EditFormPro
         reset,
         watch,
         control,
-    } = useForm<EditItemFormData>({
-        resolver: zodResolver(editItemSchema),
+    } = useForm<AddToLibraryFormData>({
+        resolver: zodResolver(addToLibrarySchema),
         defaultValues: {
-            title: '',
-            content_type: 'movie',
             status: 'want_to_watch',
             rating: undefined,
             notes: '',
@@ -78,23 +73,16 @@ export default function EditForm({ open, item, onClose, onSuccess }: EditFormPro
 
     const currentStatus = watch('status');
 
-    useEffect(() => {
-        if (item) {
-            reset({
-                title: item.title || '',
-                content_type: item.content_type,
-                status: item.status,
-                rating: item.rating || undefined,
-                notes: item.notes || '',
-                progress: item.progress || undefined,
-                started_at: item.started_at || undefined,
-                completed_at: item.completed_at || undefined,
-            });
-        }
-    }, [item, reset]);
+    const onSubmit = async (data: AddToLibraryFormData) => {
+        console.log('=== AddToLibraryDialog onSubmit ===');
+        console.log('Form data:', data);
+        console.log('Content:', content);
 
-    const onSubmit = async (data: EditItemFormData) => {
-        if (!item) return;
+        if (!content) {
+            console.error('Content is null, cannot submit');
+            setError('内容信息缺失，无法添加');
+            return;
+        }
 
         try {
             setLoading(true);
@@ -102,17 +90,36 @@ export default function EditForm({ open, item, onClose, onSuccess }: EditFormPro
 
             // 处理null值，转换为undefined
             const cleanedData = {
-                ...data,
                 rating: data.rating ?? undefined,
                 progress: data.progress ?? undefined,
+                notes: data.notes,
+                started_at: data.started_at,
+                completed_at: data.completed_at,
             };
 
-            const requestData = createUpdateItemRequest(cleanedData);
-            await userItemsApi.update(item.id, requestData);
-            onSuccess();
-            onClose();
+            // 合并content和表单数据
+            const itemToAdd = {
+                ...content,
+                ...cleanedData,
+                status: data.status,
+            };
+
+            console.log('Item to add:', itemToAdd);
+
+            const result = await addToLibrary(itemToAdd, data.status);
+
+            console.log('Add result:', result);
+
+            if (result.success) {
+                reset();
+                onSuccess();
+                onClose();
+            } else {
+                setError(result.message);
+            }
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : '更新失败，请重试');
+            console.error('Add to library error:', err);
+            setError(err instanceof Error ? err.message : '添加失败，请重试');
         } finally {
             setLoading(false);
         }
@@ -120,10 +127,20 @@ export default function EditForm({ open, item, onClose, onSuccess }: EditFormPro
 
     const handleClose = () => {
         if (!loading) {
+            reset({
+                status: 'want_to_watch',
+                rating: undefined,
+                notes: '',
+                progress: undefined,
+                started_at: undefined,
+                completed_at: undefined,
+            });
             setError('');
             onClose();
         }
     };
+
+    const contentTitle = content?.title || content?.name || content?.name_cn || '未知内容';
 
     return (
         <AppleDialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -134,14 +151,26 @@ export default function EditForm({ open, item, onClose, onSuccess }: EditFormPro
                 pt: 4,
                 pb: 2,
             }}>
-                编辑项目
+                添加到收藏库
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontSize: '14px', fontWeight: 400 }}>
+                    {contentTitle}
+                </Typography>
             </DialogTitle>
 
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(onSubmit, (errors) => {
+                console.log('=== Form validation errors ===');
+                console.log('Errors:', errors);
+            })}>
                 <DialogContent sx={{ px: 4, py: 3 }}>
                     {error && (
                         <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
                             {error}
+                        </Alert>
+                    )}
+
+                    {Object.keys(errors).length > 0 && (
+                        <Alert severity="warning" sx={{ mb: 3, borderRadius: 3 }}>
+                            表单验证失败，请检查输入
                         </Alert>
                     )}
 
@@ -156,7 +185,7 @@ export default function EditForm({ open, item, onClose, onSuccess }: EditFormPro
                                     select
                                     fullWidth
                                     error={!!errors.status}
-                                    helperText={errors.status?.message || '切换状态会显示对应的表单项'}
+                                    helperText={errors.status?.message || '请选择观看状态'}
                                     {...field}
                                 >
                                     {itemStatuses.map((status) => (
@@ -167,31 +196,6 @@ export default function EditForm({ open, item, onClose, onSuccess }: EditFormPro
                                 </AppleInput>
                             )}
                         />
-
-                        {/* 基础信息 - 所有状态都显示 */}
-                        <AppleInput
-                            label="标题 *"
-                            placeholder="请输入标题"
-                            fullWidth
-                            error={!!errors.title}
-                            helperText={errors.title?.message}
-                            {...register('title')}
-                        />
-
-                        <AppleInput
-                            label="类型 *"
-                            select
-                            fullWidth
-                            error={!!errors.content_type}
-                            helperText={errors.content_type?.message}
-                            {...register('content_type')}
-                        >
-                            {itemTypes.map((type) => (
-                                <MenuItem key={type.value} value={type.value}>
-                                    {type.label}
-                                </MenuItem>
-                            ))}
-                        </AppleInput>
 
                         {/* 在看状态 - 显示进度和开始日期 */}
                         <Collapse in={currentStatus === 'watching'} timeout="auto">
@@ -292,9 +296,13 @@ export default function EditForm({ open, item, onClose, onSuccess }: EditFormPro
                         variant="primary"
                         type="submit"
                         disabled={loading}
+                        onClick={(e) => {
+                            console.log('Button clicked!');
+                            console.log('Button type:', e.currentTarget.type);
+                        }}
                         sx={{ minWidth: 100, height: 44 }}
                     >
-                        {loading ? '保存中...' : '保存'}
+                        {loading ? '添加中...' : '添加'}
                     </AppleButton>
                 </DialogActions>
             </form>

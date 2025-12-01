@@ -193,7 +193,7 @@ export function Navbar() {
                         <SettingsIcon className="w-4 h-4" />
                         设置
                       </Link>
-                      {user.isAdmin && (
+                      {user.is_admin && (
                         <Link
                           href="/admin"
                           onClick={() => setUserMenuOpen(false)}

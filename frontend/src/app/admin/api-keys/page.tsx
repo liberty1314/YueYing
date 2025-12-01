@@ -9,7 +9,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, Button, Input, Badge } from '@/components/ui';
+import { Card, Button, Input, Badge, Switch } from '@/components/ui';
 import { useApiKeys, type ApiKeyConfig, type ApiKeyConfigUpdate } from '@/hooks/useApiKeys';
 import { KeyIcon, CheckCircleIcon, XCircleIcon, EyeIcon, EyeOffIcon, SaveIcon, TestTubeIcon } from 'lucide-react';
 
@@ -103,9 +103,8 @@ export default function ApiKeysPage() {
       {/* Toast 通知 */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-            toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-          }`}
+          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`}
         >
           {toast.message}
         </div>
@@ -170,12 +169,13 @@ export default function ApiKeysPage() {
                           [config.service]: { ...currentFormData, api_key: e.target.value }
                         })}
                         placeholder="输入新的API密钥..."
-                        className="pr-10"
+                        className="pr-12"
+                        fullWidth
                       />
                       <button
                         type="button"
                         onClick={() => setShowKeys({ ...showKeys, [config.service]: !showKeys[config.service] })}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 z-10"
                       >
                         {showKeys[config.service] ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
                       </button>
@@ -205,26 +205,24 @@ export default function ApiKeysPage() {
                         [config.service]: { ...currentFormData, base_url: e.target.value }
                       })}
                       placeholder="默认使用官方URL"
+                      fullWidth
                     />
                   </div>
                 )}
 
                 {/* 启用开关（编辑模式） */}
                 {isEditing && (
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id={`enabled-${config.service}`}
-                      checked={currentFormData.enabled ?? config.enabled}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        [config.service]: { ...currentFormData, enabled: e.target.checked }
-                      })}
-                      className="w-4 h-4"
-                    />
+                  <div className="flex items-center justify-between">
                     <label htmlFor={`enabled-${config.service}`} className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       启用此服务
                     </label>
+                    <Switch
+                      checked={currentFormData.enabled ?? config.enabled}
+                      onChange={(checked) => setFormData({
+                        ...formData,
+                        [config.service]: { ...currentFormData, enabled: checked }
+                      })}
+                    />
                   </div>
                 )}
 

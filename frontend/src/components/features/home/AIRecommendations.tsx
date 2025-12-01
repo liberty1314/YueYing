@@ -1,11 +1,11 @@
 'use client';
 
+import { useRef } from 'react';
 import { Box, Typography, Stack, IconButton } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { AppleCard } from '@/components/ui';
-import { useRef } from 'react';
 
 interface RecommendationItem {
   id: number;
@@ -22,10 +22,15 @@ interface RecommendationItem {
 interface AIRecommendationsProps {
   items: RecommendationItem[];
   onItemClick?: (item: RecommendationItem) => void;
+  onAddToLibrary?: (item: RecommendationItem) => void;
 }
 
-export default function AIRecommendations({ items, onItemClick }: AIRecommendationsProps) {
+export default function AIRecommendations({ items, onItemClick, onAddToLibrary }: AIRecommendationsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleItemClick = (item: RecommendationItem) => {
+    onItemClick?.(item);
+  };
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -42,14 +47,35 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
   }
 
   return (
-    <Box sx={{ mb: 8, position: 'relative' }}>
+    <Box sx={{ mb: { xs: 10, md: 14 }, position: 'relative', px: { xs: 2, md: 4 } }}>
       {/* 标题 */}
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-        <AutoAwesomeIcon sx={{ fontSize: 32, color: 'primary.main' }} />
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          AI 为你推荐
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        alignItems={{ xs: 'flex-start', md: 'center' }}
+        spacing={{ xs: 1, md: 2 }}
+        sx={{ mb: 4 }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <AutoAwesomeIcon sx={{ fontSize: { xs: 28, md: 32 }, color: 'primary.main' }} />
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 700,
+              fontSize: { xs: '1.75rem', md: '2.25rem' },
+              letterSpacing: '-0.02em',
+            }}
+          >
+            AI 为你推荐
+          </Typography>
+        </Stack>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            fontSize: { xs: '0.875rem', md: '0.95rem' },
+            ml: { xs: 0, md: 1 },
+          }}
+        >
           基于你的观看习惯，智能推荐精彩内容
         </Typography>
       </Stack>
@@ -61,16 +87,20 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
           onClick={() => scroll('left')}
           sx={{
             position: 'absolute',
-            left: -20,
+            left: -24,
             top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 2,
-            bgcolor: 'background.paper',
-            boxShadow: 2,
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+            backdropFilter: 'blur(20px)',
+            border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+            width: 48,
+            height: 48,
             '&:hover': {
-              bgcolor: 'background.paper',
-              boxShadow: 4,
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+              transform: 'translateY(-50%) scale(1.05)',
             },
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             display: { xs: 'none', md: 'flex' },
           }}
         >
@@ -103,18 +133,17 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
             return (
               <Box
                 key={item.id}
-                onClick={() => onItemClick?.(item)}
+                onClick={() => handleItemClick(item)}
                 sx={{
-                  minWidth: 250,
-                  maxWidth: 250,
+                  minWidth: { xs: 200, md: 240 },
+                  maxWidth: { xs: 200, md: 240 },
                   cursor: 'pointer',
                   flexShrink: 0,
                   '&:hover .image-card': {
-                    boxShadow: 6,
-                    transform: 'translateY(-4px)',
+                    transform: 'translateY(-8px)',
                   },
                   '&:hover img': {
-                    transform: 'scale(1.05)',
+                    transform: 'scale(1.08)',
                   },
                 }}
               >
@@ -124,7 +153,8 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
                   className="image-card"
                   sx={{
                     overflow: 'hidden',
-                    transition: 'all 0.3s ease',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    borderRadius: 1.5,
                   }}
                 >
                   <Box
@@ -132,6 +162,7 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
                       position: 'relative',
                       paddingTop: '150%',
                       overflow: 'hidden',
+                      bgcolor: 'grey.100',
                     }}
                   >
                     <Box
@@ -145,7 +176,7 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
-                        transition: 'transform 0.3s ease',
+                        transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                       }}
                     />
                   </Box>
@@ -221,16 +252,20 @@ export default function AIRecommendations({ items, onItemClick }: AIRecommendati
           onClick={() => scroll('right')}
           sx={{
             position: 'absolute',
-            right: -20,
+            right: -24,
             top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 2,
-            bgcolor: 'background.paper',
-            boxShadow: 2,
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+            backdropFilter: 'blur(20px)',
+            border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+            width: 48,
+            height: 48,
             '&:hover': {
-              bgcolor: 'background.paper',
-              boxShadow: 4,
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+              transform: 'translateY(-50%) scale(1.05)',
             },
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             display: { xs: 'none', md: 'flex' },
           }}
         >

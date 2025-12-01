@@ -2,6 +2,8 @@
 export { AppleButton } from './AppleButton';
 export { AppleCard } from './AppleCard';
 export { AppleInput } from './AppleInput';
+export { AppleDialog } from './AppleDialog';
+export { default as AppleTabSwitch } from './AppleTabSwitch';
 export { Loading } from './Loading';
 export { AnimatedThemeToggler } from './animated-theme-toggler';
 
@@ -10,9 +12,10 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Button } from './button';
 export { Badge } from './badge';
 export { Input } from './input';
+export { Switch } from './Switch';
 
 // 骨架屏组件
-export { 
+export {
   Skeleton,
   SkeletonText,
   SkeletonCard,
@@ -26,3 +29,4 @@ export {
 export { ErrorDisplay, InlineError, ErrorToast } from './ErrorDisplay';
 
 export type { AppleInputProps } from './AppleInput';
+export type { SwitchProps } from './Switch';

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Box, Typography, Stack, Tabs, Tab, Grid, Chip, IconButton } from '@mui/material';
-import { AppleCard } from '@/components/ui';
+import { Box, Typography, Stack, Grid, Chip, IconButton, Fade } from '@mui/material';
+import { AppleCard, AppleTabSwitch } from '@/components/ui';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -96,8 +96,8 @@ export default function AnimeTimeline({ calendarData, onAnimeClick }: AnimeTimel
     setActiveDay(dayIndex);
   }, []);
 
-  const handleDayChange = (_: React.SyntheticEvent, newValue: number) => {
-    setActiveDay(newValue);
+  const handleDayChange = (value: string | number) => {
+    setActiveDay(value as number);
     setCurrentPage(1); // 切换日期时重置到第一页
   };
 
@@ -107,6 +107,12 @@ export default function AnimeTimeline({ calendarData, onAnimeClick }: AnimeTimel
 
   const currentDayData = calendarData[activeDay];
   const animeList = currentDayData?.items || [];
+
+  // 构建周几选项（不显示数量）
+  const weekdayOptions = calendarData.map((day, index) => ({
+    id: index,
+    label: WEEKDAY_MAP[index],
+  }));
 
   // 计算分页
   const totalPages = Math.ceil(animeList.length / ITEMS_PER_PAGE);
@@ -124,18 +130,28 @@ export default function AnimeTimeline({ calendarData, onAnimeClick }: AnimeTimel
   };
 
   return (
-    <Box sx={{ mb: 8 }}>
+    <Box sx={{ mb: { xs: 10, md: 14 }, px: { xs: 2, md: 4 } }}>
       {/* 标题 */}
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-        <CalendarTodayIcon sx={{ fontSize: 32, color: 'primary.main' }} />
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 4 }}>
+        <CalendarTodayIcon sx={{ fontSize: { xs: 28, md: 32 }, color: 'primary.main' }} />
+        <Typography
+          variant="h3"
+          sx={{
+            fontWeight: 700,
+            fontSize: { xs: '1.75rem', md: '2.25rem' },
+            letterSpacing: '-0.02em',
+          }}
+        >
           热门番剧
         </Typography>
         <Chip
           label="本周放送"
           size="small"
           color="primary"
-          sx={{ ml: 1 }}
+          sx={{
+            ml: 1,
+            fontWeight: 600,
+          }}
         />
       </Stack>
 
@@ -144,55 +160,42 @@ export default function AnimeTimeline({ calendarData, onAnimeClick }: AnimeTimel
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+        sx={{ mb: 4, flexWrap: 'wrap', gap: 2 }}
       >
-        <Tabs
+        <AppleTabSwitch
+          options={weekdayOptions}
           value={activeDay}
           onChange={handleDayChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            flex: 1,
-            '& .MuiTab-root': {
-              minWidth: 80,
-              fontWeight: 600,
-              fontSize: '0.95rem',
-            },
-          }}
-        >
-          {calendarData.map((day, index) => (
-            <Tab
-              key={index}
-              label={
-                <Stack alignItems="center" spacing={0.5}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {WEEKDAY_MAP[index]}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {day.items.length}部
-                  </Typography>
-                </Stack>
-              }
-            />
-          ))}
-        </Tabs>
+          size="small"
+        />
 
         {/* 分页控制器 */}
         {totalPages > 1 && (
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 2, pb: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 2 }}>
             <IconButton
               size="small"
               onClick={handlePrevPage}
               disabled={currentPage === 1}
               sx={{
-                bgcolor: 'background.paper',
-                '&:hover': { bgcolor: 'action.hover' },
-                '&.Mui-disabled': { bgcolor: 'action.disabledBackground' },
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+                backdropFilter: 'blur(20px)',
+                border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                width: 36,
+                height: 36,
+                '&:hover': {
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+                  transform: 'scale(1.05)',
+                },
+                '&.Mui-disabled': {
+                  bgcolor: 'action.disabledBackground',
+                  opacity: 0.5,
+                },
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
-              <ChevronLeftIcon />
+              <ChevronLeftIcon fontSize="small" />
             </IconButton>
-            <Typography variant="body2" sx={{ minWidth: 60, textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ minWidth: 60, textAlign: 'center', fontWeight: 600 }}>
               {currentPage} / {totalPages}
             </Typography>
             <IconButton
@@ -200,111 +203,137 @@ export default function AnimeTimeline({ calendarData, onAnimeClick }: AnimeTimel
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
               sx={{
-                bgcolor: 'background.paper',
-                '&:hover': { bgcolor: 'action.hover' },
-                '&.Mui-disabled': { bgcolor: 'action.disabledBackground' },
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+                backdropFilter: 'blur(20px)',
+                border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                width: 36,
+                height: 36,
+                '&:hover': {
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+                  transform: 'scale(1.05)',
+                },
+                '&.Mui-disabled': {
+                  bgcolor: 'action.disabledBackground',
+                  opacity: 0.5,
+                },
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
-              <ChevronRightIcon />
+              <ChevronRightIcon fontSize="small" />
             </IconButton>
           </Stack>
         )}
       </Stack>
 
-      {/* 番剧列表 */}
-      <Grid container spacing={2}>
-        {paginatedAnimeList.map((anime) => {
-          const title = anime.name_cn || anime.name;
-          const imageUrl = anime.images?.large || anime.images?.common || '/placeholder.svg';
-          const score = anime.rating?.score;
-          const year = extractYear(anime.air_date);
+      {/* 番剧列表 - 带淡入动画 */}
+      <Fade in={true} timeout={400} key={`${activeDay}-${currentPage}`}>
+        <Grid container spacing={{ xs: 2, md: 3 }}>
+          {paginatedAnimeList.map((anime) => {
+            const title = anime.name_cn || anime.name;
+            const imageUrl = anime.images?.large || anime.images?.common || '/placeholder.svg';
+            const score = anime.rating?.score;
+            const year = extractYear(anime.air_date);
 
-          return (
-            <Grid key={anime.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
-              {/* 分离式布局：图片卡片和信息区域 */}
-              <Box
-                onClick={() => onAnimeClick?.(anime)}
-                sx={{
-                  cursor: 'pointer',
-                  '&:hover .image-card': {
-                    boxShadow: 6,
-                    transform: 'translateY(-4px)',
-                  },
-                  '&:hover img': {
-                    transform: 'scale(1.05)',
-                  },
-                }}
-              >
-                {/* 图片卡片 - 独立容器 */}
-                <AppleCard
-                  variant="elevated"
-                  className="image-card"
+            return (
+              <Grid key={anime.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+                {/* 分离式布局：图片卡片和信息区域 */}
+                <Box
+                  onClick={() => onAnimeClick?.(anime)}
                   sx={{
-                    overflow: 'hidden',
-                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                    '&:hover .image-card': {
+                      transform: 'translateY(-8px)',
+                    },
+                    '&:hover img': {
+                      transform: 'scale(1.08)',
+                    },
                   }}
                 >
-                  <Box
+                  {/* 图片卡片 - 独立容器 */}
+                  <AppleCard
+                    variant="elevated"
+                    className="image-card"
                     sx={{
-                      position: 'relative',
-                      paddingTop: '140%',
                       overflow: 'hidden',
+                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      borderRadius: 1.5,
                     }}
                   >
                     <Box
-                      component="img"
-                      src={imageUrl}
-                      alt={title}
                       sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        transition: 'transform 0.3s ease',
+                        position: 'relative',
+                        paddingTop: '150%',
+                        overflow: 'hidden',
+                        bgcolor: 'grey.100',
                       }}
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
-                  </Box>
-                </AppleCard>
+                    >
+                      <Box
+                        component="img"
+                        src={imageUrl}
+                        alt={title}
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
+                      />
+                    </Box>
+                  </AppleCard>
 
-                {/* 信息区域 - 独立容器，透明背景 */}
-                <Box sx={{ mt: 1, px: 0.5 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: 600,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      minHeight: '2.4em',
-                      lineHeight: 1.2,
-                      mb: 0.25,
-                    }}
-                  >
-                    {title}
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {year}
+                  {/* 信息区域 - 独立容器，透明背景 */}
+                  <Box sx={{ mt: 1.5, px: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        minHeight: '2.6em',
+                        lineHeight: 1.3,
+                        mb: 0.5,
+                      }}
+                    >
+                      {title}
                     </Typography>
-                    {score && (
-                      <Typography variant="caption" sx={{ color: '#facc15', fontWeight: 600 }}>
-                        ⭐ {score.toFixed(1)}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.8rem' }}
+                      >
+                        {year}
                       </Typography>
-                    )}
+                      {score && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: '#fbbf24',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                          }}
+                        >
+                          ⭐ {score.toFixed(1)}
+                        </Typography>
+                      )}
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
-            </Grid>
-          );
-        })}
-      </Grid>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Fade>
 
       {animeList.length === 0 && (
         <Box

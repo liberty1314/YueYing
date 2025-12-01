@@ -40,18 +40,26 @@ export function useAdminAuth(
       // 获取当前用户信息
       const userData = await api.get<User>('/auth/me', true);
 
+      console.log('🔍 Admin Auth Check:', {
+        userData,
+        isAdmin: userData.is_admin,
+        role: userData.role,
+        requireAdmin,
+      });
+
       setUser(userData);
-      setIsAdmin(userData.isAdmin);
+      setIsAdmin(userData.is_admin);
 
       // 检查是否需要管理员权限
-      if (requireAdmin && !userData.isAdmin) {
-        console.warn('User is not an admin, redirecting...');
+      if (requireAdmin && !userData.is_admin) {
+        console.warn('❌ User is not an admin, redirecting to /403');
+        console.warn('User data:', userData);
         router.push('/403'); // 重定向到403权限不足页面
         return false;
       }
 
       // 检查账户是否激活
-      if (!userData.isActive) {
+      if (!userData.is_active) {
         console.warn('User account is not active');
         router.push('/login');
         return false;
@@ -104,7 +112,7 @@ export function useAdminAuth(
 export async function checkIsAdmin(): Promise<boolean> {
   try {
     const userData = await api.get<User>('/auth/me', true);
-    return userData.isAdmin;
+    return userData.is_admin;
   } catch (error) {
     console.error('Failed to check admin status:', error);
     return false;

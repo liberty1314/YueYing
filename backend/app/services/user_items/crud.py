@@ -323,3 +323,39 @@ async def delete_user_item(
         logger.error(f"Failed to delete user_item {user_item_id} from vector store: {e}", exc_info=True)
     
     return True
+
+
+def check_user_item(
+    db: Session,
+    user_id: int,
+    external_id: str,
+    content_type: str
+) -> tuple[bool, Optional[int]]:
+    """
+    检查用户是否已收藏某个条目
+    
+    Args:
+        db: 数据库会话
+        user_id: 用户ID
+        external_id: 外部ID
+        content_type: 内容类型
+        
+    Returns:
+        tuple[bool, Optional[int]]: (是否在库中, UserItem ID)
+    """
+    user_item = (
+        db.query(UserItem)
+        .join(Item)
+        .filter(
+            and_(
+                UserItem.user_id == user_id,
+                Item.external_id == external_id,
+                Item.content_type == content_type,
+            )
+        )
+        .first()
+    )
+    
+    if user_item:
+        return True, user_item.id
+    return False, None

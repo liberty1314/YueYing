@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Button } from '@/components/ui';
+import { Card, Button, Switch } from '@/components/ui';
 import { SaveIcon, SettingsIcon, AlertCircleIcon, CheckCircleIcon } from 'lucide-react';
 import { api } from '@/lib/apiClient';
 
@@ -38,26 +38,7 @@ const SettingCard = ({ title, description, checked, onChange }: SettingCardProps
         </p>
       </div>
       <div className="ml-4">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={checked}
-          onClick={() => onChange(!checked)}
-          className={`
-            relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
-            ${checked ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'}
-          `}
-        >
-          <span
-            aria-hidden="true"
-            className={`
-              pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
-              transition duration-200 ease-in-out
-              ${checked ? 'translate-x-5' : 'translate-x-0'}
-            `}
-          />
-        </button>
+        <Switch checked={checked} onChange={onChange} />
       </div>
     </div>
   </Card>
@@ -181,7 +162,7 @@ export default function SystemSettingsPage() {
       </div>
 
       {/* 变更提示 */}
-      {hasChanges && (
+      {/* {hasChanges && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertCircleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5" />
@@ -195,7 +176,7 @@ export default function SystemSettingsPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* 功能开关区块 */}
       <div>

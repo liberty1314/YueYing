@@ -68,10 +68,10 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
       sx={{
         position: 'relative',
         width: '100%',
-        height: { xs: '60vh', md: '70vh' },
+        height: { xs: '75vh', md: '85vh' },
         overflow: 'hidden',
-        borderRadius: { xs: 0, md: 4 },
-        mb: 6,
+        mb: { xs: 8, md: 12 },
+        borderRadius: { xs: 3, md: 4 },
       }}
     >
       {/* 背景图片 */}
@@ -85,7 +85,8 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
           backgroundImage: `url(${imageUrl})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          transition: 'opacity 0.5s ease',
+          borderRadius: { xs: 3, md: 4 },
+          transition: 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
           '&::after': {
             content: '""',
             position: 'absolute',
@@ -93,10 +94,11 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
             left: 0,
             width: '100%',
             height: '100%',
+            borderRadius: { xs: 3, md: 4 },
             background: (theme) =>
               theme.palette.mode === 'dark'
-                ? 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.6) 100%)'
-                : 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.4) 100%)',
+                ? 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.95) 100%)'
+                : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.85) 100%)',
           },
         }}
       />
@@ -110,12 +112,12 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'flex-end',
-          p: { xs: 3, md: 6 },
-          maxWidth: 1200,
+          p: { xs: 4, md: 8 },
+          maxWidth: 1400,
           mx: 'auto',
         }}
       >
-        <Stack spacing={2} sx={{ maxWidth: 600 }}>
+        <Stack spacing={{ xs: 2, md: 3 }} sx={{ maxWidth: { xs: '100%', md: 700 } }}>
           {/* 类型标签 */}
           {currentItem.media_type && (
             <Chip
@@ -123,46 +125,63 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
               size="small"
               sx={{
                 width: 'fit-content',
-                bgcolor: 'rgba(255,255,255,0.2)',
+                bgcolor: 'rgba(255,255,255,0.15)',
                 color: 'white',
-                backdropFilter: 'blur(10px)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                fontWeight: 500,
+                fontSize: '0.75rem',
+                letterSpacing: '0.5px',
               }}
             />
           )}
 
           {/* 标题 */}
           <Typography
-            variant="h2"
+            variant="h1"
             sx={{
               color: 'white',
               fontWeight: 700,
-              fontSize: { xs: '2rem', md: '3rem' },
-              textShadow: '2px 2px 8px rgba(0,0,0,0.8)',
+              fontSize: { xs: '2.5rem', md: '4rem', lg: '4.5rem' },
+              lineHeight: 1.1,
+              letterSpacing: '-0.02em',
+              textShadow: '0 4px 20px rgba(0,0,0,0.5)',
             }}
           >
             {title}
           </Typography>
 
           {/* 评分和类型 */}
-          <Stack direction="row" spacing={2} alignItems="center">
+          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
             {currentItem.vote_average && (
-              <Chip
-                label={`⭐ ${currentItem.vote_average.toFixed(1)}`}
-                size="small"
+              <Box
                 sx={{
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  color: 'white',
-                  backdropFilter: 'blur(10px)',
-                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  bgcolor: 'rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 2,
                 }}
-              />
+              >
+                <Typography variant="body2" sx={{ color: '#fbbf24', fontWeight: 600 }}>
+                  ⭐
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
+                  {currentItem.vote_average.toFixed(1)}
+                </Typography>
+              </Box>
             )}
             {currentItem.genres && currentItem.genres.length > 0 && (
               <Typography
-                variant="body2"
+                variant="body1"
                 sx={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textShadow: '1px 1px 4px rgba(0,0,0,0.8)',
+                  color: 'rgba(255,255,255,0.85)',
+                  fontWeight: 400,
+                  fontSize: '0.95rem',
                 }}
               >
                 {currentItem.genres.slice(0, 3).join(' · ')}
@@ -174,20 +193,21 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
           <Typography
             variant="body1"
             sx={{
-              color: 'rgba(255,255,255,0.9)',
-              textShadow: '1px 1px 4px rgba(0,0,0,0.8)',
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: { xs: '0.95rem', md: '1.05rem' },
+              lineHeight: 1.7,
               display: '-webkit-box',
               WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              lineHeight: 1.6,
+              maxWidth: 600,
             }}
           >
             {currentItem.overview}
           </Typography>
 
           {/* 操作按钮 */}
-          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+          <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
             <AppleButton
               variant="primary"
               startIcon={<PlayArrowIcon />}
@@ -195,9 +215,15 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
               sx={{
                 bgcolor: 'white',
                 color: 'black',
+                px: 3,
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 600,
                 '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.9)',
+                  bgcolor: 'rgba(255,255,255,0.92)',
+                  transform: 'scale(1.02)',
                 },
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               查看详情
@@ -207,14 +233,20 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
               startIcon={<AddIcon />}
               onClick={() => onAddToLibrary?.(currentItem)}
               sx={{
-                borderColor: 'white',
+                borderColor: 'rgba(255,255,255,0.3)',
                 color: 'white',
-                bgcolor: 'rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(10px)',
+                bgcolor: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px)',
+                px: 3,
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 600,
                 '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  borderColor: 'white',
+                  bgcolor: 'rgba(255,255,255,0.15)',
+                  borderColor: 'rgba(255,255,255,0.5)',
+                  transform: 'scale(1.02)',
                 },
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               快速添加
@@ -230,37 +262,47 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
             onClick={handlePrev}
             sx={{
               position: 'absolute',
-              left: { xs: 10, md: 20 },
+              left: { xs: 16, md: 32 },
               top: '50%',
               transform: 'translateY(-50%)',
               zIndex: 2,
-              bgcolor: 'rgba(0,0,0,0.5)',
+              bgcolor: 'rgba(255,255,255,0.1)',
               color: 'white',
-              backdropFilter: 'blur(10px)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              width: 48,
+              height: 48,
               '&:hover': {
-                bgcolor: 'rgba(0,0,0,0.7)',
+                bgcolor: 'rgba(255,255,255,0.2)',
+                transform: 'translateY(-50%) scale(1.05)',
               },
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
-            <ChevronLeftIcon />
+            <ChevronLeftIcon sx={{ fontSize: 28 }} />
           </IconButton>
           <IconButton
             onClick={handleNext}
             sx={{
               position: 'absolute',
-              right: { xs: 10, md: 20 },
+              right: { xs: 16, md: 32 },
               top: '50%',
               transform: 'translateY(-50%)',
               zIndex: 2,
-              bgcolor: 'rgba(0,0,0,0.5)',
+              bgcolor: 'rgba(255,255,255,0.1)',
               color: 'white',
-              backdropFilter: 'blur(10px)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              width: 48,
+              height: 48,
               '&:hover': {
-                bgcolor: 'rgba(0,0,0,0.7)',
+                bgcolor: 'rgba(255,255,255,0.2)',
+                transform: 'translateY(-50%) scale(1.05)',
               },
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
-            <ChevronRightIcon />
+            <ChevronRightIcon sx={{ fontSize: 28 }} />
           </IconButton>
         </>
       )}
@@ -272,7 +314,7 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
           spacing={1}
           sx={{
             position: 'absolute',
-            bottom: 20,
+            bottom: { xs: 24, md: 32 },
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 2,
@@ -286,14 +328,14 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
                 setIsAutoPlaying(false);
               }}
               sx={{
-                width: currentIndex === index ? 24 : 8,
+                width: currentIndex === index ? 32 : 8,
                 height: 8,
                 borderRadius: 4,
-                bgcolor: currentIndex === index ? 'white' : 'rgba(255,255,255,0.5)',
+                bgcolor: currentIndex === index ? 'white' : 'rgba(255,255,255,0.4)',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  bgcolor: 'white',
+                  bgcolor: currentIndex === index ? 'white' : 'rgba(255,255,255,0.7)',
                 },
               }}
             />

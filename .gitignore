@@ -166,3 +166,8 @@ docs/_build/
 docs/.doctrees/
 site/
 
+# 浏览器数据
+backend/data/*   
+
+# ====================================
+

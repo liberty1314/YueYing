@@ -47,7 +47,7 @@ const cards = [
         color: '#5856D6',
     },
     {
-        title: '想看/想玩',
+        title: '想看',
         key: 'totalWantToWatch' as keyof OverviewData,
         icon: BookmarkIcon,
         color: '#FF3B30',

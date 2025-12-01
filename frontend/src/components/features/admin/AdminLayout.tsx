@@ -9,10 +9,10 @@ import { ReactNode, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminSidebar } from './AdminSidebar';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { 
-  MenuIcon, 
-  BellIcon, 
-  UserCircleIcon, 
+import {
+  MenuIcon,
+  BellIcon,
+  UserCircleIcon,
   LogOutIcon,
   SettingsIcon,
 } from 'lucide-react';
@@ -57,7 +57,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
-          <div 
+          <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setMobileMenuOpen(false)}
           />
@@ -81,7 +81,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
               >
                 <MenuIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
               </button>
-              
+
               {title && (
                 <div>
                   <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -111,7 +111,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
               <div className="flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-gray-800">
                 <div className="hidden sm:block text-right">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.fullName || user?.username || '管理员'}
+                    {user?.full_name || user?.username || '管理员'}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {user?.email}

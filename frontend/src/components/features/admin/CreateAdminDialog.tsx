@@ -103,6 +103,7 @@ export function CreateAdminDialog({ isOpen, onClose, onSubmit }: CreateAdminDial
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
               placeholder="admin@example.com"
+              fullWidth
             />
           </div>
 
@@ -117,12 +118,13 @@ export function CreateAdminDialog({ isOpen, onClose, onSubmit }: CreateAdminDial
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 placeholder="至少6个字符"
-                className="pr-10"
+                className="pr-12"
+                fullWidth
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 z-10"
               >
                 {showPassword ? (
                   <EyeOffIcon className="w-5 h-5" />
@@ -147,6 +149,7 @@ export function CreateAdminDialog({ isOpen, onClose, onSubmit }: CreateAdminDial
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               placeholder="可选"
+              fullWidth
             />
           </div>
 
@@ -159,6 +162,7 @@ export function CreateAdminDialog({ isOpen, onClose, onSubmit }: CreateAdminDial
               value={formData.full_name}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               placeholder="可选"
+              fullWidth
             />
           </div>
 

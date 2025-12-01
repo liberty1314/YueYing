@@ -38,7 +38,8 @@ export type LibraryStatus =
  * 添加内容到库的请求参数
  */
 interface AddToLibraryParams {
-  external_id: number;
+  external_id: string;
+  source: string;
   content_type: string;
   title: string;
   original_title?: string;
@@ -59,6 +60,32 @@ function getImageUrl(path?: string): string | undefined {
   if (path.startsWith('http')) return path;
   // 否则假设是TMDB路径
   return `https://image.tmdb.org/t/p/w500${path}`;
+}
+
+/**
+ * 推断数据源
+ */
+function inferSource(item: any): string {
+  // 如果item中已经有source字段，直接使用
+  if (item.source) {
+    return item.source;
+  }
+
+  // 根据数据特征推断
+  if (item.media_type === 'movie' || item.media_type === 'tv') {
+    return 'tmdb';
+  }
+
+  if (item.type === 'book' || item.volumeInfo) {
+    return 'google_books';
+  }
+
+  if (item.type === 'anime' || item.type === 'game' || item.name_cn) {
+    return 'bangumi';
+  }
+
+  // 默认返回tmdb
+  return 'tmdb';
 }
 
 /**
@@ -100,16 +127,22 @@ export async function addToLibrary(
     // 提取发布日期
     const releaseDate = item.release_date || item.first_air_date || item.air_date;
 
+    // 推断数据源
+    const source = inferSource(item);
+
+    const contentType = item.media_type || item.content_type || 'movie';
+
     // 构建请求参数
     const params: AddToLibraryParams = {
-      external_id: item.external_id || item.id,
-      content_type: item.media_type || item.content_type || 'movie',
+      external_id: String(item.external_id || item.id), // 转换为字符串
+      source,
+      content_type: contentType,
       title,
       original_title: originalTitle,
       poster_url: posterUrl,
       backdrop_url: backdropUrl,
       overview,
-      rating,
+      rating: rating ? Math.round(rating) : undefined, // 四舍五入为整数
       release_date: releaseDate,
       status,
     };
@@ -124,10 +157,13 @@ export async function addToLibrary(
     };
   } catch (error) {
     if (error instanceof APIError) {
-      // API错误
+      // API错误 - 确保返回字符串而不是对象
+      const errorMessage = typeof error.detail === 'string'
+        ? error.detail
+        : JSON.stringify(error.detail);
       return {
         success: false,
-        message: error.detail || '添加失败',
+        message: errorMessage || '添加失败',
       };
     }
     // 其他错误

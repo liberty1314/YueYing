@@ -13,7 +13,7 @@ const itemTypes: { value: ItemType; label: string }[] = [
 ];
 
 const itemStatuses: { value: ItemStatus; label: string }[] = [
-    { value: 'want_to_watch', label: '想看/想玩' },
+    { value: 'want_to_watch', label: '想看' },
     { value: 'watching', label: '进行中' },
     { value: 'watched', label: '已完成' },
 ];

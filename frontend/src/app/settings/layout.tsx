@@ -24,7 +24,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             <Box
                 sx={{
                     minHeight: '100vh',
-                    bgcolor: '#f5f5f7',
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0a0a0a' : '#f5f5f7',
                     pt: { xs: 2, md: 6 },
                     pb: 8,
                 }}
@@ -46,10 +46,12 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                         >
                             <Box
                                 sx={{
-                                    bgcolor: 'white',
+                                    bgcolor: (theme) => theme.palette.mode === 'dark' ? '#1a1a1a' : 'white',
                                     borderRadius: '18px',
                                     overflow: 'hidden',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                                    boxShadow: (theme) => theme.palette.mode === 'dark'
+                                        ? '0 2px 8px rgba(0,0,0,0.3)'
+                                        : '0 2px 8px rgba(0,0,0,0.04)',
                                 }}
                             >
                                 <List sx={{ p: 1 }}>
@@ -66,10 +68,14 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                                     mb: index < menuItems.length - 1 ? 0.5 : 0,
                                                     py: 1.5,
                                                     px: 2,
-                                                    bgcolor: isActive ? '#f5f5f7' : 'transparent',
+                                                    bgcolor: (theme) => isActive
+                                                        ? theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f7'
+                                                        : 'transparent',
                                                     transition: 'all 0.2s ease',
                                                     '&:hover': {
-                                                        bgcolor: isActive ? '#f5f5f7' : '#fafafa',
+                                                        bgcolor: (theme) => isActive
+                                                            ? theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f7'
+                                                            : theme.palette.mode === 'dark' ? '#252525' : '#fafafa',
                                                     },
                                                 }}
                                             >
@@ -77,7 +83,9 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                                     <Icon
                                                         sx={{
                                                             fontSize: 22,
-                                                            color: isActive ? '#0071e3' : '#86868b',
+                                                            color: (theme) => isActive
+                                                                ? '#0071e3'
+                                                                : theme.palette.mode === 'dark' ? '#a0a0a0' : '#86868b',
                                                         }}
                                                     />
                                                 </ListItemIcon>
@@ -86,7 +94,9 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                                     primaryTypographyProps={{
                                                         fontWeight: isActive ? 600 : 500,
                                                         fontSize: '0.95rem',
-                                                        color: isActive ? '#1d1d1f' : '#1d1d1f',
+                                                        color: (theme) => theme.palette.mode === 'dark'
+                                                            ? (isActive ? '#ffffff' : '#d0d0d0')
+                                                            : '#1d1d1f',
                                                     }}
                                                 />
                                             </ListItemButton>

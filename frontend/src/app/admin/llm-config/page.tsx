@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Button, Input, Badge } from '@/components/ui';
+import { Card, Button, Input, Badge, Switch } from '@/components/ui';
 import { useLLMConfig, type LLMProvider, type LLMConfigUpdate, type LLMConfig } from '@/hooks/useLLMConfig';
 import { BrainCircuitIcon, CheckCircleIcon, XCircleIcon, EyeIcon, EyeOffIcon, SaveIcon } from 'lucide-react';
 
@@ -194,12 +194,13 @@ export default function LLMConfigPage() {
                 value={getCurrentValue('api_key') as string || ''}
                 onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
                 placeholder="sk-..."
-                className="pr-10"
+                className="pr-12"
+                fullWidth
               />
               <button
                 type="button"
                 onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 z-10"
               >
                 {showApiKey ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
               </button>
@@ -215,6 +216,7 @@ export default function LLMConfigPage() {
               value={getCurrentValue('base_url') as string || ''}
               onChange={(e) => setFormData({ ...formData, base_url: e.target.value })}
               placeholder="https://api.siliconflow.cn/v1"
+              fullWidth
             />
           </div>
 
@@ -227,6 +229,7 @@ export default function LLMConfigPage() {
               value={getCurrentValue('default_model') as string || ''}
               onChange={(e) => setFormData({ ...formData, default_model: e.target.value })}
               placeholder="deepseek-ai/DeepSeek-V3"
+              fullWidth
             />
           </div>
 
@@ -248,29 +251,23 @@ export default function LLMConfigPage() {
 
           {/* 功能开关 */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="enabled"
-                checked={getCurrentValue('enabled') as boolean ?? true}
-                onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                className="w-4 h-4"
-              />
+            <div className="flex items-center justify-between">
               <label htmlFor="enabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 启用LLM服务
               </label>
-            </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="auto_tag"
-                checked={getCurrentValue('auto_tag_enabled') as boolean ?? false}
-                onChange={(e) => setFormData({ ...formData, auto_tag_enabled: e.target.checked })}
-                className="w-4 h-4"
+              <Switch
+                checked={getCurrentValue('enabled') as boolean ?? true}
+                onChange={(checked) => setFormData({ ...formData, enabled: checked })}
               />
+            </div>
+            <div className="flex items-center justify-between">
               <label htmlFor="auto_tag" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 启用自动标签生成
               </label>
+              <Switch
+                checked={getCurrentValue('auto_tag_enabled') as boolean ?? false}
+                onChange={(checked) => setFormData({ ...formData, auto_tag_enabled: checked })}
+              />
             </div>
           </div>
 

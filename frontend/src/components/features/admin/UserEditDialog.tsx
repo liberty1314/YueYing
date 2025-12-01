@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { XIcon } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Switch } from '@/components/ui';
 import type { AdminUserResponse, UserUpdateRequest } from '@/hooks/useAdminUsers';
 
 export interface UserEditDialogProps {
@@ -84,6 +84,7 @@ export function UserEditDialog({ user, isOpen, onClose, onSubmit }: UserEditDial
               value={formData.email || ''}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
+              fullWidth
             />
           </div>
 
@@ -95,6 +96,7 @@ export function UserEditDialog({ user, isOpen, onClose, onSubmit }: UserEditDial
               type="text"
               value={formData.username || ''}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              fullWidth
             />
           </div>
 
@@ -106,6 +108,7 @@ export function UserEditDialog({ user, isOpen, onClose, onSubmit }: UserEditDial
               type="text"
               value={formData.full_name || ''}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              fullWidth
             />
           </div>
 
@@ -123,17 +126,14 @@ export function UserEditDialog({ user, isOpen, onClose, onSubmit }: UserEditDial
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={formData.is_active ?? true}
-              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-            />
+          <div className="flex items-center justify-between">
             <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               账号已激活
             </label>
+            <Switch
+              checked={formData.is_active ?? true}
+              onChange={(checked) => setFormData({ ...formData, is_active: checked })}
+            />
           </div>
 
           {/* 按钮 */}

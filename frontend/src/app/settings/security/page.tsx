@@ -5,20 +5,16 @@ import { useRouter } from 'next/navigation';
 import {
     Box,
     Typography,
-    TextField,
     Button,
     CircularProgress,
     Alert,
     Snackbar,
     Divider,
-    InputAdornment,
-    IconButton,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
+import { AuthInput } from '@/components/ui/AuthInput';
 
 interface SettingSectionProps {
     title: string;
@@ -72,9 +68,6 @@ export default function SecurityPage() {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [error, setError] = useState('');
@@ -105,13 +98,13 @@ export default function SecurityPage() {
                 old_password: currentPassword,
                 new_password: newPassword,
             });
-            
+
             // 修改成功后，显示成功提示
             setSaveSuccess(true);
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
-            
+
             // 2秒后自动退出登录并跳转到首页
             setTimeout(() => {
                 logout();
@@ -160,40 +153,16 @@ export default function SecurityPage() {
                         >
                             当前密码
                         </Typography>
-                        <TextField
-                            fullWidth
-                            type={showCurrentPassword ? 'text' : 'password'}
+                        <AuthInput
+                            type="password"
                             value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)}
                             placeholder="请输入当前密码"
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                            edge="end"
-                                        >
-                                            {showCurrentPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    bgcolor: '#f5f5f7',
-                                    '& fieldset': {
-                                        borderColor: 'transparent',
-                                    },
-                                    '&:hover fieldset': {
-                                        borderColor: '#d2d2d7',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: '#0071e3',
-                                        borderWidth: '2px',
-                                    },
-                                },
-                            }}
+                            icon={
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            }
                         />
                     </Box>
 
@@ -208,40 +177,16 @@ export default function SecurityPage() {
                         >
                             新密码
                         </Typography>
-                        <TextField
-                            fullWidth
-                            type={showNewPassword ? 'text' : 'password'}
+                        <AuthInput
+                            type="password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="请输入新密码（至少 8 位）"
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            edge="end"
-                                        >
-                                            {showNewPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    bgcolor: '#f5f5f7',
-                                    '& fieldset': {
-                                        borderColor: 'transparent',
-                                    },
-                                    '&:hover fieldset': {
-                                        borderColor: '#d2d2d7',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: '#0071e3',
-                                        borderWidth: '2px',
-                                    },
-                                },
-                            }}
+                            icon={
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                            }
                         />
                     </Box>
 
@@ -256,40 +201,16 @@ export default function SecurityPage() {
                         >
                             确认新密码
                         </Typography>
-                        <TextField
-                            fullWidth
-                            type={showConfirmPassword ? 'text' : 'password'}
+                        <AuthInput
+                            type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="请再次输入新密码"
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            edge="end"
-                                        >
-                                            {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    bgcolor: '#f5f5f7',
-                                    '& fieldset': {
-                                        borderColor: 'transparent',
-                                    },
-                                    '&:hover fieldset': {
-                                        borderColor: '#d2d2d7',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: '#0071e3',
-                                        borderWidth: '2px',
-                                    },
-                                },
-                            }}
+                            icon={
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            }
                         />
                     </Box>
                 </Box>

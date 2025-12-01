@@ -183,3 +183,12 @@ class UserItemFilters(BaseModel):
         validate_assignment = True
         arbitrary_types_allowed = True
 
+
+
+class CheckUserItemResponse(BaseModel):
+    """检查用户记录响应 Schema"""
+    in_library: bool = Field(..., description="是否在收藏库中")
+    item_id: Optional[int] = Field(None, description="UserItem ID（如果存在）")
+
+    class Config:
+        from_attributes = True

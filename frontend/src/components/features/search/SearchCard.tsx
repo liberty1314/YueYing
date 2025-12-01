@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Badge, Button } from '@/components/ui';
 import { PlusIcon, CheckIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { userItemsApi } from '@/lib/api';
+import { checkInLibrary } from '@/utils/library';
 import type { ItemType } from '@/types';
 
 interface SearchResult {
@@ -37,6 +38,23 @@ export default function SearchCard({ result, contentType, source }: SearchCardPr
     const [added, setAdded] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+
+    // 检查条目是否已在库中
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const externalId = Number(result.external_id);
+                if (isNaN(externalId)) return;
+
+                const { inLibrary } = await checkInLibrary(externalId, contentType);
+                setAdded(inLibrary);
+            } catch (error) {
+                console.error('检查收藏状态失败:', error);
+            }
+        };
+
+        checkStatus();
+    }, [result.external_id, contentType]);
 
     const handleAdd = async (e: React.MouseEvent) => {
         e.stopPropagation();

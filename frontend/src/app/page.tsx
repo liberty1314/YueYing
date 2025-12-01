@@ -23,8 +23,8 @@ import {
 } from '@/components/features/home';
 import { ErrorDisplay } from '@/components/ui';
 import ExternalContentDialog from '@/components/features/detail/ExternalContentDialog';
+import AddToLibraryDialog from '@/components/features/library/AddToLibraryDialog';
 import { api, CachePresets } from '@/lib/apiClient';
-import { addToLibrary } from '@/utils/library';
 import { Box, Snackbar, Alert } from '@mui/material';
 
 export default function HomePage() {
@@ -59,6 +59,12 @@ export default function HomePage() {
   // 详情弹窗
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // 用于触发详情对话框刷新状态
+  const [forceAdded, setForceAdded] = useState(false); // 强制设置为已添加状态
+
+  // 添加到收藏库弹窗
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [contentToAdd, setContentToAdd] = useState<any>(null);
 
   useEffect(() => {
     loadHomeData();
@@ -68,6 +74,7 @@ export default function HomePage() {
   const handleOpenDetail = (item: any) => {
     setSelectedContent(item);
     setDetailDialogOpen(true);
+    setForceAdded(false); // 重置强制添加状态
   };
 
   // 处理关闭详情
@@ -77,31 +84,22 @@ export default function HomePage() {
   };
 
   // 处理添加到库
-  const handleAddToLibrary = async (item: any) => {
-    try {
-      const result = await addToLibrary(item, 'want_to_watch');
-      if (result.success) {
-        setToast({
-          open: true,
-          message: '添加成功！',
-          severity: 'success',
-        });
-        // 关闭详情弹窗
-        handleCloseDetail();
-      } else {
-        setToast({
-          open: true,
-          message: result.message || '添加失败',
-          severity: 'error',
-        });
-      }
-    } catch (error) {
-      setToast({
-        open: true,
-        message: '添加失败，请重试',
-        severity: 'error',
-      });
-    }
+  const handleAddToLibrary = (item: any) => {
+    setContentToAdd(item);
+    setAddDialogOpen(true);
+  };
+
+  // 添加成功后的回调
+  const handleAddSuccess = () => {
+    setToast({
+      open: true,
+      message: '添加成功！',
+      severity: 'success',
+    });
+    // 关闭添加对话框
+    setAddDialogOpen(false);
+    // 直接设置为已添加状态，不依赖后端检查
+    setForceAdded(true);
   };
 
   // 处理关闭Toast
@@ -257,6 +255,16 @@ export default function HomePage() {
         content={selectedContent}
         onClose={handleCloseDetail}
         onAddToLibrary={handleAddToLibrary}
+        refreshTrigger={refreshTrigger}
+        forceAdded={forceAdded}
+      />
+
+      {/* 添加到收藏库弹窗 */}
+      <AddToLibraryDialog
+        open={addDialogOpen}
+        content={contentToAdd}
+        onClose={() => setAddDialogOpen(false)}
+        onSuccess={handleAddSuccess}
       />
 
       {/* Toast提示 */}

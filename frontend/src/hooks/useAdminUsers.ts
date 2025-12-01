@@ -77,21 +77,21 @@ interface UseUsersResult {
 // ========== 转换函数 ==========
 
 /**
- * 将后端返回的AdminUserResponse转换为前端User类型
+ * 将后端返回的AdminUserResponse转换为前端User类型（保持 snake_case）
  */
 function convertAdminUserToUser(adminUser: AdminUserResponse): User {
   return {
     id: String(adminUser.id),
     username: adminUser.username || '',
     email: adminUser.email,
-    fullName: adminUser.full_name || undefined,
-    avatarUrl: adminUser.avatar_url || undefined,
-    isActive: adminUser.is_active,
-    isVerified: adminUser.is_verified,
+    full_name: adminUser.full_name || undefined,
+    avatar_url: adminUser.avatar_url || undefined,
+    is_active: adminUser.is_active,
+    is_verified: adminUser.is_verified,
     role: adminUser.role as 'user' | 'admin',
-    isAdmin: adminUser.role === 'admin',
-    createdAt: adminUser.created_at,
-    updatedAt: adminUser.updated_at,
+    is_admin: adminUser.role === 'admin',
+    created_at: adminUser.created_at,
+    updated_at: adminUser.updated_at,
   };
 }
 
