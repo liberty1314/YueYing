@@ -11,7 +11,7 @@ import type { UserItem, ItemStatus } from '@/types';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PosterGridSkeleton } from '@/components/shared/LoadingSkeletons';
-import { AdvancedFilterPanel, ContentCard, BatchOperationsBar, BatchEditDialog, type BatchUpdateData } from '@/components/features/library';
+import { AdvancedFilterPanel, ResponsiveFilterPanel, ContentCard, BatchOperationsBar, BatchEditDialog, type BatchUpdateData } from '@/components/features/library';
 import QuickAddForm from '@/components/features/library/QuickAddForm';
 import EditForm from '@/components/features/library/EditForm';
 import DeleteConfirmDialog from '@/components/features/library/DeleteConfirmDialog';

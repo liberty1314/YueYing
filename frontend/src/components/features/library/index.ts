@@ -1,5 +1,6 @@
 // Library feature components export
 export { AdvancedFilterPanel } from './AdvancedFilterPanel';
+export { ResponsiveFilterPanel } from './ResponsiveFilterPanel';
 export { ContentCard } from './ContentCard';
 export { BatchOperationsBar } from './BatchOperationsBar';
 export { BatchEditDialog } from './BatchEditDialog';

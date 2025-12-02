@@ -143,9 +143,11 @@ export default function AssistantPage() {
 
     const handleDeleteConversation = async (id: number) => {
         try {
-            // 调用删除API（如果有）
-            // await assistantApi.deleteConversation(id);
+            // 调用删除API
+            await assistantApi.deleteConversation(id);
+            // 重新加载对话列表
             await loadConversations();
+            // 如果删除的是当前对话，清空消息
             if (currentConversationId === id) {
                 handleNewConversation();
             }

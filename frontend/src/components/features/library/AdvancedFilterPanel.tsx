@@ -224,9 +224,9 @@ export function AdvancedFilterPanel({
               />
             </div>
 
-            {/* 状态筛选 */}
+            {/* 状态筛选 - 增强动画效果 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-1.5">
                 <BarChart3Icon className="w-4 h-4" />
                 状态
               </h4>
@@ -236,10 +236,10 @@ export function AdvancedFilterPanel({
                     key={status.value}
                     onClick={() => handleStatusToggle(status.value)}
                     className={cn(
-                      'px-3 py-1.5 text-sm font-medium rounded-lg border-2 transition-all',
+                      'px-4 py-2 text-sm font-semibold rounded-xl border-2 transition-all duration-300 transform',
                       filters.status === status.value
-                        ? status.color
-                        : 'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                        ? `${status.color} shadow-md scale-105`
+                        : 'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:scale-105 hover:shadow-sm active:scale-95'
                     )}
                   >
                     {status.label}
@@ -248,13 +248,13 @@ export function AdvancedFilterPanel({
               </div>
             </div>
 
-            {/* 类型筛选 */}
+            {/* 类型筛选 - 增强动画效果 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-1.5">
                 <FilmIcon className="w-4 h-4" />
                 类型
               </h4>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {itemTypes.map((type) => {
                   const Icon = type.icon;
                   return (
@@ -262,10 +262,10 @@ export function AdvancedFilterPanel({
                       key={type.value}
                       onClick={() => handleTypeToggle(type.value)}
                       className={cn(
-                        'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border-2 transition-all',
+                        'inline-flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold rounded-xl border-2 transition-all duration-300 transform',
                         filters.content_type === type.value
-                          ? type.activeColor
-                          : 'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                          ? `${type.activeColor} shadow-md scale-105`
+                          : 'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:scale-105 hover:shadow-sm active:scale-95'
                       )}
                     >
                       <Icon className="w-4 h-4" />
@@ -294,10 +294,10 @@ export function AdvancedFilterPanel({
               />
             </div>
 
-            {/* 标签云 */}
+            {/* 标签云 - 增强动画效果 */}
             {activeTags.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-1.5">
                   <TagIcon className="w-4 h-4" />
                   活跃标签
                 </h4>
@@ -309,10 +309,10 @@ export function AdvancedFilterPanel({
                         key={tag}
                         onClick={() => handleTagToggle(tag)}
                         className={cn(
-                          'px-2.5 py-1 text-xs font-medium rounded-full transition-all',
+                          'px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 transform',
                           isSelected
-                            ? 'bg-blue-600 dark:bg-blue-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md scale-105'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:scale-110 active:scale-95'
                         )}
                       >
                         #{tag}
