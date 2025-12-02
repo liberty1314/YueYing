@@ -62,6 +62,7 @@ out/
 .turbo
 *.tsbuildinfo
 next-env.d.ts
+frontend/.pnpm-store/
 
 # ====================================
 # IDE / 编辑器
@@ -166,8 +167,9 @@ docs/_build/
 docs/.doctrees/
 site/
 
-# 浏览器数据
-backend/data/*   
+# 浏览器数据和向量数据库
+backend/data/*
+backend/data/chromadb/
 
 # ====================================
 

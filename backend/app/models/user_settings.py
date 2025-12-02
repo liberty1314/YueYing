@@ -1,7 +1,7 @@
 """
 用户设置模型
 """
-from sqlalchemy import Column, Integer, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, Boolean, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
@@ -20,9 +20,12 @@ class UserSettings(BaseModel):
     # 搜索设置
     enable_strict_search_filter = Column(Boolean, nullable=False, default=True, server_default='true', comment="启用严格搜索过滤（只返回标题包含关键词的结果）")
     
+    # 记录页面设置
+    default_library_status = Column(String(50), nullable=False, default='want_to_watch', server_default='want_to_watch', comment="我的记录页面默认筛选状态")
+    
     # 关联用户
     user = relationship("User", back_populates="settings")
 
     def __repr__(self):
-        return f"<UserSettings(user_id={self.user_id}, auto_generate_tags={self.auto_generate_tags}, enable_strict_search_filter={self.enable_strict_search_filter})>"
+        return f"<UserSettings(user_id={self.user_id}, auto_generate_tags={self.auto_generate_tags}, enable_strict_search_filter={self.enable_strict_search_filter}, default_library_status={self.default_library_status})>"
 

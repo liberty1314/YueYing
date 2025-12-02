@@ -128,8 +128,8 @@ class UserItemFilters(BaseModel):
     """用户记录筛选 Schema"""
     status: Optional[WatchStatus] = Field(None, description="按状态筛选")
     content_type: Optional[ContentType] = Field(None, description="按内容类型筛选")
-    min_rating: Optional[int] = Field(None, ge=0, le=10, description="最低评分")
-    max_rating: Optional[int] = Field(None, ge=0, le=10, description="最高评分")
+    min_rating: Optional[float] = Field(None, ge=0, le=10, description="最低评分")
+    max_rating: Optional[float] = Field(None, ge=0, le=10, description="最高评分")
     year_from: Optional[int] = Field(None, description="年份起始")
     year_to: Optional[int] = Field(None, description="年份结束")
     search: Optional[str] = Field(None, description="搜索关键词（标题）")

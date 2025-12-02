@@ -1,5 +1,5 @@
 /**
- * ChatSidebar - 对话历史侧边栏
+ * ChatSidebar - 对话历史侧边栏 (优化版)
  * 
  * 功能：
  * - 对话列表展示
@@ -7,6 +7,11 @@
  * - 分组管理（今天、昨天、本周等）
  * - 新建对话
  * - 删除对话
+ * 
+ * 优化点：
+ * - 更精致的新建对话按钮（渐变+光影效果）
+ * - 优化的选中和 hover 状态
+ * - 更细腻的阴影和圆角
  */
 
 'use client';
@@ -19,7 +24,8 @@ import {
   SearchIcon,
   MessageSquareIcon,
   Trash2Icon,
-  ClockIcon
+  ClockIcon,
+  SparklesIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -91,10 +97,10 @@ export function ChatSidebar({
   // 分组
   const groups = groupConversationsByTime(filteredConversations);
   const groupLabels = {
-    today: '📅 今天',
-    yesterday: '📅 昨天',
-    thisWeek: '📅 本周',
-    older: '📅 更早',
+    today: '今天',
+    yesterday: '昨天',
+    thisWeek: '本周',
+    older: '更早',
   };
 
   const handleDelete = (id: number) => {
@@ -108,40 +114,42 @@ export function ChatSidebar({
   };
 
   return (
-    <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <Button
-          variant="primary"
-          className="w-full bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white"
+    <div className="w-80 bg-gradient-to-b from-slate-50 to-white dark:from-gray-900 dark:to-gray-950 border-r border-slate-200/60 dark:border-gray-800/60 flex flex-col">
+      {/* Header - 新建对话按钮 */}
+      <div className="p-4">
+        <button
           onClick={onNewConversation}
+          className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 p-[2px] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/50 dark:hover:shadow-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
         >
-          <PlusIcon className="w-4 h-4 mr-2 text-white" />
-          <span className="text-white font-medium">新对话</span>
-        </Button>
+          <div className="relative flex items-center justify-center gap-2 rounded-[10px] bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 px-4 py-3 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            <PlusIcon className="w-5 h-5 text-white relative z-10" />
+            <span className="text-white font-semibold text-sm relative z-10">新建对话</span>
+          </div>
+        </button>
       </div>
 
       {/* Search */}
-      <div className="p-4">
+      <div className="px-4 pb-4">
         <div className="relative">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-gray-500" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索对话..."
-            className="pl-10"
+            className="pl-10 bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 focus:border-blue-500 dark:focus:border-blue-400 rounded-lg"
           />
         </div>
       </div>
 
       {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto px-2">
+      <div className="flex-1 overflow-y-auto px-3 pb-4">
         {Object.entries(groups).map(([key, items]) => {
           if (items.length === 0) return null;
 
           return (
-            <div key={key} className="mb-4">
-              <div className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+            <div key={key} className="mb-6">
+              <div className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                 {groupLabels[key as keyof typeof groupLabels]}
               </div>
               <div className="space-y-1">
@@ -149,30 +157,48 @@ export function ChatSidebar({
                   <div
                     key={conv.id}
                     className={cn(
-                      'group relative p-3 rounded-lg cursor-pointer transition-colors',
+                      'group relative p-3 rounded-xl cursor-pointer transition-all duration-200',
                       currentConversationId === conv.id
-                        ? 'bg-blue-100 dark:bg-blue-900/30'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 shadow-sm border border-blue-200/50 dark:border-blue-800/50'
+                        : 'hover:bg-slate-100/80 dark:hover:bg-gray-800/60 hover:shadow-sm'
                     )}
                     onClick={() => onSelectConversation(conv.id)}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-1">
-                        <MessageSquareIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <div className="flex-shrink-0 mt-0.5">
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                          currentConversationId === conv.id
+                            ? "bg-gradient-to-br from-blue-500 to-indigo-500 shadow-md"
+                            : "bg-slate-200 dark:bg-gray-700 group-hover:bg-slate-300 dark:group-hover:bg-gray-600"
+                        )}>
+                          <MessageSquareIcon className={cn(
+                            "w-4 h-4",
+                            currentConversationId === conv.id
+                              ? "text-white"
+                              : "text-slate-600 dark:text-gray-400"
+                          )} />
+                        </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        <h4 className={cn(
+                          "text-sm font-semibold truncate",
+                          currentConversationId === conv.id
+                            ? "text-slate-900 dark:text-white"
+                            : "text-slate-700 dark:text-gray-300"
+                        )}>
                           {conv.title}
                         </h4>
                         {conv.last_message && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
+                          <p className="text-xs text-slate-500 dark:text-gray-400 line-clamp-1 mt-1">
                             {conv.last_message}
                           </p>
                         )}
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="default" size="sm" className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-gray-800 text-xs text-slate-600 dark:text-gray-400">
+                            <SparklesIcon className="w-3 h-3" />
                             {conv.message_count}
-                          </Badge>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -185,10 +211,10 @@ export function ChatSidebar({
                           handleDelete(conv.id);
                         }}
                         className={cn(
-                          'absolute top-3 right-3 p-1.5 rounded transition-colors opacity-0 group-hover:opacity-100',
+                          'absolute top-3 right-3 p-1.5 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100',
                           deleteConfirm === conv.id
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                            : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500'
+                            ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 opacity-100 scale-110'
+                            : 'hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400'
                         )}
                         title={deleteConfirm === conv.id ? '再次点击确认删除' : '删除对话'}
                       >
@@ -203,35 +229,19 @@ export function ChatSidebar({
         })}
 
         {filteredConversations.length === 0 && (
-          <div className="text-center py-8">
-            <ClockIcon className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-600" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+              <ClockIcon className="w-8 h-8 text-slate-400 dark:text-gray-600" />
+            </div>
+            <p className="text-sm font-medium text-slate-600 dark:text-gray-400">
               {searchQuery ? '没有找到匹配的对话' : '还没有对话记录'}
+            </p>
+            <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">
+              {searchQuery ? '试试其他关键词' : '点击上方按钮开始新对话'}
             </p>
           </div>
         )}
       </div>
-
-      {/* Footer - Quick Actions */}
-      {/* <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          💡 快捷提问
-        </div>
-        <div className="mt-2 space-y-1">
-          {['推荐电影', '数据统计', '标签分析'].map((prompt) => (
-            <button
-              key={prompt}
-              onClick={() => {
-                onNewConversation();
-                // 可以触发自动输入提示词
-              }}
-              className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
-            >
-              {prompt}
-            </button>
-          ))}
-        </div>
-      </div> */}
     </div>
   );
 }

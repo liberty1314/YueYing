@@ -1,9 +1,10 @@
 'use client';
 
 import { Box, Typography, Stack, Grid } from '@mui/material';
-import { AppleCard } from '@/components/ui';
+import MediaCard from '@/components/shared/MediaCard';
 import MovieIcon from '@mui/icons-material/Movie';
 import TvIcon from '@mui/icons-material/Tv';
+import { normalizeMediaData } from '@/utils/mediaDataMapper';
 
 interface MediaItem {
   id: number;
@@ -20,7 +21,6 @@ interface CategoryRecommendationsProps {
   tvShows: MediaItem[];
   onMovieClick?: (movie: MediaItem) => void;
   onTvShowClick?: (tvShow: MediaItem) => void;
-  onAddToLibrary?: (item: MediaItem) => void;
 }
 
 export default function CategoryRecommendations({
@@ -28,7 +28,6 @@ export default function CategoryRecommendations({
   tvShows,
   onMovieClick,
   onTvShowClick,
-  onAddToLibrary
 }: CategoryRecommendationsProps) {
   const renderMediaGrid = (
     items: MediaItem[],
@@ -60,108 +59,17 @@ export default function CategoryRecommendations({
         {/* 内容网格 */}
         <Grid container spacing={{ xs: 2, md: 3 }}>
           {items.slice(0, 12).map((item) => {
-            const itemTitle = item.title || item.name || '未知标题';
-            const imageUrl = item.poster_path
-              ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-              : '/placeholder.svg';
-            const releaseDate = item.release_date || item.first_air_date;
-            const year = releaseDate ? new Date(releaseDate).getFullYear() : '';
-
+            const normalized = normalizeMediaData(item);
             return (
               <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
-                {/* 分离式布局：图片卡片和信息区域 */}
-                <Box
+                <MediaCard
+                  id={normalized.id}
+                  title={normalized.title}
+                  posterUrl={normalized.poster_url}
+                  year={normalized.year}
+                  rating={normalized.rating}
                   onClick={() => onItemClick?.(item)}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover .image-card': {
-                      transform: 'translateY(-8px)',
-                    },
-                    '&:hover img': {
-                      transform: 'scale(1.08)',
-                    },
-                  }}
-                >
-                  {/* 图片卡片 - 独立容器 */}
-                  <AppleCard
-                    variant="elevated"
-                    className="image-card"
-                    sx={{
-                      overflow: 'hidden',
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      borderRadius: 1.5,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        position: 'relative',
-                        paddingTop: '150%',
-                        overflow: 'hidden',
-                        bgcolor: 'grey.100',
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={imageUrl}
-                        alt={itemTitle}
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                        }}
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
-                      />
-                    </Box>
-                  </AppleCard>
-
-                  {/* 信息区域 - 独立容器，透明背景 */}
-                  <Box sx={{ mt: 1.5, px: 0.5 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: 600,
-                        fontSize: '0.9rem',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        minHeight: '2.6em',
-                        lineHeight: 1.3,
-                        mb: 0.5,
-                      }}
-                    >
-                      {itemTitle}
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontSize: '0.8rem' }}
-                      >
-                        {year || '未知'}
-                      </Typography>
-                      {item.vote_average && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: '#fbbf24',
-                            fontWeight: 600,
-                            fontSize: '0.8rem',
-                          }}
-                        >
-                          ⭐ {item.vote_average.toFixed(1)}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                </Box>
+                />
               </Grid>
             );
           })}

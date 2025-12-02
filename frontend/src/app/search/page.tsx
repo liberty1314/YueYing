@@ -17,6 +17,9 @@ import { Badge } from '@/components/ui';
 import { SearchIcon } from 'lucide-react';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { api, APIError } from '@/lib/apiClient';
+import ExternalContentDialog from '@/components/features/detail/ExternalContentDialog';
+import AddToLibraryDialog from '@/components/features/library/AddToLibraryDialog';
+import { Snackbar, Alert } from '@mui/material';
 
 interface SearchResult {
   id: number | string;
@@ -47,6 +50,23 @@ export default function SearchPage() {
   const [yearRange, setYearRange] = useState<[number, number]>([1990, currentYear]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // 默认卡片视图
   const [strictFilter, setStrictFilter] = useState(true); // 默认启用严格过滤
+
+  // 详情弹窗状态
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [forceAdded, setForceAdded] = useState(false);
+
+  // 添加到收藏库弹窗状态
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [contentToAdd, setContentToAdd] = useState<any>(null);
+
+  // Toast提示
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
 
   // 加载用户设置
   useEffect(() => {
@@ -210,13 +230,39 @@ export default function SearchPage() {
     return true;
   });
 
-  const handleAddToLibrary = async (result: SearchResult) => {
-    try {
-      // TODO: 调用API添加到收藏
-      console.log('Adding to library:', result);
-    } catch (error) {
-      console.error('Failed to add:', error);
-    }
+  // 处理打开详情
+  const handleOpenDetail = (result: SearchResult) => {
+    setSelectedContent(result);
+    setDetailDialogOpen(true);
+    setForceAdded(false);
+  };
+
+  // 处理关闭详情
+  const handleCloseDetail = () => {
+    setDetailDialogOpen(false);
+    setSelectedContent(null);
+  };
+
+  // 处理添加到库
+  const handleAddToLibrary = (result: any) => {
+    setContentToAdd(result);
+    setAddDialogOpen(true);
+  };
+
+  // 添加成功后的回调
+  const handleAddSuccess = () => {
+    setToast({
+      open: true,
+      message: '添加成功！',
+      severity: 'success',
+    });
+    setAddDialogOpen(false);
+    setForceAdded(true);
+  };
+
+  // 处理关闭Toast
+  const handleCloseToast = () => {
+    setToast({ ...toast, open: false });
   };
 
   return (
@@ -298,10 +344,40 @@ export default function SearchPage() {
           <SearchResultGrid
             results={filteredResults}
             loading={loading}
-            onAdd={handleAddToLibrary}
+            onView={handleOpenDetail}
             viewMode={viewMode}
           />
         </div>
+
+        {/* 详情弹窗 */}
+        <ExternalContentDialog
+          open={detailDialogOpen}
+          content={selectedContent}
+          onClose={handleCloseDetail}
+          onAddToLibrary={handleAddToLibrary}
+          refreshTrigger={refreshTrigger}
+          forceAdded={forceAdded}
+        />
+
+        {/* 添加到收藏库弹窗 */}
+        <AddToLibraryDialog
+          open={addDialogOpen}
+          content={contentToAdd}
+          onClose={() => setAddDialogOpen(false)}
+          onSuccess={handleAddSuccess}
+        />
+
+        {/* Toast提示 */}
+        <Snackbar
+          open={toast.open}
+          autoHideDuration={3000}
+          onClose={handleCloseToast}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%' }}>
+            {toast.message}
+          </Alert>
+        </Snackbar>
       </MainLayout>
     </ProtectedRoute>
   );

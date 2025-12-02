@@ -59,8 +59,13 @@ class UserItemService:
         if item:
             # 更新现有 Item 的信息
             for key, value in kwargs.items():
-                if hasattr(item, key) and value is not None:
-                    setattr(item, key, value)
+                # 允许更新为空字符串，但不允许 None（除非是有意清空）
+                if hasattr(item, key):
+                    # 对于 description 等文本字段，允许空字符串
+                    if key in ['description', 'original_title', 'language']:
+                        setattr(item, key, value)
+                    elif value is not None:
+                        setattr(item, key, value)
             if title:
                 item.title = title
             db.commit()
@@ -69,6 +74,21 @@ class UserItemService:
             return item
 
         # 创建新 Item
+        # 如果没有 year 但有 release_date，自动提取年份
+        if 'release_date' in kwargs and kwargs['release_date'] and ('year' not in kwargs or not kwargs['year']):
+            try:
+                from datetime import datetime
+                release_date_str = kwargs['release_date']
+                # 尝试解析日期并提取年份
+                if len(release_date_str) >= 4:
+                    year = release_date_str[:4]
+                    if year.isdigit():
+                        kwargs['year'] = year
+                        kwargs['release_year'] = int(year)
+                        logger.debug(f"Auto-extracted year {year} from release_date")
+            except Exception as e:
+                logger.warning(f"Failed to extract year from release_date: {e}")
+        
         item = Item(
             external_id=external_id,
             source=source,

@@ -7,7 +7,8 @@
 'use client';
 
 import { Card, Button, Badge } from '@/components/ui';
-import { SparklesIcon, PlusIcon, InfoIcon } from 'lucide-react';
+import { SparklesIcon, PlusIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import type { RecommendationItem } from '@/stores/recommendationStore';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ interface RecommendationSectionProps {
   items: RecommendationItem[];
   onAddToLibrary?: (item: RecommendationItem) => void;
   loading?: boolean;
+  isUpdating?: boolean;
 }
 
 const typeLabels = {
@@ -29,6 +31,7 @@ export function RecommendationSection({
   items,
   onAddToLibrary,
   loading = false,
+  isUpdating = false,
 }: RecommendationSectionProps) {
   const [addedItems, setAddedItems] = useState<Set<number>>(new Set());
 
@@ -87,107 +90,125 @@ export function RecommendationSection({
         </Badge>
       </div>
 
-      {/* Grid - 分离式布局 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {items.map((item) => {
-          const isAdded = addedItems.has(item.id);
-          const poster = item.poster_url || item.backdrop_url;
+      {/* Grid - 分离式布局 with Animation */}
+      <motion.div
+        layout
+        className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 transition-opacity duration-300 ${isUpdating ? 'opacity-50' : 'opacity-100'}`}
+      >
+        <AnimatePresence mode="popLayout">
+          {items.map((item) => {
+            const isAdded = addedItems.has(item.id);
+            const poster = item.poster_url || item.backdrop_url;
 
-          return (
-            <div key={item.id} className="group cursor-pointer">
-              {/* 图片卡片 - 独立容器 */}
-              <Card variant="elevated" className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                <div className="aspect-[2/3] relative bg-gray-100 dark:bg-gray-800">
-                  {poster ? (
-                    <Image
-                      src={poster}
-                      alt={item.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">暂无封面</span>
-                    </div>
-                  )}
+            return (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{
+                  duration: 0.3,
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30
+                }}
+                className="group cursor-pointer"
+              >
+                {/* 图片卡片 - 独立容器 */}
+                <Card variant="elevated" className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                  <div className="aspect-[2/3] relative bg-gray-100 dark:bg-gray-800">
+                    {poster ? (
+                      <Image
+                        src={poster}
+                        alt={item.title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">暂无封面</span>
+                      </div>
+                    )}
 
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
-                      {/* Reason */}
-                      {item.reason && (
-                        <div className="space-y-1">
-                          <p className="text-xs text-gray-200 dark:text-gray-300">推荐理由</p>
-                          <p className="text-white text-sm line-clamp-2">{item.reason}</p>
-                        </div>
-                      )}
-
-                      {/* Match Score */}
-                      {item.match_score && (
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary-500 rounded-full"
-                              style={{ width: `${item.match_score}%` }}
-                            />
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
+                        {/* Reason */}
+                        {item.reason && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-gray-200 dark:text-gray-300">推荐理由</p>
+                            <p className="text-white text-sm line-clamp-2">{item.reason}</p>
                           </div>
-                          <span className="text-white text-xs font-medium">
-                            {item.match_score}% 匹配
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Add Button */}
-                      <Button
-                        variant={isAdded ? 'secondary' : 'primary'}
-                        size="sm"
-                        className="w-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAdd(item);
-                        }}
-                        disabled={isAdded}
-                      >
-                        {isAdded ? (
-                          <>已添加</>
-                        ) : (
-                          <>
-                            <PlusIcon className="w-4 h-4 mr-1" />
-                            添加到我的收藏
-                          </>
                         )}
-                      </Button>
+
+                        {/* Match Score */}
+                        {item.match_score && (
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary-500 rounded-full"
+                                style={{ width: `${item.match_score}%` }}
+                              />
+                            </div>
+                            <span className="text-white text-xs font-medium">
+                              {item.match_score}% 匹配
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Add Button */}
+                        <Button
+                          variant={isAdded ? 'secondary' : 'primary'}
+                          size="sm"
+                          className="w-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdd(item);
+                          }}
+                          disabled={isAdded}
+                        >
+                          {isAdded ? (
+                            <>已添加</>
+                          ) : (
+                            <>
+                              <PlusIcon className="w-4 h-4 mr-1" />
+                              添加到我的收藏
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Type Badge */}
+                    <div className="absolute top-2 left-2">
+                      <Badge variant="default" size="sm">
+                        {typeLabels[item.content_type]}
+                      </Badge>
                     </div>
                   </div>
+                </Card>
 
-                  {/* Type Badge */}
-                  <div className="absolute top-2 left-2">
-                    <Badge variant="default" size="sm">
-                      {typeLabels[item.content_type]}
-                    </Badge>
+                {/* 信息区域 - 独立容器，透明背景 */}
+                <div className="mt-2 px-1">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 leading-tight">
+                    {item.title}
+                  </h3>
+                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>{item.year || '未知'}</span>
+                    {item.rating && (
+                      <span className="text-yellow-500 font-medium">
+                        ⭐ {item.rating.toFixed(1)}
+                      </span>
+                    )}
                   </div>
                 </div>
-              </Card>
-
-              {/* 信息区域 - 独立容器，透明背景 */}
-              <div className="mt-2 px-1">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 leading-tight">
-                  {item.title}
-                </h3>
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                  <span>{item.year || '未知'}</span>
-                  {item.rating && (
-                    <span className="text-yellow-500 font-medium">
-                      ⭐ {item.rating.toFixed(1)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

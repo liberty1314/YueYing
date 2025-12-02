@@ -13,6 +13,7 @@ export { Button } from './button';
 export { Badge } from './badge';
 export { Input } from './input';
 export { Switch } from './Switch';
+export { Slider } from './Slider';
 
 // 骨架屏组件
 export {

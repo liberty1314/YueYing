@@ -14,19 +14,20 @@ import { StrategySelector } from '@/components/features/recommendations/Strategy
 import { RecommendationSection } from '@/components/features/recommendations/RecommendationSection';
 import { ExploreGrid } from '@/components/features/recommendations/ExploreGrid';
 import { Button, Badge } from '@/components/ui';
-import { RefreshCwIcon, CompassIcon, SparklesIcon } from 'lucide-react';
+import { RefreshCwIcon, CompassIcon, SparklesIcon, Loader2 } from 'lucide-react';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
 type TabType = 'for-you' | 'explore';
 
 export default function RecommendationsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('for-you');
-  
+
   const {
     strategy,
     recommendations,
     exploreItems,
     loading,
+    isUpdating,
     error,
     setStrategy,
     refreshRecommendations,
@@ -69,7 +70,7 @@ export default function RecommendationsPage() {
                 AI 驱动的个性化内容推荐
               </p>
             </div>
-            
+
             {activeTab === 'for-you' && (
               <Button
                 variant="outline"
@@ -88,10 +89,9 @@ export default function RecommendationsPage() {
               onClick={() => setActiveTab('for-you')}
               className={`
                 px-4 py-3 font-medium text-sm transition-all duration-200 border-b-2
-                ${
-                  activeTab === 'for-you'
-                    ? 'border-primary-500 text-primary-700 dark:text-primary-300'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                ${activeTab === 'for-you'
+                  ? 'border-primary-500 text-primary-700 dark:text-primary-300'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }
               `}
             >
@@ -103,15 +103,14 @@ export default function RecommendationsPage() {
                 </Badge>
               )}
             </button>
-            
+
             <button
               onClick={() => setActiveTab('explore')}
               className={`
                 px-4 py-3 font-medium text-sm transition-all duration-200 border-b-2
-                ${
-                  activeTab === 'explore'
-                    ? 'border-primary-500 text-primary-700 dark:text-primary-300'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                ${activeTab === 'explore'
+                  ? 'border-primary-500 text-primary-700 dark:text-primary-300'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }
               `}
             >
@@ -156,12 +155,20 @@ export default function RecommendationsPage() {
 
           {/* Content */}
           {activeTab === 'for-you' ? (
-            <div className="space-y-8">
+            <div className="space-y-8 relative">
+              {/* 更新中的加载指示器 */}
+              {isUpdating && (
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-md">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">更新推荐中...</span>
+                </div>
+              )}
+
               {/* Strategy Selector */}
               <StrategySelector
                 currentStrategy={strategy}
                 onStrategyChange={setStrategy}
-                disabled={loading}
+                disabled={loading || isUpdating}
               />
 
               {/* Recommendations */}
@@ -169,6 +176,7 @@ export default function RecommendationsPage() {
                 items={recommendations}
                 onAddToLibrary={handleAddToLibrary}
                 loading={loading}
+                isUpdating={isUpdating}
               />
             </div>
           ) : (

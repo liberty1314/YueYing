@@ -1,14 +1,15 @@
 /**
  * SearchResultGrid - 搜索结果网格
  * 
- * 按数据源分组展示搜索结果
+ * 使用统一的 MediaCard 组件展示搜索结果
  */
 
 'use client';
 
-import { SearchResultCard } from './SearchResultCard';
-import { Badge } from '@/components/ui';
+import { Grid } from '@mui/material';
+import MediaCard from '@/components/shared/MediaCard';
 import { PackageIcon } from 'lucide-react';
+import { normalizeMediaData } from '@/utils/mediaDataMapper';
 
 interface SearchResult {
   id: number | string;
@@ -27,48 +28,26 @@ interface SearchResult {
 interface SearchResultGridProps {
   results: SearchResult[];
   loading?: boolean;
-  onAdd?: (result: SearchResult) => void;
   onView?: (result: SearchResult) => void;
   viewMode?: 'grid' | 'list';
 }
 
-const sourceLabels = {
-  library: '你的收藏',
-  tmdb: 'TMDB',
-  bangumi: 'Bangumi',
-  google_books: 'Google Books',
-};
-
-export function SearchResultGrid({ results, loading, onAdd, onView, viewMode = 'grid' }: SearchResultGridProps) {
+export function SearchResultGrid({ results, loading, onView, viewMode = 'grid' }: SearchResultGridProps) {
   if (loading) {
     return (
-      <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' : 'space-y-4'}>
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div
-            key={i}
-            className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden animate-pulse"
-          >
-            {viewMode === 'grid' ? (
-              <>
-                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700" />
-                <div className="p-3 space-y-2">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-                </div>
-              </>
-            ) : (
-              <div className="flex gap-4 p-4">
-                <div className="w-24 h-36 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0" />
-                <div className="flex-1 space-y-3">
-                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-                </div>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <Grid key={i} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden animate-pulse">
+              <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700" />
+              <div className="p-3 space-y-2">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
               </div>
-            )}
-          </div>
+            </div>
+          </Grid>
         ))}
-      </div>
+      </Grid>
     );
   }
 
@@ -88,18 +67,24 @@ export function SearchResultGrid({ results, loading, onAdd, onView, viewMode = '
     );
   }
 
-  // 统一列表，不按来源分组
+  // 使用统一的 MediaCard 组件
   return (
-    <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' : 'space-y-3'}>
-      {results.map((result) => (
-        <SearchResultCard
-          key={`${result.source}-${result.id}`}
-          result={result}
-          onAdd={onAdd}
-          onView={onView}
-          viewMode={viewMode}
-        />
-      ))}
-    </div>
+    <Grid container spacing={{ xs: 2, md: 3 }}>
+      {results.map((result) => {
+        const normalized = normalizeMediaData(result);
+        return (
+          <Grid key={`${result.source}-${result.id}`} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+            <MediaCard
+              id={normalized.id}
+              title={normalized.title}
+              posterUrl={normalized.poster_url}
+              year={normalized.year}
+              rating={normalized.rating}
+              onClick={() => onView?.(result)}
+            />
+          </Grid>
+        );
+      })}
+    </Grid>
   );
 }

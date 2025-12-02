@@ -45,7 +45,7 @@ interface AddToLibraryParams {
   original_title?: string;
   poster_url?: string;
   backdrop_url?: string;
-  overview?: string;
+  description?: string;
   rating?: number;
   release_date?: string;
   status?: LibraryStatus;
@@ -118,8 +118,8 @@ export async function addToLibrary(
     const title = item.title || item.name || item.name_cn || '未知标题';
     const originalTitle = item.original_title || item.original_name || item.name;
 
-    // 提取简介
-    const overview = item.overview || item.summary;
+    // 提取简介（支持多种字段名）
+    const description = item.description || item.overview || item.summary;
 
     // 提取评分
     const rating = item.vote_average || item.rating?.score;
@@ -141,7 +141,7 @@ export async function addToLibrary(
       original_title: originalTitle,
       poster_url: posterUrl,
       backdrop_url: backdropUrl,
-      overview,
+      description,  // 使用 description 字段名，与后端保持一致
       rating: rating ? Math.round(rating) : undefined, // 四舍五入为整数
       release_date: releaseDate,
       status,

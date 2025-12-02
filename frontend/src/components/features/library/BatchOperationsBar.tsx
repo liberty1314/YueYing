@@ -13,10 +13,10 @@
 
 import { Button } from '@/components/ui';
 import { Badge } from '@/components/ui';
-import { 
-  CheckSquareIcon, 
-  Edit2Icon, 
-  Trash2Icon, 
+import {
+  CheckSquareIcon,
+  Edit2Icon,
+  Trash2Icon,
   DownloadIcon,
   XIcon,
   CheckIcon
@@ -45,26 +45,14 @@ export function BatchOperationsBar({
   onBatchDelete,
   onBatchExport,
 }: BatchOperationsBarProps) {
+  // 未激活时不渲染
+  if (!isActive) {
+    return null;
+  }
+
   return (
     <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
       <div className="px-6 py-3">
-        {/* 未激活状态 */}
-        {!isActive && (
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              共 {totalCount} 项
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggle}
-            >
-              <CheckSquareIcon className="w-4 h-4 mr-2" />
-              批量管理
-            </Button>
-          </div>
-        )}
-
         {/* 激活状态 */}
         {isActive && (
           <div className="flex items-center justify-between">

@@ -1,39 +1,28 @@
 /**
- * ContentCard - 内容卡片组件（重构版）
+ * ContentCard - 内容卡片组件（简化版）
  * 
- * 新增功能：
- * - 悬停预览效果
- * - AI标签展示
- * - 快捷操作菜单
- * - 观看进度条
- * - 匹配度显示
+ * 功能：
+ * - 整卡可点击，导航到详情页
+ * - 悬停时缩放和阴影效果
+ * - 状态徽章显示
+ * - 批量选择模式支持
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui';
 import { Badge } from '@/components/ui';
 import {
-  StarIcon,
-  Edit2Icon,
-  Trash2Icon,
-  EyeIcon,
-  SparklesIcon,
   PlayIcon,
   CheckIcon,
   ClockIcon,
-  MoreVerticalIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { UserItem } from '@/types';
 
 interface ContentCardProps {
   item: UserItem;
-  onView: (item: UserItem) => void;
-  onEdit: (item: UserItem) => void;
-  onDelete: (item: UserItem) => void;
-  showAITags?: boolean;
   isSelectable?: boolean;
   isSelected?: boolean;
   onSelect?: (item: UserItem) => void;
@@ -54,45 +43,58 @@ const typeEmojis = {
 
 export function ContentCard({
   item,
-  onView,
-  onEdit,
-  onDelete,
-  showAITags = true,
   isSelectable = false,
   isSelected = false,
   onSelect,
 }: ContentCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [showActions, setShowActions] = useState(false);
-
+  const router = useRouter();
   const statusInfo = statusConfig[item.status];
   const StatusIcon = statusInfo.icon;
   const coverImage = item.poster_url || item.backdrop_url;
 
-  // AI标签（模拟数据，实际应从API获取）
-  const aiTags: string[] = [];
+  // 提取年份
+  const getDisplayYear = (): string => {
+    if (item.year && String(item.year).length === 4) {
+      return String(item.year);
+    }
+    if (item.release_date) {
+      try {
+        const year = new Date(item.release_date).getFullYear();
+        if (!isNaN(year) && year > 1800 && year < 2100) {
+          return String(year);
+        }
+      } catch (e) {
+        // 解析失败
+      }
+    }
+    return '未知';
+  };
 
-  // 计算观看进度（使用progress字段）
-  const progress = 0; // 暂时禁用，等待后端字段支持
+  const displayYear = getDisplayYear();
 
-  const handleSelect = () => {
+  const handleCardClick = () => {
     if (isSelectable && onSelect) {
       onSelect(item);
+    } else {
+      router.push(`/library/${item.id}`);
     }
   };
 
   return (
-    <div className="relative group">
+    <div className="relative">
       {/* 选择框 */}
       {isSelectable && (
         <div className="absolute -top-2 -left-2 z-20">
           <button
-            onClick={handleSelect}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSelect) onSelect(item);
+            }}
             className={cn(
-              'w-6 h-6 rounded-full border-2 transition-all',
+              'w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center',
               isSelected
-                ? 'bg-primary-500 border-primary-500'
-                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-primary-500'
+                ? 'bg-blue-500 border-blue-500'
+                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-blue-500'
             )}
           >
             {isSelected && <CheckIcon className="w-4 h-4 text-white" />}
@@ -101,18 +103,16 @@ export function ContentCard({
       )}
 
       <div
-        className="group cursor-pointer"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onClick={handleCardClick}
+        className="cursor-pointer"
       >
-        {/* 图片卡片 - 独立容器，带圆角、阴影和 hover 效果 */}
+        {/* 图片卡片 */}
         <Card
           variant="elevated"
           className={cn(
-            'overflow-hidden transition-all duration-300',
-            'hover:shadow-2xl hover:-translate-y-2',
-            isHovered && 'ring-2 ring-primary',
-            isSelected && 'ring-2 ring-primary'
+            'overflow-hidden transition-all duration-300 rounded-xl',
+            'hover:scale-105 hover:shadow-lg',
+            isSelected && 'ring-2 ring-blue-500'
           )}
         >
           <div className="relative aspect-[2/3] overflow-hidden bg-gray-200 dark:bg-gray-800">
@@ -120,49 +120,11 @@ export function ContentCard({
               <img
                 src={coverImage}
                 alt={item.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="w-full h-full object-cover"
               />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-600">
                 <span className="text-5xl">{typeEmojis[item.content_type]}</span>
-              </div>
-            )}
-
-            {/* Hover 遮罩层 */}
-            {isHovered && (
-              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center transition-all duration-300 animate-fadeIn">
-                <div className="flex gap-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onView(item);
-                    }}
-                    className="p-3 rounded-full bg-white/95 hover:bg-white transition-all transform hover:scale-110 shadow-lg"
-                    title="查看详情"
-                  >
-                    <EyeIcon className="w-5 h-5 text-gray-900" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(item);
-                    }}
-                    className="p-3 rounded-full bg-white/95 hover:bg-white transition-all transform hover:scale-110 shadow-lg"
-                    title="编辑"
-                  >
-                    <Edit2Icon className="w-5 h-5 text-gray-900" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowActions(!showActions);
-                    }}
-                    className="p-3 rounded-full bg-white/95 hover:bg-white transition-all transform hover:scale-110 shadow-lg"
-                    title="更多操作"
-                  >
-                    <MoreVerticalIcon className="w-5 h-5 text-gray-900" />
-                  </button>
-                </div>
               </div>
             )}
 
@@ -173,39 +135,16 @@ export function ContentCard({
                 {statusInfo.label}
               </Badge>
             </div>
-
-            {/* AI标签 */}
-            {showAITags && aiTags.length > 0 && (
-              <div className="absolute top-2 right-2">
-                <Badge variant="default" size="sm" className="bg-gradient-to-r from-primary to-purple-500 text-white dark:text-white">
-                  <SparklesIcon className="w-3 h-3 mr-1 text-white dark:text-white" />
-                  AI推荐
-                </Badge>
-              </div>
-            )}
-
-            {/* 观看进度条 */}
-            {progress > 0 && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800/50">
-                <div
-                  className="h-full bg-primary transition-all"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            )}
           </div>
         </Card>
 
-        {/* 信息区域 - 独立容器，透明背景 */}
+        {/* 信息区域 */}
         <div className="mt-2 px-1">
-          {/* 标题 */}
           <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 text-sm leading-tight">
             {item.title}
           </h3>
-
-          {/* 元数据行 */}
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-            <span>{item.year || '未知'}</span>
+            <span>{displayYear}</span>
             {item.rating ? (
               <span className="text-yellow-500 font-medium">
                 ⭐ {item.rating.toFixed(1)}
@@ -215,42 +154,6 @@ export function ContentCard({
             )}
           </div>
         </div>
-
-        {/* 快捷操作菜单 */}
-        {showActions && (
-          <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-30 animate-fadeIn">
-            <button
-              onClick={() => {
-                onView(item);
-                setShowActions(false);
-              }}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 rounded-t-lg"
-            >
-              <EyeIcon className="w-4 h-4" />
-              查看详情
-            </button>
-            <button
-              onClick={() => {
-                onEdit(item);
-                setShowActions(false);
-              }}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Edit2Icon className="w-4 h-4" />
-              编辑记录
-            </button>
-            <button
-              onClick={() => {
-                onDelete(item);
-                setShowActions(false);
-              }}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 rounded-b-lg"
-            >
-              <Trash2Icon className="w-4 h-4" />
-              删除记录
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

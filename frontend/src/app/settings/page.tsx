@@ -113,6 +113,7 @@ export default function SettingsPage() {
     const [autoSave, setAutoSave] = useState(true);
     const [notifications, setNotifications] = useState(true);
     const [strictSearchFilter, setStrictSearchFilter] = useState(true);
+    const [defaultLibraryStatus, setDefaultLibraryStatus] = useState('want_to_watch');
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -128,9 +129,11 @@ export default function SettingsPage() {
             const data = await api.get<{
                 auto_generate_tags: boolean;
                 enable_strict_search_filter: boolean;
+                default_library_status: string;
             }>('/settings', true);
 
             setStrictSearchFilter(data.enable_strict_search_filter);
+            setDefaultLibraryStatus(data.default_library_status || 'want_to_watch');
         } catch (err) {
             if (err instanceof APIError) {
                 setError(err.detail);
@@ -152,6 +155,7 @@ export default function SettingsPage() {
                 '/settings',
                 {
                     enable_strict_search_filter: strictSearchFilter,
+                    default_library_status: defaultLibraryStatus,
                 },
                 true
             );
@@ -223,6 +227,57 @@ export default function SettingsPage() {
                     checked={strictSearchFilter}
                     onChange={setStrictSearchFilter}
                 />
+            </SettingSection>
+
+            {/* 记录页面设置 */}
+            <SettingSection title="我的记录">
+                <Box sx={{ py: 2.5, px: 3 }}>
+                    <Typography
+                        sx={{
+                            fontSize: '1rem',
+                            fontWeight: 500,
+                            color: (theme) => theme.palette.mode === 'dark' ? '#ffffff' : '#1d1d1f',
+                            mb: 0.5,
+                        }}
+                    >
+                        默认记录状态
+                    </Typography>
+                    <Typography
+                        sx={{
+                            fontSize: '0.875rem',
+                            color: (theme) => theme.palette.mode === 'dark' ? '#a0a0a0' : '#6e6e73',
+                            lineHeight: 1.5,
+                            mb: 2,
+                        }}
+                    >
+                        进入"我的记录"页面时默认显示的状态
+                    </Typography>
+                    <Box
+                        component="select"
+                        value={defaultLibraryStatus}
+                        onChange={(e: any) => setDefaultLibraryStatus(e.target.value)}
+                        sx={{
+                            width: '100%',
+                            px: 2,
+                            py: 1.5,
+                            fontSize: '0.875rem',
+                            borderRadius: '8px',
+                            border: '1px solid',
+                            borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? '#2a2a2a' : 'white',
+                            color: (theme) => theme.palette.mode === 'dark' ? '#ffffff' : '#1d1d1f',
+                            cursor: 'pointer',
+                            '&:focus': {
+                                outline: 'none',
+                                borderColor: '#0071e3',
+                            },
+                        }}
+                    >
+                        <option value="want_to_watch">想看</option>
+                        <option value="watching">在看</option>
+                        <option value="watched">看过</option>
+                    </Box>
+                </Box>
             </SettingSection>
 
             {/* 保存按钮 */}

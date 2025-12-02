@@ -10,11 +10,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, Button, Badge, Slider } from '@/components/ui';
 import { SmartSearchBar } from '@/components/features/search/SmartSearchBar';
 import {
   FilterIcon,
-  XIcon,
   StarIcon,
   TagIcon,
   SearchIcon,
@@ -22,7 +21,8 @@ import {
   TvIcon,
   ClapperboardIcon,
   BookOpenIcon,
-  BarChart3Icon
+  BarChart3Icon,
+  CheckSquareIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ItemType, ItemStatus } from '@/types';
@@ -31,8 +31,8 @@ interface FilterState {
   content_type?: ItemType;
   status?: ItemStatus;
   search?: string;
-  rating_min?: number;
-  rating_max?: number;
+  min_rating?: number;
+  max_rating?: number;
   tags?: string[];
   year_min?: number;
   year_max?: number;
@@ -44,19 +44,13 @@ interface FilterState {
 interface AdvancedFilterPanelProps {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
+  onClearFilters: () => void;
   activeTags?: string[];
+  onToggleBatchMode?: () => void;
+  batchMode?: boolean;
 }
 
 const STORAGE_KEY = 'library_filters';
-
-// 评分范围配置
-const ratingRanges: { label: string; min?: number; max?: number; color: string }[] = [
-  { label: '9-10分', min: 9, max: 10, color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-500' },
-  { label: '8-9分', min: 8, max: 9, color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-500' },
-  { label: '7-8分', min: 7, max: 8, color: 'bg-lime-100 dark:bg-lime-900/30 text-lime-700 dark:text-lime-300 border-lime-500' },
-  { label: '6-7分', min: 6, max: 7, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-500' },
-  { label: '6分以下', min: 0, max: 6, color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-500' },
-];
 
 const itemTypes: { value: ItemType; label: string; icon: typeof FilmIcon; activeColor: string }[] = [
   { value: 'movie', label: '电影', icon: FilmIcon, activeColor: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-500' },
@@ -74,7 +68,10 @@ const itemStatuses: { value: ItemStatus; label: string; color: string }[] = [
 export function AdvancedFilterPanel({
   filters,
   onFilterChange,
-  activeTags = []
+  onClearFilters,
+  activeTags = [],
+  onToggleBatchMode,
+  batchMode = false
 }: AdvancedFilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -106,27 +103,32 @@ export function AdvancedFilterPanel({
   };
 
   const handleStatusToggle = (status: ItemStatus) => {
+    // 如果点击的是当前已选中的状态，不做任何操作（强制保持选中）
+    if (filters.status === status) {
+      return;
+    }
+
+    // 切换到新的状态
     onFilterChange({
       ...filters,
-      status: filters.status === status ? undefined : status,
+      status: status,
     });
   };
 
-  const handleRatingToggle = (min?: number, max?: number) => {
-    const isActive = filters.rating_min === min && filters.rating_max === max;
+  const handleRatingChange = (value: [number, number]) => {
+    const [min, max] = value;
 
-    if (isActive) {
-      // 取消激活：清除评分筛选
+    // 如果是完整范围 (0-10)，则清除评分筛选
+    if (min === 0 && max === 10) {
       const newFilters = { ...filters };
-      delete newFilters.rating_min;
-      delete newFilters.rating_max;
+      delete newFilters.min_rating;
+      delete newFilters.max_rating;
       onFilterChange(newFilters);
     } else {
-      // 激活：设置评分范围
       onFilterChange({
         ...filters,
-        rating_min: min,
-        rating_max: max,
+        min_rating: min,
+        max_rating: max,
       });
     }
   };
@@ -144,12 +146,18 @@ export function AdvancedFilterPanel({
   };
 
   const clearFilters = () => {
-    onFilterChange({});
-    localStorage.removeItem(STORAGE_KEY);
+    // 调用传入的清除函数（会保留当前状态）
+    onClearFilters();
+
+    // 更新 localStorage，只保存 status
+    if (filters.status) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ status: filters.status }));
+    }
   };
 
+  // 计算除了 status 之外的活跃筛选条件数量
   const activeFilterCount = Object.keys(filters).filter(key =>
-    filters[key as keyof FilterState] !== undefined
+    key !== 'status' && filters[key as keyof FilterState] !== undefined
   ).length;
 
   return (
@@ -178,12 +186,38 @@ export function AdvancedFilterPanel({
 
         {isExpanded && (
           <CardContent className="space-y-6">
+            {/* 批量管理按钮 */}
+            {onToggleBatchMode && (
+              <div>
+                <Button
+                  variant={batchMode ? "primary" : "outline"}
+                  size="sm"
+                  onClick={onToggleBatchMode}
+                  className="w-full"
+                >
+                  <CheckSquareIcon className="w-4 h-4 mr-2" />
+                  {batchMode ? '退出批量管理' : '批量管理'}
+                </Button>
+              </div>
+            )}
+
             {/* 智能搜索 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                <SearchIcon className="w-4 h-4" />
-                智能搜索
-              </h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <SearchIcon className="w-4 h-4" />
+                  智能搜索
+                </h4>
+                {/* 清除按钮 - 只在有额外筛选条件时显示 */}
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                  >
+                    清除
+                  </button>
+                )}
+              </div>
               <SmartSearchBar
                 onSearch={(query) => onFilterChange({ ...filters, search: query })}
                 placeholder="搜索或描述你想看的..."
@@ -244,29 +278,20 @@ export function AdvancedFilterPanel({
 
             {/* 评分筛选 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-1.5">
                 <StarIcon className="w-4 h-4" />
-                评分
+                评分范围
               </h4>
-              <div className="flex flex-wrap gap-2">
-                {ratingRanges.map((range) => {
-                  const isActive = filters.rating_min === range.min && filters.rating_max === range.max;
-                  return (
-                    <button
-                      key={range.label}
-                      onClick={() => handleRatingToggle(range.min, range.max)}
-                      className={cn(
-                        'px-3 py-1.5 text-sm font-medium rounded-lg border-2 transition-all',
-                        isActive
-                          ? range.color
-                          : 'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
-                      )}
-                    >
-                      {range.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <Slider
+                min={0}
+                max={10}
+                step={0.5}
+                value={[
+                  filters.min_rating ?? 0,
+                  filters.max_rating ?? 10
+                ]}
+                onChange={handleRatingChange}
+              />
             </div>
 
             {/* 标签云 */}
@@ -295,21 +320,6 @@ export function AdvancedFilterPanel({
                     );
                   })}
                 </div>
-              </div>
-            )}
-
-            {/* 清除筛选 */}
-            {activeFilterCount > 0 && (
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="w-full"
-                >
-                  <XIcon className="w-4 h-4 mr-2" />
-                  清除所有筛选
-                </Button>
               </div>
             )}
           </CardContent>

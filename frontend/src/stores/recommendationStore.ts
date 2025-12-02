@@ -30,6 +30,8 @@ interface RecommendationState {
   recommendations: RecommendationItem[];
   exploreItems: RecommendationItem[];
   loading: boolean;
+  isFirstLoad: boolean; // 区分首次加载
+  isUpdating: boolean; // 策略切换更新中
   error: string | null;
 }
 
@@ -54,6 +56,8 @@ export const useRecommendationStore = create<RecommendationStore>()((set, get) =
   recommendations: [],
   exploreItems: [],
   loading: false,
+  isFirstLoad: true,
+  isUpdating: false,
   error: null,
 
   // Actions
@@ -73,10 +77,15 @@ export const useRecommendationStore = create<RecommendationStore>()((set, get) =
   clearError: () => set({ error: null }),
 
   refreshRecommendations: async () => {
-    const { strategy } = get();
+    const { strategy, isFirstLoad } = get();
 
     try {
-      set({ loading: true, error: null });
+      // 首次加载显示骨架屏，后续策略切换只显示更新状态
+      if (isFirstLoad) {
+        set({ loading: true, error: null });
+      } else {
+        set({ isUpdating: true, error: null });
+      }
 
       // 从authStore获取token
       const authStorage = typeof window !== 'undefined' ? localStorage.getItem('auth-storage') : null;
@@ -129,12 +138,15 @@ export const useRecommendationStore = create<RecommendationStore>()((set, get) =
 
       set({
         recommendations: items,
-        loading: false
+        loading: false,
+        isUpdating: false,
+        isFirstLoad: false, // 首次加载完成
       });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : '获取推荐失败',
-        loading: false
+        loading: false,
+        isUpdating: false,
       });
     }
   },

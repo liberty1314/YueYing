@@ -6,10 +6,8 @@ interface LibraryFilters {
     status?: ItemStatus;
     tags?: string[];
     search?: string;
-    rating?: {
-        min?: number;
-        max?: number;
-    };
+    min_rating?: number;
+    max_rating?: number;
 }
 
 type SortOption =
@@ -74,10 +72,12 @@ export const useLibraryStore = create<LibraryStore>()((set) => ({
         })),
 
     clearFilters: () =>
-        set({
-            filters: {},
+        set((state) => ({
+            filters: {
+                status: state.filters.status, // 保留当前状态
+            },
             page: 1,
-        }),
+        })),
 
     setSortBy: (sortBy) =>
         set({

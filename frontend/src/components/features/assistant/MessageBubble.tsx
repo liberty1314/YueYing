@@ -69,19 +69,31 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
         const codeContent = lines.slice(1).join('\n');
 
         return (
-          <div key={index} className="my-3">
-            <div className="bg-gray-900 rounded-lg overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
-                <span className="text-xs text-gray-400">{language || 'code'}</span>
+          <div key={index} className="my-4">
+            <div className="bg-slate-900 dark:bg-black rounded-xl overflow-hidden border border-slate-800 dark:border-gray-800 shadow-lg">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800 dark:bg-gray-900 border-b border-slate-700 dark:border-gray-800">
+                <span className="text-xs font-semibold text-slate-400 dark:text-gray-400 uppercase tracking-wide">
+                  {language || 'code'}
+                </span>
                 <button
                   onClick={handleCopy}
-                  className="text-xs text-gray-400 hover:text-white transition-colors"
+                  className="text-xs text-slate-400 hover:text-white transition-colors px-2 py-1 rounded-md hover:bg-slate-700 dark:hover:bg-gray-800 flex items-center gap-1.5"
                 >
-                  {isCopied ? <CheckIcon className="w-3 h-3" /> : <CopyIcon className="w-3 h-3" />}
+                  {isCopied ? (
+                    <>
+                      <CheckIcon className="w-3.5 h-3.5" />
+                      <span>已复制</span>
+                    </>
+                  ) : (
+                    <>
+                      <CopyIcon className="w-3.5 h-3.5" />
+                      <span>复制</span>
+                    </>
+                  )}
                 </button>
               </div>
               <pre className="p-4 overflow-x-auto">
-                <code className="text-sm text-gray-100 font-mono">
+                <code className="text-sm text-slate-100 dark:text-gray-100 font-mono leading-relaxed">
                   {codeContent}
                 </code>
               </pre>
@@ -105,45 +117,44 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
   };
 
   return (
-    <div className={cn('flex gap-4 mb-6', isUser && 'flex-row-reverse')}>
+    <div className={cn('flex gap-4 mb-8', isUser && 'flex-row-reverse')}>
       {/* Avatar */}
       <div className="flex-shrink-0">
         <div
           className={cn(
-            'w-10 h-10 rounded-full flex items-center justify-center',
+            'w-10 h-10 rounded-xl flex items-center justify-center shadow-md',
             isUser
-              ? 'bg-blue-600 dark:bg-blue-500 text-white'
-              : 'bg-gray-200 dark:bg-gray-700'
+              ? 'bg-gradient-to-br from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500'
+              : 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-gray-800 dark:to-gray-900'
           )}
         >
           {isUser ? (
-            <UserIcon className="w-5 h-5 text-white" />
+            <UserIcon className="w-5 h-5 text-white" strokeWidth={2} />
           ) : (
-            <SparklesIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            <SparklesIcon className="w-5 h-5 text-slate-700 dark:text-gray-300" strokeWidth={2} />
           )}
         </div>
       </div>
 
       {/* Message Content */}
       <div className={cn('flex-1 max-w-3xl', isUser && 'flex justify-end')}>
-        <Card
-          variant={isUser ? 'default' : 'elevated'}
+        <div
           className={cn(
-            'inline-block',
+            'inline-block rounded-2xl shadow-sm border transition-all duration-200',
             isUser
-              ? 'bg-blue-600 dark:bg-blue-500 text-white'
-              : 'bg-white dark:bg-gray-800'
+              ? 'bg-gradient-to-br from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white border-transparent'
+              : 'bg-white dark:bg-gray-900 border-slate-200/60 dark:border-gray-800/60'
           )}
         >
-          <div className="p-4">
+          <div className="p-5">
             {/* Role Label */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <span
                 className={cn(
-                  'text-xs font-medium',
+                  'text-xs font-semibold',
                   isUser
-                    ? 'text-white opacity-90'
-                    : 'text-gray-500 dark:text-gray-400'
+                    ? 'text-white/90'
+                    : 'text-slate-600 dark:text-gray-400'
                 )}
               >
                 {isUser ? '你' : 'AI 助手'}
@@ -152,8 +163,8 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
                 className={cn(
                   'text-xs',
                   isUser
-                    ? 'text-white opacity-75'
-                    : 'text-gray-400 dark:text-gray-500'
+                    ? 'text-white/70'
+                    : 'text-slate-400 dark:text-gray-500'
                 )}
               >
                 {new Date(message.created_at).toLocaleTimeString('zh-CN', {
@@ -166,20 +177,20 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
             {/* Content */}
             <div
               className={cn(
-                'text-sm leading-relaxed',
+                'text-[15px] leading-relaxed',
                 isUser
                   ? 'text-white'
-                  : 'text-gray-900 dark:text-white'
+                  : 'text-slate-900 dark:text-white'
               )}
             >
               {displayedContent === '' && message.role === 'assistant' ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="flex items-center gap-3 py-2">
+                  <div className="flex gap-1.5">
+                    <span className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-sm text-slate-600 dark:text-gray-400 font-medium">
                     AI 正在思考中...
                   </span>
                 </div>
@@ -187,33 +198,33 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
                 <>
                   {renderContent(displayedContent)}
                   {isStreaming && message.role === 'assistant' && displayedContent !== '' && (
-                    <span className="inline-block w-2 h-4 ml-1 bg-primary-500 animate-pulse" />
+                    <span className="inline-block w-0.5 h-5 ml-1 bg-blue-500 dark:bg-blue-400 animate-pulse" />
                   )}
                 </>
               )}
             </div>
 
             {/* Copy Button for Assistant Messages */}
-            {!isUser && !isStreaming && (
+            {!isUser && !isStreaming && displayedContent !== '' && (
               <button
                 onClick={handleCopy}
-                className="mt-3 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 transition-colors"
+                className="mt-4 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg flex items-center gap-1.5 transition-all duration-200"
               >
                 {isCopied ? (
                   <>
-                    <CheckIcon className="w-3 h-3" />
+                    <CheckIcon className="w-3.5 h-3.5" />
                     已复制
                   </>
                 ) : (
                   <>
-                    <CopyIcon className="w-3 h-3" />
-                    复制
+                    <CopyIcon className="w-3.5 h-3.5" />
+                    复制内容
                   </>
                 )}
               </button>
             )}
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

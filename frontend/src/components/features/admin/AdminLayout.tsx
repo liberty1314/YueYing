@@ -6,7 +6,8 @@
 'use client';
 
 import { ReactNode, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AdminSidebar } from './AdminSidebar';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import {
@@ -26,6 +27,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, title, description }: AdminLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading } = useAdminAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -140,10 +142,23 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content - Apple 风格页面切换动画 */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-6 max-w-7xl mx-auto">
-            {children}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                transition={{
+                  duration: 0.35,
+                  ease: [0.4, 0.0, 0.2, 1], // Apple 风格的 cubic-bezier
+                }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
 

@@ -15,7 +15,7 @@ import {
     Collapse,
 } from '@mui/material';
 import { AppleButton, AppleInput } from '@/components/ui';
-import { userItemsApi } from '@/lib/api';
+import { userItemsApi, userSettingsApi } from '@/lib/api';
 import type { ItemType, ItemStatus } from '@/types';
 import { createManualItemRequest, typeLabels, statusLabels } from '@/lib/adapters/userItemAdapter';
 
@@ -91,6 +91,19 @@ export default function QuickAddForm({ open, onClose, onSuccess }: QuickAddFormP
 
             const requestData = createManualItemRequest(cleanedData);
             await userItemsApi.create(requestData);
+
+            // 检查用户是否开启了自动生成标签
+            try {
+                const settings = await userSettingsApi.getSettings();
+                if (settings.auto_generate_tags) {
+                    // 显示 AI 生成提示（不阻塞用户操作）
+                    console.log('AI 正在后台生成标签...');
+                    // 可以使用 toast 或 snackbar 显示提示
+                }
+            } catch (err) {
+                console.error('获取用户设置失败:', err);
+            }
+
             reset();
             onSuccess();
             onClose();

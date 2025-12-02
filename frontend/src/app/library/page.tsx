@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusIcon, Film } from 'lucide-react';
+import { Film, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { userItemsApi, tagsApi } from '@/lib/api';
-import type { UserItem } from '@/types';
-import type { Tag } from '@/lib/api/tags';
+import { api } from '@/lib/apiClient';
+import type { UserItem, ItemStatus } from '@/types';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PosterGridSkeleton } from '@/components/shared/LoadingSkeletons';
@@ -20,7 +21,10 @@ export default function LibraryPage() {
     const router = useRouter();
     const [items, setItems] = useState<UserItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isFirstLoad, setIsFirstLoad] = useState(true); // 区分首次加载
+    const [isUpdating, setIsUpdating] = useState(false); // 筛选更新中
     const [error, setError] = useState('');
+    const [isInitialized, setIsInitialized] = useState(false);
 
     // Dialog states
     const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -42,7 +46,12 @@ export default function LibraryPage() {
 
     const fetchItems = async () => {
         try {
-            setLoading(true);
+            // 首次加载显示骨架屏，后续筛选只显示更新状态
+            if (isFirstLoad) {
+                setLoading(true);
+            } else {
+                setIsUpdating(true);
+            }
 
             // 转换 sortBy 格式：从 'updatedAt-desc' 转换为 'updated_at' 和 'desc'
             const [sortField, sortOrder] = sortBy.split('-');
@@ -56,10 +65,16 @@ export default function LibraryPage() {
                 page_size: pageSize,
             });
             setItems(response.items);
+
+            // 首次加载完成后，标记为非首次
+            if (isFirstLoad) {
+                setIsFirstLoad(false);
+            }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : '获取数据失败');
         } finally {
             setLoading(false);
+            setIsUpdating(false);
         }
     };
 
@@ -74,11 +89,46 @@ export default function LibraryPage() {
         }
     };
 
+    // 初始化：加载用户设置并设置默认状态
     useEffect(() => {
-        fetchItems();
-        fetchActiveTags();
+        const initializeFilters = async () => {
+            try {
+                // 如果已经有状态筛选，不覆盖
+                if (filters.status) {
+                    setIsInitialized(true);
+                    return;
+                }
+
+                // 获取用户设置
+                const settings = await api.get<{
+                    default_library_status: string;
+                }>('/settings', true);
+
+                // 设置默认状态
+                const defaultStatus = settings.default_library_status || 'want_to_watch';
+                updateFilter('status', defaultStatus as ItemStatus);
+                setIsInitialized(true);
+            } catch (err) {
+                console.error('加载用户设置失败:', err);
+                // 失败时使用默认值
+                if (!filters.status) {
+                    updateFilter('status', 'want_to_watch' as ItemStatus);
+                }
+                setIsInitialized(true);
+            }
+        };
+
+        initializeFilters();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters, sortBy, page, pageSize]);
+    }, []);
+
+    useEffect(() => {
+        if (isInitialized) {
+            fetchItems();
+            fetchActiveTags();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters, sortBy, page, pageSize, isInitialized]);
 
     const handleView = (item: UserItem) => {
         setSelectedItem(item);
@@ -144,11 +194,25 @@ export default function LibraryPage() {
             const updatePromises = Array.from(selectedItems).map(id =>
                 userItemsApi.update(id, updates as any)
             );
-            await Promise.all(updatePromises);
+            const results = await Promise.allSettled(updatePromises);
+
+            // 检查是否有失败的更新
+            const failed = results.filter(r => r.status === 'rejected');
+
+            if (failed.length > 0) {
+                console.error('部分更新失败:', failed);
+                alert(`更新失败：${failed.length} 条记录更新失败，请重试`);
+            } else {
+                console.log(`成功更新 ${selectedItems.size} 条记录`);
+            }
+
+            // 无论成功或失败，都刷新列表
             await fetchItems();
             setSelectedItems(new Set());
+            setBatchEditOpen(false);
         } catch (err) {
             console.error('批量编辑失败:', err);
+            alert('批量编辑失败，请查看控制台了解详情');
         }
     };
 
@@ -158,13 +222,32 @@ export default function LibraryPage() {
             const deletePromises = Array.from(selectedItems).map(id =>
                 userItemsApi.delete(id)
             );
-            await Promise.all(deletePromises);
+            const results = await Promise.allSettled(deletePromises);
+
+            // 检查是否有失败的删除
+            const failed = results.filter(r => r.status === 'rejected');
+
+            if (failed.length > 0) {
+                console.error('部分删除失败:', failed);
+                alert(`删除失败：${failed.length} 条记录删除失败，请重试`);
+            } else {
+                console.log(`成功删除 ${selectedItems.size} 条记录`);
+            }
+
+            // 无论成功或失败，都刷新列表
             await fetchItems();
             setSelectedItems(new Set());
             setBatchDeleteOpen(false);
+            setBatchMode(false);
         } catch (err) {
             console.error('批量删除失败:', err);
+            alert('批量删除失败，请查看控制台了解详情');
         }
+    };
+
+    // 强制刷新数据（用于添加/编辑/删除后立即更新列表）
+    const handleRefreshItems = async () => {
+        await fetchItems();
     };
 
     return (
@@ -188,20 +271,27 @@ export default function LibraryPage() {
                     <AdvancedFilterPanel
                         filters={filters}
                         onFilterChange={(newFilters) => {
-                            // 如果是清空操作，调用store的clearFilters
-                            if (Object.keys(newFilters).length === 0) {
-                                clearFilters();
-                            } else {
-                                Object.entries(newFilters).forEach(([key, value]) => {
-                                    updateFilter(key as any, value);
-                                });
-                            }
+                            // 直接更新所有传入的筛选条件
+                            Object.entries(newFilters).forEach(([key, value]) => {
+                                updateFilter(key as any, value);
+                            });
                         }}
+                        onClearFilters={clearFilters}
                         activeTags={activeTags}
+                        onToggleBatchMode={handleToggleBatchMode}
+                        batchMode={batchMode}
                     />
 
                     {/* Main Content */}
-                    <div className="flex-1 p-6">
+                    <div className="flex-1 p-6 relative">
+                        {/* 更新中的加载指示器 */}
+                        {isUpdating && (
+                            <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-md">
+                                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                                <span className="text-sm text-gray-600 dark:text-gray-400">更新中...</span>
+                            </div>
+                        )}
+
                         {loading ? (
                             <PosterGridSkeleton count={12} />
                         ) : error ? (
@@ -228,20 +318,35 @@ export default function LibraryPage() {
                                 ]}
                             />
                         ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                                {items.map((item) => (
-                                    <ContentCard
-                                        key={item.id}
-                                        item={item}
-                                        onView={handleView}
-                                        onEdit={handleEdit}
-                                        onDelete={handleDelete}
-                                        isSelectable={batchMode}
-                                        isSelected={selectedItems.has(item.id)}
-                                        onSelect={handleSelectItem}
-                                    />
-                                ))}
-                            </div>
+                            <motion.div
+                                layout
+                                className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 transition-opacity duration-300 ${isUpdating ? 'opacity-50' : 'opacity-100'}`}
+                            >
+                                <AnimatePresence mode="popLayout">
+                                    {items.map((item) => (
+                                        <motion.div
+                                            key={item.id}
+                                            layout
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.9 }}
+                                            transition={{
+                                                duration: 0.3,
+                                                type: "spring",
+                                                stiffness: 300,
+                                                damping: 30
+                                            }}
+                                        >
+                                            <ContentCard
+                                                item={item}
+                                                isSelectable={batchMode}
+                                                isSelected={selectedItems.has(item.id)}
+                                                onSelect={handleSelectItem}
+                                            />
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </motion.div>
                         )}
                     </div>
                 </div>
@@ -250,7 +355,7 @@ export default function LibraryPage() {
                 <QuickAddForm
                     open={addDialogOpen}
                     onClose={() => setAddDialogOpen(false)}
-                    onSuccess={fetchItems}
+                    onSuccess={handleRefreshItems}
                 />
 
                 <EditForm
@@ -260,7 +365,7 @@ export default function LibraryPage() {
                         setEditDialogOpen(false);
                         setSelectedItem(null);
                     }}
-                    onSuccess={fetchItems}
+                    onSuccess={handleRefreshItems}
                 />
 
                 <DeleteConfirmDialog
@@ -270,7 +375,7 @@ export default function LibraryPage() {
                         setDeleteDialogOpen(false);
                         setSelectedItem(null);
                     }}
-                    onSuccess={fetchItems}
+                    onSuccess={handleRefreshItems}
                 />
 
                 <ItemDetailDialog

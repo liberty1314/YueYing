@@ -2,6 +2,7 @@
 
 import { Box, List, ListItemButton, ListItemIcon, ListItemText, Typography, Container } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
@@ -106,8 +107,23 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                             </Box>
                         </Box>
 
-                        {/* 主内容区 */}
-                        <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
+                        {/* 主内容区 - Apple 风格页面切换动画 */}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={pathname}
+                                    initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                                    transition={{
+                                        duration: 0.35,
+                                        ease: [0.4, 0.0, 0.2, 1], // Apple 风格的 cubic-bezier
+                                    }}
+                                >
+                                    {children}
+                                </motion.div>
+                            </AnimatePresence>
+                        </Box>
                     </Box>
                 </Container>
             </Box>
