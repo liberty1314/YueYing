@@ -51,7 +51,7 @@ export interface UserItem {
     language?: string;
     metadata?: Record<string, any>;
     status: ItemStatus;
-    rating?: number; // 0-10, integer
+    rating?: number; // 0-10, float (保留一位小数)
     notes?: string;
     progress?: number; // 观看进度（第几集/第几页）
     started_at?: string;

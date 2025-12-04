@@ -43,7 +43,7 @@ class UserItemBase(BaseModel):
     
     # 用户记录
     status: WatchStatus = Field(..., description="观看状态")
-    rating: Optional[int] = Field(None, ge=0, le=10, description="评分（0-10）")
+    rating: Optional[float] = Field(None, ge=0, le=10, description="评分（0-10）")
     notes: Optional[str] = Field(None, description="笔记")
     started_at: Optional[str] = Field(None, description="开始日期")
     completed_at: Optional[str] = Field(None, description="完成日期")
@@ -61,7 +61,7 @@ class UserItemCreate(UserItemBase):
 class UserItemUpdate(BaseModel):
     """更新用户记录 Schema"""
     status: Optional[WatchStatus] = Field(None, description="观看状态")
-    rating: Optional[int] = Field(None, ge=0, le=10, description="评分（0-10）")
+    rating: Optional[float] = Field(None, ge=0, le=10, description="评分（0-10）")
     notes: Optional[str] = Field(None, description="笔记")
     started_at: Optional[str] = Field(None, description="开始日期")
     completed_at: Optional[str] = Field(None, description="完成日期")

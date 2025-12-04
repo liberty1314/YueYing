@@ -1,173 +1,117 @@
-/**
- * 首页骨架屏组件
- * 在数据加载期间显示占位符
- */
-
 'use client';
 
-import { Box, Grid, Stack, Skeleton as MuiSkeleton } from '@mui/material';
+import { Skeleton } from '@/components/ui/Skeleton';
 
-/**
- * 英雄轮播图骨架屏
- */
 export function HeroCarouselSkeleton() {
   return (
-    <MuiSkeleton
-      variant="rectangular"
-      sx={{
-        width: '100%',
-        height: { xs: '60vh', md: '70vh' },
-        borderRadius: { xs: 0, md: 4 },
-        mb: 6,
-      }}
-    />
+    <div className="relative w-full h-[75vh] md:h-[85vh] mb-12 md:mb-16 rounded-2xl md:rounded-3xl overflow-hidden">
+      <Skeleton className="absolute inset-0" />
+      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 space-y-4">
+        <Skeleton className="h-8 w-32 rounded-full" />
+        <Skeleton className="h-16 md:h-24 w-3/4 max-w-2xl" />
+        <Skeleton className="h-6 w-1/2 max-w-xl" />
+        <Skeleton className="h-20 w-full max-w-xl" />
+        <div className="flex gap-3 pt-2">
+          <Skeleton className="h-12 w-32" />
+          <Skeleton className="h-12 w-32" />
+        </div>
+      </div>
+    </div>
   );
 }
 
-/**
- * AI推荐区块骨架屏
- */
 export function AIRecommendationsSkeleton() {
   return (
-    <Box sx={{ mb: 8 }}>
-      {/* 标题 */}
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-        <MuiSkeleton variant="circular" width={32} height={32} />
-        <MuiSkeleton variant="text" width={200} height={32} />
-      </Stack>
-
-      {/* 卡片列表 */}
-      <Box sx={{ display: 'flex', gap: 2, overflowX: 'hidden' }}>
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Box key={index} sx={{ minWidth: 250, maxWidth: 250, flexShrink: 0 }}>
-            <MuiSkeleton variant="rectangular" height={375} sx={{ borderRadius: 2, mb: 2 }} />
-            <MuiSkeleton variant="text" width="80%" sx={{ mb: 1 }} />
-            <MuiSkeleton variant="rectangular" height={60} sx={{ borderRadius: 1 }} />
-          </Box>
+    <section className="mb-16 md:mb-20 px-4 md:px-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Skeleton className="w-1 h-8 rounded-full" />
+        <Skeleton className="w-8 h-8 rounded-full" />
+        <Skeleton className="h-10 w-48" />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="space-y-3">
+            <Skeleton className="aspect-[2/3] rounded-xl" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
         ))}
-      </Box>
-    </Box>
+      </div>
+    </section>
   );
 }
 
-/**
- * 热门趋势骨架屏
- */
 export function TrendingSectionSkeleton() {
   return (
-    <Box sx={{ mb: 8 }}>
-      {/* 标题和切换 */}
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <MuiSkeleton variant="circular" width={32} height={32} />
-          <MuiSkeleton variant="text" width={150} height={32} />
-        </Stack>
-        <MuiSkeleton variant="rectangular" width={200} height={40} sx={{ borderRadius: 20 }} />
-      </Stack>
-
-      {/* 内容网格 */}
-      <Grid container spacing={2}>
-        {Array.from({ length: 12 }).map((_, index) => (
-          <Grid key={index} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
-            <MuiSkeleton
-              variant="rectangular"
-              sx={{
-                width: '100%',
-                paddingTop: '150%',
-                borderRadius: 2,
-              }}
-            />
-            <Box sx={{ p: 1.5 }}>
-              <MuiSkeleton variant="text" width="100%" />
-              <MuiSkeleton variant="text" width="40%" />
-            </Box>
-          </Grid>
+    <section className="mb-16 md:mb-20 px-4 md:px-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-1 h-8 rounded-full" />
+          <Skeleton className="w-8 h-8 rounded-full" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <Skeleton className="h-10 w-64 rounded-full" />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="space-y-3">
+            <Skeleton className="aspect-[2/3] rounded-xl" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
         ))}
-      </Grid>
-    </Box>
+      </div>
+    </section>
   );
 }
 
-/**
- * 番剧日历骨架屏
- */
 export function AnimeTimelineSkeleton() {
   return (
-    <Box sx={{ mb: 8 }}>
-      {/* 标题 */}
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-        <MuiSkeleton variant="circular" width={32} height={32} />
-        <MuiSkeleton variant="text" width={150} height={32} />
-        <MuiSkeleton variant="text" width={80} height={24} />
-      </Stack>
-
-      {/* 周几选择器 */}
-      <Box sx={{ mb: 3 }}>
-        <Stack direction="row" spacing={2}>
-          {Array.from({ length: 7 }).map((_, index) => (
-            <MuiSkeleton key={index} variant="rectangular" width={80} height={60} />
-          ))}
-        </Stack>
-      </Box>
-
-      {/* 番剧列表 */}
-      <Grid container spacing={2}>
-        {Array.from({ length: 12 }).map((_, index) => (
-          <Grid key={index} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
-            <MuiSkeleton
-              variant="rectangular"
-              sx={{
-                width: '100%',
-                paddingTop: '140%',
-                borderRadius: 2,
-              }}
-            />
-            <Box sx={{ p: 1.5 }}>
-              <MuiSkeleton variant="text" width="100%" />
-              <MuiSkeleton variant="text" width="40%" />
-            </Box>
-          </Grid>
+    <section className="mb-16 md:mb-20 px-4 md:px-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Skeleton className="w-1 h-8 rounded-full" />
+        <Skeleton className="w-8 h-8 rounded-full" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      <div className="mb-6 flex gap-2 overflow-x-auto">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-20 rounded-xl flex-shrink-0" />
         ))}
-      </Grid>
-    </Box>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="space-y-3">
+            <Skeleton className="aspect-[2/3] rounded-xl" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
-/**
- * 分类推荐骨架屏
- */
 export function CategoryRecommendationsSkeleton() {
-  const renderSection = () => (
-    <Box sx={{ mb: 8 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-        <MuiSkeleton variant="circular" width={32} height={32} />
-        <MuiSkeleton variant="text" width={180} height={32} />
-      </Stack>
-      <Grid container spacing={2}>
-        {Array.from({ length: 12 }).map((_, index) => (
-          <Grid key={index} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
-            <MuiSkeleton
-              variant="rectangular"
-              sx={{
-                width: '100%',
-                paddingTop: '150%',
-                borderRadius: 2,
-              }}
-            />
-            <Box sx={{ p: 1.5 }}>
-              <MuiSkeleton variant="text" width="100%" />
-              <MuiSkeleton variant="text" width="40%" />
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
-  );
-
   return (
     <>
-      {renderSection()}
-      {renderSection()}
+      {Array.from({ length: 2 }).map((_, sectionIndex) => (
+        <section key={sectionIndex} className="mb-16 md:mb-20 px-4 md:px-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Skeleton className="w-1 h-8 rounded-full" />
+            <Skeleton className="w-8 h-8 rounded-full" />
+            <Skeleton className="h-10 w-40" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="aspect-[2/3] rounded-xl" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </>
   );
 }

@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Box, IconButton, Typography, Stack, Chip } from '@mui/material';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import AddIcon from '@mui/icons-material/Add';
-import { AppleButton } from '@/components/ui';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Play, Plus, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface CarouselItem {
   id: number;
@@ -64,284 +62,130 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
       : '/placeholder.svg';
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        width: '100%',
-        height: { xs: '75vh', md: '85vh' },
-        overflow: 'hidden',
-        mb: { xs: 8, md: 12 },
-        borderRadius: { xs: 3, md: 4 },
-      }}
-    >
-      {/* 背景图片 */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundImage: `url(${imageUrl})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          borderRadius: { xs: 3, md: 4 },
-          transition: 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            borderRadius: { xs: 3, md: 4 },
-            background: (theme) =>
-              theme.palette.mode === 'dark'
-                ? 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.95) 100%)'
-                : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.85) 100%)',
-          },
-        }}
-      />
+    <div className="relative w-full h-[75vh] md:h-[85vh] overflow-hidden mb-12 md:mb-16 rounded-2xl md:rounded-3xl">
+      {/* 背景图片层 - 带动画切换 */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+          className="absolute inset-0"
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-center rounded-2xl md:rounded-3xl"
+            style={{ backgroundImage: `url(${imageUrl})` }}
+          />
+          {/* 渐变遮罩 - 从透明到深色 */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/20 rounded-2xl md:rounded-3xl" />
+        </motion.div>
+      </AnimatePresence>
 
       {/* 内容区域 */}
-      <Box
-        sx={{
-          position: 'relative',
-          zIndex: 1,
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          p: { xs: 4, md: 8 },
-          maxWidth: 1400,
-          mx: 'auto',
-        }}
-      >
-        <Stack spacing={{ xs: 2, md: 3 }} sx={{ maxWidth: { xs: '100%', md: 700 } }}>
+      <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-12 max-w-7xl mx-auto">
+        <motion.div
+          key={`content-${currentIndex}`}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
+          className="max-w-2xl space-y-4 md:space-y-6"
+        >
           {/* 类型标签 */}
           {currentItem.media_type && (
-            <Chip
-              label={currentItem.media_type === 'movie' ? '电影' : '剧集'}
-              size="small"
-              sx={{
-                width: 'fit-content',
-                bgcolor: 'rgba(255,255,255,0.15)',
-                color: 'white',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                fontWeight: 500,
-                fontSize: '0.75rem',
-                letterSpacing: '0.5px',
-              }}
-            />
+            <Badge className="w-fit bg-white/15 text-white border-white/20 backdrop-blur-md font-medium text-xs tracking-wide">
+              {currentItem.media_type === 'movie' ? '电影' : '剧集'}
+            </Badge>
           )}
 
           {/* 标题 */}
-          <Typography
-            variant="h1"
-            sx={{
-              color: 'white',
-              fontWeight: 700,
-              fontSize: { xs: '2.5rem', md: '4rem', lg: '4.5rem' },
-              lineHeight: 1.1,
-              letterSpacing: '-0.02em',
-              textShadow: '0 4px 20px rgba(0,0,0,0.5)',
-            }}
-          >
+          <h1 className="text-white font-bold text-4xl md:text-6xl lg:text-7xl leading-tight tracking-tight drop-shadow-2xl">
             {title}
-          </Typography>
+          </h1>
 
           {/* 评分和类型 */}
-          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+          <div className="flex items-center gap-4 flex-wrap">
             {currentItem.vote_average && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  bgcolor: 'rgba(255,255,255,0.15)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 2,
-                }}
-              >
-                <Typography variant="body2" sx={{ color: '#fbbf24', fontWeight: 600 }}>
-                  ⭐
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 backdrop-blur-md border border-white/20">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                <span className="text-white font-semibold text-sm">
                   {currentItem.vote_average.toFixed(1)}
-                </Typography>
-              </Box>
+                </span>
+              </div>
             )}
             {currentItem.genres && currentItem.genres.length > 0 && (
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'rgba(255,255,255,0.85)',
-                  fontWeight: 400,
-                  fontSize: '0.95rem',
-                }}
-              >
+              <span className="text-white/85 text-sm md:text-base">
                 {currentItem.genres.slice(0, 3).join(' · ')}
-              </Typography>
+              </span>
             )}
-          </Stack>
+          </div>
 
           {/* 简介 */}
-          <Typography
-            variant="body1"
-            sx={{
-              color: 'rgba(255,255,255,0.85)',
-              fontSize: { xs: '0.95rem', md: '1.05rem' },
-              lineHeight: 1.7,
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              maxWidth: 600,
-            }}
-          >
+          <p className="text-white/85 text-sm md:text-base leading-relaxed line-clamp-3 max-w-xl">
             {currentItem.overview}
-          </Typography>
+          </p>
 
           {/* 操作按钮 */}
-          <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-            <AppleButton
-              variant="primary"
-              startIcon={<PlayArrowIcon />}
+          <div className="flex gap-3 pt-2">
+            <Button
               onClick={() => onViewDetail?.(currentItem)}
-              sx={{
-                bgcolor: 'white',
-                color: 'black',
-                px: 3,
-                py: 1.5,
-                fontSize: '1rem',
-                fontWeight: 600,
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.92)',
-                  transform: 'scale(1.02)',
-                },
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
+              size="lg"
+              className="bg-white text-black hover:bg-white/90 font-semibold px-6 shadow-xl hover:scale-105 transition-transform"
             >
+              <Play className="w-5 h-5 mr-2" />
               查看详情
-            </AppleButton>
-            <AppleButton
-              variant="ghost"
-              startIcon={<AddIcon />}
+            </Button>
+            <Button
               onClick={() => onAddToLibrary?.(currentItem)}
-              sx={{
-                borderColor: 'rgba(255,255,255,0.3)',
-                color: 'white',
-                bgcolor: 'rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(20px)',
-                px: 3,
-                py: 1.5,
-                fontSize: '1rem',
-                fontWeight: 600,
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.15)',
-                  borderColor: 'rgba(255,255,255,0.5)',
-                  transform: 'scale(1.02)',
-                },
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
+              size="lg"
+              variant="outline"
+              className="border-white/30 text-white bg-white/10 backdrop-blur-md hover:bg-white/20 hover:border-white/50 font-semibold px-6 hover:scale-105 transition-transform"
             >
+              <Plus className="w-5 h-5 mr-2" />
               快速添加
-            </AppleButton>
-          </Stack>
-        </Stack>
-      </Box>
+            </Button>
+          </div>
+        </motion.div>
+      </div>
 
       {/* 导航按钮 */}
       {items.length > 1 && (
         <>
-          <IconButton
+          <button
             onClick={handlePrev}
-            sx={{
-              position: 'absolute',
-              left: { xs: 16, md: 32 },
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 2,
-              bgcolor: 'rgba(255,255,255,0.1)',
-              color: 'white',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              width: 48,
-              height: 48,
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.2)',
-                transform: 'translateY(-50%) scale(1.05)',
-              },
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:scale-110 transition-all duration-200 flex items-center justify-center"
           >
-            <ChevronLeftIcon sx={{ fontSize: 28 }} />
-          </IconButton>
-          <IconButton
+            <ChevronLeft className="w-7 h-7" />
+          </button>
+          <button
             onClick={handleNext}
-            sx={{
-              position: 'absolute',
-              right: { xs: 16, md: 32 },
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 2,
-              bgcolor: 'rgba(255,255,255,0.1)',
-              color: 'white',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              width: 48,
-              height: 48,
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.2)',
-                transform: 'translateY(-50%) scale(1.05)',
-              },
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:scale-110 transition-all duration-200 flex items-center justify-center"
           >
-            <ChevronRightIcon sx={{ fontSize: 28 }} />
-          </IconButton>
+            <ChevronRight className="w-7 h-7" />
+          </button>
         </>
       )}
 
       {/* 指示器 */}
       {items.length > 1 && (
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            position: 'absolute',
-            bottom: { xs: 24, md: 32 },
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 2,
-          }}
-        >
+        <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {items.map((_, index) => (
-            <Box
+            <motion.button
               key={index}
               onClick={() => {
                 setCurrentIndex(index);
                 setIsAutoPlaying(false);
               }}
-              sx={{
+              className="h-2 rounded-full bg-white/40 hover:bg-white/70 cursor-pointer transition-all duration-300"
+              animate={{
                 width: currentIndex === index ? 32 : 8,
-                height: 8,
-                borderRadius: 4,
-                bgcolor: currentIndex === index ? 'white' : 'rgba(255,255,255,0.4)',
-                cursor: 'pointer',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  bgcolor: currentIndex === index ? 'white' : 'rgba(255,255,255,0.7)',
-                },
+                backgroundColor: currentIndex === index ? 'rgb(255 255 255)' : 'rgb(255 255 255 / 0.4)',
               }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
             />
           ))}
-        </Stack>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }

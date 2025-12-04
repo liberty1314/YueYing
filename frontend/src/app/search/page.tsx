@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui';
 import { SearchIcon } from 'lucide-react';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { api, APIError } from '@/lib/apiClient';
-import ExternalContentDialog from '@/components/features/detail/ExternalContentDialog';
+import ResourceDetailModal from '@/components/features/detail/ResourceDetailModal';
 import AddToLibraryDialog from '@/components/features/library/AddToLibraryDialog';
 import { Snackbar, Alert } from '@mui/material';
 
@@ -350,7 +350,7 @@ export default function SearchPage() {
         </div>
 
         {/* 详情弹窗 */}
-        <ExternalContentDialog
+        <ResourceDetailModal
           open={detailDialogOpen}
           content={selectedContent}
           onClose={handleCloseDetail}

@@ -1,5 +1,5 @@
 /**
- * 首页 - 重新设计版
+ * 首页 - Netflix/Disney+ 级别的现代化设计
  * 
  * 展示今日热门、AI推荐、热门趋势、番剧日历和分类推荐
  */
@@ -22,10 +22,9 @@ import {
   CategoryRecommendationsSkeleton,
 } from '@/components/features/home';
 import { ErrorDisplay } from '@/components/ui';
-import ExternalContentDialog from '@/components/features/detail/ExternalContentDialog';
+import { ResourceDetailModal } from '@/components/features/detail';
 import AddToLibraryDialog from '@/components/features/library/AddToLibraryDialog';
 import { api, CachePresets } from '@/lib/apiClient';
-import { Box, Snackbar, Alert } from '@mui/material';
 
 export default function HomePage() {
   const router = useRouter();
@@ -49,17 +48,9 @@ export default function HomePage() {
   const [popularMovies, setPopularMovies] = useState<any[]>([]);
   const [popularTvShows, setPopularTvShows] = useState<any[]>([]);
 
-  // Toast提示
-  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
-    open: false,
-    message: '',
-    severity: 'info',
-  });
-
   // 详情弹窗
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<any>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // 用于触发详情对话框刷新状态
   const [forceAdded, setForceAdded] = useState(false); // 强制设置为已添加状态
 
   // 添加到收藏库弹窗
@@ -91,20 +82,10 @@ export default function HomePage() {
 
   // 添加成功后的回调
   const handleAddSuccess = () => {
-    setToast({
-      open: true,
-      message: '添加成功！',
-      severity: 'success',
-    });
     // 关闭添加对话框
     setAddDialogOpen(false);
     // 直接设置为已添加状态，不依赖后端检查
     setForceAdded(true);
-  };
-
-  // 处理关闭Toast
-  const handleCloseToast = () => {
-    setToast({ ...toast, open: false });
   };
 
   const loadHomeData = async () => {
@@ -184,13 +165,13 @@ export default function HomePage() {
   if (loading) {
     return (
       <MainLayout>
-        <Box sx={{ width: '100%' }}>
+        <div className="w-full">
           <HeroCarouselSkeleton />
           <AIRecommendationsSkeleton />
           <TrendingSectionSkeleton />
           <AnimeTimelineSkeleton />
           <CategoryRecommendationsSkeleton />
-        </Box>
+        </div>
       </MainLayout>
     );
   }
@@ -209,7 +190,7 @@ export default function HomePage() {
 
   return (
     <MainLayout>
-      <Box sx={{ width: '100%' }}>
+      <div className="w-full">
         {/* 英雄轮播图 - 今日热门前5条 */}
         <HeroCarousel
           items={heroItems}
@@ -247,15 +228,14 @@ export default function HomePage() {
           onMovieClick={(movie) => handleOpenDetail({ ...movie, media_type: 'movie' })}
           onTvShowClick={(tvShow) => handleOpenDetail({ ...tvShow, media_type: 'tv' })}
         />
-      </Box>
+      </div>
 
       {/* 详情弹窗 */}
-      <ExternalContentDialog
+      <ResourceDetailModal
         open={detailDialogOpen}
         content={selectedContent}
         onClose={handleCloseDetail}
         onAddToLibrary={handleAddToLibrary}
-        refreshTrigger={refreshTrigger}
         forceAdded={forceAdded}
       />
 
@@ -266,18 +246,6 @@ export default function HomePage() {
         onClose={() => setAddDialogOpen(false)}
         onSuccess={handleAddSuccess}
       />
-
-      {/* Toast提示 */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={3000}
-        onClose={handleCloseToast}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%' }}>
-          {toast.message}
-        </Alert>
-      </Snackbar>
     </MainLayout>
   );
 }

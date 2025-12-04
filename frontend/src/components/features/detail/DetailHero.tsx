@@ -43,7 +43,7 @@ export function DetailHero({
   return (
     <div className="relative -mt-8 -mx-4 sm:-mx-6 lg:-mx-8">
       {/* Backdrop Image */}
-      <div className="relative h-[500px] bg-gray-900">
+      <div className="relative h-[500px] bg-muted dark:bg-gray-900">
         {backdropUrl ? (
           <>
             <Image
@@ -54,17 +54,17 @@ export function DetailHero({
               priority
               sizes="100vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/70 to-transparent dark:from-black dark:via-black/50" />
           </>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
+          <div className="absolute inset-0 bg-gradient-to-br from-muted to-card dark:from-gray-800 dark:to-gray-900" />
         )}
 
         {/* Content */}
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end h-full pb-12 gap-8">
             {/* Poster */}
-            <div className="flex-shrink-0 w-64 h-96 relative bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
+            <div className="flex-shrink-0 w-64 h-96 relative bg-muted rounded-xl overflow-hidden shadow-2xl dark:bg-gray-800">
               {posterUrl ? (
                 <Image
                   src={posterUrl}
@@ -76,18 +76,18 @@ export function DetailHero({
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-gray-500 text-sm">暂无海报</span>
+                  <span className="text-muted-foreground text-sm">暂无海报</span>
                 </div>
               )}
             </div>
 
             {/* Info */}
-            <div className="flex-1 text-white space-y-4 pb-4">
+            <div className="flex-1 space-y-4 pb-4">
               {/* Title */}
               <div>
-                <h1 className="text-4xl font-bold mb-2">{title}</h1>
+                <h1 className="text-4xl font-bold mb-2 text-foreground dark:text-white">{title}</h1>
                 {originalTitle && originalTitle !== title && (
-                  <p className="text-xl text-gray-200 dark:text-gray-300">{originalTitle}</p>
+                  <p className="text-xl text-muted-foreground dark:text-gray-200">{originalTitle}</p>
                 )}
               </div>
 
@@ -97,19 +97,19 @@ export function DetailHero({
                   {typeLabels[contentType]}
                 </Badge>
                 {year && (
-                  <div className="flex items-center gap-1.5 text-gray-200 dark:text-gray-300">
+                  <div className="flex items-center gap-1.5 text-muted-foreground dark:text-gray-200">
                     <CalendarIcon className="w-4 h-4" />
                     <span>{year}</span>
                   </div>
                 )}
                 {rating && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 text-foreground dark:text-white">
                     <StarIcon className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                     <span className="text-lg font-semibold">{rating.toFixed(1)}</span>
                   </div>
                 )}
                 {runtime && (
-                  <div className="flex items-center gap-1.5 text-gray-200 dark:text-gray-300">
+                  <div className="flex items-center gap-1.5 text-muted-foreground dark:text-gray-200">
                     <ClockIcon className="w-4 h-4" />
                     <span>{runtime} 分钟</span>
                   </div>
@@ -120,7 +120,7 @@ export function DetailHero({
               {genres.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {genres.map((genre) => (
-                    <Badge key={genre} variant="outline" size="sm" className="text-white border-white/30">
+                    <Badge key={genre} variant="outline" size="sm" className="border-border dark:text-white dark:border-white/30">
                       {genre}
                     </Badge>
                   ))}

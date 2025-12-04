@@ -1,14 +1,15 @@
 /**
  * MediaCard - 统一的媒体卡片组件
  * 
- * 基于首页设计风格，适用于首页、搜索页和我的记录页
- * 使用 Apple 风格的分离式布局：图片卡片 + 信息区域
+ * Netflix/Disney+ 级别的现代化卡片设计
+ * 使用 Tailwind CSS + Framer Motion
  */
 
 'use client';
 
-import { Box, Typography } from '@mui/material';
-import { AppleCard } from '@/components/ui';
+import { motion } from 'framer-motion';
+import { Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MediaCardProps {
     id: number | string;
@@ -31,98 +32,53 @@ export default function MediaCard({
     const imageUrl = posterUrl || '/placeholder.svg';
 
     return (
-        <Box
+        <motion.div
             onClick={onClick}
-            className={className}
-            sx={{
-                cursor: 'pointer',
-                '&:hover .image-card': {
-                    transform: 'translateY(-8px)',
-                },
-                '&:hover img': {
-                    transform: 'scale(1.08)',
-                },
-            }}
+            className={cn('group cursor-pointer', className)}
+            whileHover={{ y: -8 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         >
-            {/* 图片卡片 - 独立容器 */}
-            <AppleCard
-                variant="elevated"
-                className="image-card"
-                sx={{
-                    overflow: 'hidden',
-                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                    borderRadius: 1.5,
-                }}
-            >
-                <Box
-                    sx={{
-                        position: 'relative',
-                        paddingTop: '150%',
-                        overflow: 'hidden',
-                        bgcolor: 'grey.100',
-                    }}
-                >
-                    <Box
-                        component="img"
+            {/* 图片容器 */}
+            <div className="relative overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800 shadow-lg group-hover:shadow-2xl transition-shadow duration-300">
+                {/* 宽高比容器 */}
+                <div className="relative aspect-[2/3] overflow-hidden">
+                    <motion.img
                         src={imageUrl}
                         alt={title}
-                        sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                        }}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        whileHover={{ scale: 1.08 }}
+                        transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
                         onError={(e) => {
                             e.currentTarget.src = '/placeholder.svg';
                         }}
                     />
-                </Box>
-            </AppleCard>
 
-            {/* 信息区域 - 独立容器，透明背景 */}
-            <Box sx={{ mt: 1.5, px: 0.5 }}>
-                <Typography
-                    variant="body2"
-                    sx={{
-                        fontWeight: 600,
-                        fontSize: '0.9rem',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        minHeight: '2.6em',
-                        lineHeight: 1.3,
-                        mb: 0.5,
-                    }}
-                >
-                    {title}
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontSize: '0.8rem' }}
-                    >
-                        {year || '未知'}
-                    </Typography>
+                    {/* 评分标签 - 绝对定位在右上角 */}
                     {rating && (
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: '#fbbf24',
-                                fontWeight: 600,
-                                fontSize: '0.8rem',
-                            }}
-                        >
-                            ⭐ {typeof rating === 'number' ? rating.toFixed(1) : rating}
-                        </Typography>
+                        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-md border border-white/20">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            <span className="text-xs font-semibold text-white">
+                                {typeof rating === 'number' ? rating.toFixed(1) : rating}
+                            </span>
+                        </div>
                     )}
-                </Box>
-            </Box>
-        </Box>
+
+                    {/* Hover 遮罩层 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+            </div>
+
+            {/* 信息区域 */}
+            <div className="mt-3 px-1">
+                <h3 className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem] mb-1.5 text-slate-900 dark:text-slate-100">
+                    {title}
+                </h3>
+                <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 dark:text-slate-400">
+                        {year || '未知'}
+                    </span>
+                </div>
+            </div>
+        </motion.div>
     );
 }

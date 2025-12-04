@@ -15,6 +15,26 @@ export { Input } from './input';
 export { Switch } from './Switch';
 export { Slider } from './Slider';
 
+// Dialog 组件
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from './dialog';
+
+// Separator 组件
+export { Separator } from './separator';
+
+// ScrollArea 组件
+export { ScrollArea, ScrollBar } from './scroll-area';
+
 // 骨架屏组件
 export {
   Skeleton,

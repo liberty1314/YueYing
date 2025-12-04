@@ -1,9 +1,8 @@
 'use client';
 
-import { Box, Typography, Stack, Grid } from '@mui/material';
+import { motion } from 'framer-motion';
+import { Film, Tv } from 'lucide-react';
 import MediaCard from '@/components/shared/MediaCard';
-import MovieIcon from '@mui/icons-material/Movie';
-import TvIcon from '@mui/icons-material/Tv';
 import { normalizeMediaData } from '@/utils/mediaDataMapper';
 
 interface MediaItem {
@@ -33,6 +32,7 @@ export default function CategoryRecommendations({
     items: MediaItem[],
     title: string,
     icon: React.ReactNode,
+    iconColor: string,
     onItemClick?: (item: MediaItem) => void
   ) => {
     if (!items || items.length === 0) {
@@ -40,28 +40,28 @@ export default function CategoryRecommendations({
     }
 
     return (
-      <Box sx={{ mb: { xs: 10, md: 14 }, px: { xs: 2, md: 4 } }}>
+      <section className="mb-16 md:mb-20 px-4 md:px-6">
         {/* 标题 */}
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 4 }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className={`w-1 h-8 bg-gradient-to-b ${iconColor} rounded-full`} />
           {icon}
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 700,
-              fontSize: { xs: '1.75rem', md: '2.25rem' },
-              letterSpacing: '-0.02em',
-            }}
-          >
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             {title}
-          </Typography>
-        </Stack>
+          </h2>
+        </div>
 
         {/* 内容网格 */}
-        <Grid container spacing={{ xs: 2, md: 3 }}>
-          {items.slice(0, 12).map((item) => {
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+          {items.slice(0, 12).map((item, index) => {
             const normalized = normalizeMediaData(item);
             return (
-              <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+              >
                 <MediaCard
                   id={normalized.id}
                   title={normalized.title}
@@ -70,11 +70,11 @@ export default function CategoryRecommendations({
                   rating={normalized.rating}
                   onClick={() => onItemClick?.(item)}
                 />
-              </Grid>
+              </motion.div>
             );
           })}
-        </Grid>
-      </Box>
+        </div>
+      </section>
     );
   };
 
@@ -84,7 +84,8 @@ export default function CategoryRecommendations({
       {renderMediaGrid(
         movies,
         '热门电影推荐',
-        <MovieIcon sx={{ fontSize: { xs: 28, md: 32 }, color: 'primary.main' }} />,
+        <Film className="w-7 h-7 md:w-8 md:h-8 text-blue-500" />,
+        'from-blue-500 to-cyan-500',
         onMovieClick
       )}
 
@@ -92,7 +93,8 @@ export default function CategoryRecommendations({
       {renderMediaGrid(
         tvShows,
         '热门剧集推荐',
-        <TvIcon sx={{ fontSize: { xs: 28, md: 32 }, color: 'primary.main' }} />,
+        <Tv className="w-7 h-7 md:w-8 md:h-8 text-emerald-500" />,
+        'from-emerald-500 to-teal-500',
         onTvShowClick
       )}
     </>

@@ -94,7 +94,7 @@ class RecentActivityItem(BaseModel):
     content_type: str = Field(..., description="内容类型")
     poster_url: Optional[str] = Field(None, description="海报URL")
     status: str = Field(..., description="观看状态")
-    rating: Optional[int] = Field(None, description="评分")
+    rating: Optional[float] = Field(None, description="评分")
     updated_at: datetime = Field(..., description="更新时间")
     
     class Config:

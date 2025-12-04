@@ -42,7 +42,7 @@ class UserItem(BaseModel):
         Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False, index=True, comment="条目ID"
     )
     status = Column(String(50), nullable=False, default="want_to_watch", index=True, comment="观看状态")
-    rating = Column(Integer, nullable=True, comment="个人评分(0-10)")
+    rating = Column(Float, nullable=True, comment="个人评分(0-10)")
     notes = Column(Text, nullable=True, comment="个人笔记")
     
     # 日期字段

@@ -142,7 +142,7 @@ export async function addToLibrary(
       poster_url: posterUrl,
       backdrop_url: backdropUrl,
       description,  // 使用 description 字段名，与后端保持一致
-      rating: rating ? Math.round(rating) : undefined, // 四舍五入为整数
+      rating: rating,
       release_date: releaseDate,
       status,
     };
