@@ -166,7 +166,13 @@ export function AdvancedFilterPanel({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <FilterIcon className="w-5 h-5" />
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                aria-label={isExpanded ? '收起筛选器' : '展开筛选器'}
+              >
+                <FilterIcon className="w-5 h-5" />
+              </button>
               筛选器
               {activeFilterCount > 0 && (
                 <Badge variant="primary" size="sm">
@@ -174,13 +180,14 @@ export function AdvancedFilterPanel({
                 </Badge>
               )}
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              {isExpanded ? '收起' : '展开'}
-            </Button>
+            {activeFilterCount > 0 && (
+              <button
+                onClick={clearFilters}
+                className="text-sm text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 cursor-pointer transition-colors font-medium"
+              >
+                清除筛选
+              </button>
+            )}
           </div>
         </CardHeader>
 
@@ -203,21 +210,10 @@ export function AdvancedFilterPanel({
 
             {/* 智能搜索 */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                  <SearchIcon className="w-4 h-4" />
-                  智能搜索
-                </h4>
-                {/* 清除按钮 - 只在有额外筛选条件时显示 */}
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 cursor-pointer transition-colors"
-                  >
-                    清除
-                  </button>
-                )}
-              </div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+                <SearchIcon className="w-4 h-4" />
+                智能搜索
+              </h4>
               <SmartSearchBar
                 onSearch={(query) => onFilterChange({ ...filters, search: query })}
                 placeholder="搜索或描述你想看的..."

@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Play, Plus, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface CarouselItem {
@@ -39,15 +38,7 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
     return () => clearInterval(interval);
   }, [isAutoPlaying, items.length]);
 
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
-    setIsAutoPlaying(false);
-  };
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % items.length);
-    setIsAutoPlaying(false);
-  };
 
   if (!items || items.length === 0) {
     return null;
@@ -62,15 +53,18 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
       : '/placeholder.svg';
 
   return (
-    <div className="relative w-full h-[75vh] md:h-[85vh] overflow-hidden mb-12 md:mb-16 rounded-2xl md:rounded-3xl">
+    <div
+      onClick={() => onViewDetail?.(currentItem)}
+      className="relative w-full h-[75vh] md:h-[85vh] overflow-hidden mb-12 md:mb-16 rounded-2xl md:rounded-3xl bg-black cursor-pointer group"
+    >
       {/* 背景图片层 - 带动画切换 */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
           key={currentIndex}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           className="absolute inset-0"
         >
           <div
@@ -124,47 +118,8 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
           <p className="text-white/85 text-sm md:text-base leading-relaxed line-clamp-3 max-w-xl">
             {currentItem.overview}
           </p>
-
-          {/* 操作按钮 */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              onClick={() => onViewDetail?.(currentItem)}
-              size="lg"
-              className="bg-white text-black hover:bg-white/90 font-semibold px-6 shadow-xl hover:scale-105 transition-transform"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              查看详情
-            </Button>
-            <Button
-              onClick={() => onAddToLibrary?.(currentItem)}
-              size="lg"
-              variant="outline"
-              className="border-white/30 text-white bg-white/10 backdrop-blur-md hover:bg-white/20 hover:border-white/50 font-semibold px-6 hover:scale-105 transition-transform"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              快速添加
-            </Button>
-          </div>
         </motion.div>
       </div>
-
-      {/* 导航按钮 */}
-      {items.length > 1 && (
-        <>
-          <button
-            onClick={handlePrev}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:scale-110 transition-all duration-200 flex items-center justify-center"
-          >
-            <ChevronLeft className="w-7 h-7" />
-          </button>
-          <button
-            onClick={handleNext}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:scale-110 transition-all duration-200 flex items-center justify-center"
-          >
-            <ChevronRight className="w-7 h-7" />
-          </button>
-        </>
-      )}
 
       {/* 指示器 */}
       {items.length > 1 && (
@@ -172,7 +127,8 @@ export default function HeroCarousel({ items, onAddToLibrary, onViewDetail }: He
           {items.map((_, index) => (
             <motion.button
               key={index}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setCurrentIndex(index);
                 setIsAutoPlaying(false);
               }}

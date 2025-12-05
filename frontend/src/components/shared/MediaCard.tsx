@@ -70,7 +70,7 @@ export default function MediaCard({
 
             {/* 信息区域 */}
             <div className="mt-3 px-1">
-                <h3 className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem] mb-1.5 text-slate-900 dark:text-slate-100">
+                <h3 className="font-semibold text-sm leading-snug line-clamp-2 text-slate-900 dark:text-slate-100 mb-1.5">
                     {title}
                 </h3>
                 <div className="flex items-center justify-between text-xs">

@@ -36,7 +36,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
 import { checkInLibrary } from '@/utils/library';
@@ -51,6 +50,7 @@ interface ExternalContent {
     poster_path?: string;
     poster_url?: string;
     backdrop_path?: string;
+    backdrop_url?: string;
     images?: {
         large?: string;
         common?: string;
@@ -171,6 +171,8 @@ export default function ResourceDetailModal({
             backdropUrl = content.backdrop_path.startsWith('http')
                 ? content.backdrop_path
                 : `https://image.tmdb.org/t/p/original${content.backdrop_path}`;
+        } else if (content.backdrop_url) {
+            backdropUrl = content.backdrop_url;
         }
 
         const overview = content.overview || content.summary;
@@ -257,7 +259,7 @@ export default function ResourceDetailModal({
 
                         {/* 弹窗内容 */}
                         <DialogContent
-                            className="fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-5xl translate-x-[-50%] translate-y-[-50%] p-0 overflow-hidden border-0 shadow-2xl"
+                            className="fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-5xl translate-x-[-50%] translate-y-[-50%] p-0 border-0 shadow-2xl max-h-[90vh] flex flex-col overflow-hidden"
                             asChild
                         >
                             <motion.div
@@ -270,8 +272,24 @@ export default function ResourceDetailModal({
                                 {/* 无障碍：视觉隐藏的标题 */}
                                 <DialogTitle className="sr-only">{title}</DialogTitle>
 
-                                {/* Hero Section - 背景图 + 海报 + 标题元数据 */}
-                                <div className="relative h-[400px] overflow-hidden">
+                                {/* 
+                                    关闭按钮 - 固定在右上角，独立于滚动内容
+                                    使用 absolute + z-50 确保始终在最上层，不会被内容遮挡
+                                    backdrop-blur 提供毛玻璃效果，确保在任何背景下都清晰可见
+                                */}
+                                <button
+                                    onClick={handleClose}
+                                    className="absolute right-4 top-4 z-50 rounded-full bg-background/80 p-2.5 backdrop-blur-xl transition-all hover:bg-background/90 hover:scale-110 active:scale-95 shadow-lg dark:bg-black/60 dark:hover:bg-black/70"
+                                    aria-label="关闭弹窗"
+                                >
+                                    <X className="h-5 w-5 text-foreground dark:text-white" />
+                                </button>
+
+                                {/* 
+                                    Hero Section - 背景图 + 海报 + 标题元数据
+                                    固定高度，不参与滚动，作为视觉锚点
+                                */}
+                                <div className="relative h-[350px] flex-shrink-0 overflow-hidden">
                                     {/* 背景图 */}
                                     {backdropUrl ? (
                                         <>
@@ -297,14 +315,6 @@ export default function ResourceDetailModal({
                                         <div className="absolute inset-0 bg-gradient-to-br from-muted to-card dark:from-gray-800 dark:to-gray-900" />
                                     )}
 
-                                    {/* 关闭按钮 - 半透明悬浮 */}
-                                    <button
-                                        onClick={handleClose}
-                                        className="absolute right-4 top-4 z-10 rounded-full bg-background/60 p-2 backdrop-blur-xl transition-all hover:bg-background/80 hover:scale-105 dark:bg-black/40 dark:hover:bg-black/60"
-                                    >
-                                        <X className="h-5 w-5 text-foreground dark:text-white" />
-                                    </button>
-
                                     {/* 内容区 - 海报 + 信息 */}
                                     <div className="absolute bottom-0 left-0 right-0 p-8">
                                         <div className="flex items-end gap-6">
@@ -314,7 +324,7 @@ export default function ResourceDetailModal({
                                                     initial={{ opacity: 0, y: 20 }}
                                                     animate={{ opacity: 1, y: -20 }}
                                                     transition={{ delay: 0.2, duration: 0.5 }}
-                                                    className="relative h-[280px] w-[190px] flex-shrink-0"
+                                                    className="relative h-[280px] w-[190px] flex-shrink-0 hidden sm:block"
                                                 >
                                                     <Image
                                                         src={posterUrl}
@@ -331,11 +341,11 @@ export default function ResourceDetailModal({
                                             <div className="flex-1 space-y-3 pb-2">
                                                 {/* 标题组 */}
                                                 <div>
-                                                    <h2 className="text-4xl font-bold text-foreground drop-shadow-lg dark:text-white">
+                                                    <h2 className="text-3xl sm:text-4xl font-bold text-foreground drop-shadow-lg dark:text-white line-clamp-2">
                                                         {title}
                                                     </h2>
                                                     {originalTitle && originalTitle !== title && (
-                                                        <p className="mt-1 text-lg text-muted-foreground drop-shadow dark:text-gray-200/80">
+                                                        <p className="mt-1 text-base sm:text-lg text-muted-foreground drop-shadow dark:text-gray-200/80 line-clamp-1">
                                                             {originalTitle}
                                                         </p>
                                                     )}
@@ -393,17 +403,21 @@ export default function ResourceDetailModal({
                                     </div>
                                 </div>
 
-                                {/* Content Section - 操作按钮 + 简介 + 标签 */}
-                                <ScrollArea className="max-h-[400px] bg-background">
-                                    <div className="space-y-6 p-8">
+                                {/* 
+                                    Content Section - 操作按钮 + 简介 + 标签
+                                    使用 flex-1 + overflow-y-auto 实现内部滚动
+                                    关键：仅此区域滚动，Hero 和关闭按钮保持固定
+                                */}
+                                <div className="flex-1 overflow-y-auto bg-background">
+                                    <div className="space-y-6 p-6 sm:p-8">
                                         {/* Action Bar - 主次分明的按钮组 */}
                                         {onAddToLibrary && (
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-3 flex-wrap">
                                                 <Button
                                                     size="lg"
                                                     onClick={handleAdd}
                                                     disabled={isAdding || isAdded}
-                                                    className={`flex-1 max-w-xs font-semibold transition-all duration-200 ease-in-out active:scale-95 ${isAdded
+                                                    className={`flex-1 sm:flex-initial sm:min-w-[200px] font-semibold transition-all duration-200 ease-in-out active:scale-95 ${isAdded
                                                         ? 'bg-orange-600 hover:bg-orange-700 text-white dark:bg-orange-600 dark:hover:bg-orange-700 shadow-lg shadow-orange-500/30'
                                                         : 'bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40'
                                                         }`}
@@ -483,7 +497,7 @@ export default function ResourceDetailModal({
                                             <p className="text-sm text-muted-foreground dark:text-gray-500">暂无演员信息</p>
                                         </div>
                                     </div>
-                                </ScrollArea>
+                                </div>
                             </motion.div>
                         </DialogContent>
                     </DialogPortal>
