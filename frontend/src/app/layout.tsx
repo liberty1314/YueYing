@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import NextTopLoader from 'nextjs-toploader';
 import ThemeRegistry from '@/components/shared/ThemeRegistry';
 import AuthProvider from '@/components/shared/AuthProvider';
 import ErrorBoundary from '@/components/shared/ErrorBoundary';
@@ -26,6 +27,19 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className={inter.variable} suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground`}>
+        {/* 全局路由加载进度条 - 解决开发环境懒编译导致的"无反馈"问题 */}
+        <NextTopLoader
+          color="#cbd5e1"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+          shadow="0 0 5px #cbd5e1"
+          zIndex={1600}
+        />
         <ThemeRegistry>
           <AuthProvider>
             <ErrorBoundary>
