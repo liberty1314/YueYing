@@ -32,7 +32,6 @@ class UserSettingsService:
                 user_id=user_id,
                 auto_generate_tags=False,  # 默认关闭
                 enable_strict_search_filter=True,  # 默认启用
-                default_library_status='want_to_watch',  # 默认"想看"
             )
             db.add(settings)
             db.commit()

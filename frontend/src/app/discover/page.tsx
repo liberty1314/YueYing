@@ -37,7 +37,7 @@ export default function DiscoverPage() {
         fetchRecommendations();
     }, [recommendationType]);
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: RecommendationType) => {
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: RecommendationType) => {
         setRecommendationType(newValue);
     };
 

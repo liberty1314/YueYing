@@ -6,7 +6,6 @@ import { PlusIcon, CheckIcon, SparklesIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { userItemsApi } from '@/lib/api';
 import type { UserItem } from '@/types';
-import { typeLabels } from '@/lib/adapters/userItemAdapter';
 
 interface RecommendationCardProps {
     item: UserItem;

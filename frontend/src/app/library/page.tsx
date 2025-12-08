@@ -89,36 +89,13 @@ export default function LibraryPage() {
         }
     };
 
-    // 初始化：加载用户设置并设置默认状态
+    // 初始化：设置默认状态为"想看"
     useEffect(() => {
-        const initializeFilters = async () => {
-            try {
-                // 如果已经有状态筛选，不覆盖
-                if (filters.status) {
-                    setIsInitialized(true);
-                    return;
-                }
-
-                // 获取用户设置
-                const settings = await api.get<{
-                    default_library_status: string;
-                }>('/settings', true);
-
-                // 设置默认状态
-                const defaultStatus = settings.default_library_status || 'want_to_watch';
-                updateFilter('status', defaultStatus as ItemStatus);
-                setIsInitialized(true);
-            } catch (err) {
-                console.error('加载用户设置失败:', err);
-                // 失败时使用默认值
-                if (!filters.status) {
-                    updateFilter('status', 'want_to_watch' as ItemStatus);
-                }
-                setIsInitialized(true);
-            }
-        };
-
-        initializeFilters();
+        // 如果已经有状态筛选，不覆盖
+        if (!filters.status) {
+            updateFilter('status', 'want_to_watch' as ItemStatus);
+        }
+        setIsInitialized(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
