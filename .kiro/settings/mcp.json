@@ -27,6 +27,15 @@
       "disabledTools": [
         "fetch"
       ]
+    },
+    "power-figma-figma": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@figma/mcp-server-figma"
+      ],
+      "disabled": false,
+      "autoApprove": []
     }
   }
 }

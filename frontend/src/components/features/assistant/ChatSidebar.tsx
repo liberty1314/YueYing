@@ -17,15 +17,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, Badge } from '@/components/ui';
 import { Input } from '@/components/ui';
 import {
   PlusIcon,
   SearchIcon,
-  MessageSquareIcon,
   Trash2Icon,
-  ClockIcon,
-  SparklesIcon
+  ClockIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -164,22 +161,7 @@ export function ChatSidebar({
                     )}
                     onClick={() => onSelectConversation(conv.id)}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-0.5">
-                        <div className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                          currentConversationId === conv.id
-                            ? "bg-gradient-to-br from-blue-500 to-indigo-500 shadow-md"
-                            : "bg-slate-200 dark:bg-gray-700 group-hover:bg-slate-300 dark:group-hover:bg-gray-600"
-                        )}>
-                          <MessageSquareIcon className={cn(
-                            "w-4 h-4",
-                            currentConversationId === conv.id
-                              ? "text-white"
-                              : "text-slate-600 dark:text-gray-400"
-                          )} />
-                        </div>
-                      </div>
+                    <div className="flex items-start">
                       <div className="flex-1 min-w-0">
                         <h4 className={cn(
                           "text-sm font-semibold truncate",
@@ -194,12 +176,6 @@ export function ChatSidebar({
                             {conv.last_message}
                           </p>
                         )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-gray-800 text-xs text-slate-600 dark:text-gray-400">
-                            <SparklesIcon className="w-3 h-3" />
-                            {conv.message_count}
-                          </span>
-                        </div>
                       </div>
                     </div>
 

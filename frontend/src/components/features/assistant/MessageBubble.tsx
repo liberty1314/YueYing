@@ -3,17 +3,18 @@
  * 
  * 功能：
  * - 用户/AI消息区分
+ * - 头像显示
  * - Markdown渲染支持
  * - 代码高亮
- * - 打字机流式输出效果
+ * - AI消息打字机效果
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui';
-import { SparklesIcon, UserIcon, CopyIcon, CheckIcon } from 'lucide-react';
+import { useState } from 'react';
+import { CopyIcon, CheckIcon, User, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TextType } from '@/components/ui/TextType';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -25,30 +26,12 @@ export interface Message {
 interface MessageBubbleProps {
   message: Message;
   isStreaming?: boolean;
+  onTypingComplete?: () => void;
 }
 
-export function MessageBubble({ message, isStreaming = false }: MessageBubbleProps) {
-  const [displayedContent, setDisplayedContent] = useState('');
+export function MessageBubble({ message, isStreaming = false, onTypingComplete }: MessageBubbleProps) {
   const [isCopied, setIsCopied] = useState(false);
   const isUser = message.role === 'user';
-
-  // 流式输出打字机效果
-  useEffect(() => {
-    if (isStreaming && message.role === 'assistant') {
-      let currentIndex = 0;
-      const interval = setInterval(() => {
-        if (currentIndex <= message.content.length) {
-          setDisplayedContent(message.content.slice(0, currentIndex));
-          currentIndex += 2; // 每次显示2个字符，加快速度
-        } else {
-          clearInterval(interval);
-        }
-      }, 20);
-      return () => clearInterval(interval);
-    } else {
-      setDisplayedContent(message.content);
-    }
-  }, [message.content, isStreaming, message.role]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);
@@ -57,7 +40,7 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
   };
 
   // 简单的Markdown渲染（代码块）
-  const renderContent = (content: string) => {
+  const renderContent = (content: string, useTypeEffect: boolean = false) => {
     const parts = content.split(/(```[\s\S]*?```)/g);
 
     return parts.map((part, index) => {
@@ -102,7 +85,20 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
         );
       }
 
-      // 普通文本
+      // 普通文本 - 使用打字机效果或直接显示
+      if (useTypeEffect && part.trim()) {
+        return (
+          <TextType
+            key={index}
+            text={part}
+            speed={30}
+            showCursor={index === parts.length - 1}
+            className="whitespace-pre-wrap"
+            onComplete={index === parts.length - 1 ? onTypingComplete : undefined}
+          />
+        );
+      }
+
       return (
         <div key={index} className="whitespace-pre-wrap">
           {part.split('\n').map((line, i) => (
@@ -117,113 +113,55 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
   };
 
   return (
-    <div className={cn('flex gap-4 mb-8', isUser && 'flex-row-reverse')}>
-      {/* Avatar */}
+    <div className={cn('mb-8 flex gap-4', isUser && 'flex-row-reverse')}>
+      {/* 头像 */}
       <div className="flex-shrink-0">
         <div
           className={cn(
-            'w-10 h-10 rounded-xl flex items-center justify-center shadow-md',
+            'w-10 h-10 rounded-full flex items-center justify-center',
             isUser
-              ? 'bg-gradient-to-br from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500'
-              : 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-gray-800 dark:to-gray-900'
+              ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white'
+              : 'bg-gradient-to-br from-purple-500 to-pink-600 text-white'
           )}
         >
           {isUser ? (
-            <UserIcon className="w-5 h-5 text-white" strokeWidth={2} />
+            <User className="w-5 h-5" />
           ) : (
-            <SparklesIcon className="w-5 h-5 text-slate-700 dark:text-gray-300" strokeWidth={2} />
+            <Bot className="w-5 h-5" />
           )}
         </div>
       </div>
 
-      {/* Message Content */}
-      <div className={cn('flex-1 max-w-3xl', isUser && 'flex justify-end')}>
-        <div
-          className={cn(
-            'inline-block rounded-2xl shadow-sm border transition-all duration-200',
-            isUser
-              ? 'bg-gradient-to-br from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white border-transparent'
-              : 'bg-white dark:bg-gray-900 border-slate-200/60 dark:border-gray-800/60'
-          )}
-        >
-          <div className="p-5">
-            {/* Role Label */}
-            <div className="flex items-center gap-2 mb-3">
-              <span
-                className={cn(
-                  'text-xs font-semibold',
-                  isUser
-                    ? 'text-white/90'
-                    : 'text-slate-600 dark:text-gray-400'
-                )}
-              >
-                {isUser ? '你' : 'AI 助手'}
-              </span>
-              <span
-                className={cn(
-                  'text-xs',
-                  isUser
-                    ? 'text-white/70'
-                    : 'text-slate-400 dark:text-gray-500'
-                )}
-              >
-                {new Date(message.created_at).toLocaleTimeString('zh-CN', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
-            </div>
-
-            {/* Content */}
-            <div
-              className={cn(
-                'text-[15px] leading-relaxed',
-                isUser
-                  ? 'text-white'
-                  : 'text-slate-900 dark:text-white'
-              )}
-            >
-              {displayedContent === '' && message.role === 'assistant' ? (
-                <div className="flex items-center gap-3 py-2">
-                  <div className="flex gap-1.5">
-                    <span className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+      {/* 消息内容 */}
+      <div className="flex-1 max-w-3xl">
+        <div className="text-[15px] leading-relaxed text-slate-900 dark:text-white">
+          {message.content === '' && message.role === 'assistant' ? (
+            // Loading animation
+            <div className="flex items-center gap-3 py-2">
+              <div className="relative flex gap-1.5">
+                {[0, 150, 300].map((delay, i) => (
+                  <div key={i} className="relative">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-bounce"
+                      style={{ animationDelay: `${delay}ms` }}
+                    />
+                    <div
+                      className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-pulse opacity-50"
+                      style={{ animationDelay: `${delay}ms` }}
+                    />
                   </div>
-                  <span className="text-sm text-slate-600 dark:text-gray-400 font-medium">
-                    AI 正在思考中...
-                  </span>
-                </div>
-              ) : (
-                <>
-                  {renderContent(displayedContent)}
-                  {isStreaming && message.role === 'assistant' && displayedContent !== '' && (
-                    <span className="inline-block w-0.5 h-5 ml-1 bg-blue-500 dark:bg-blue-400 animate-pulse" />
-                  )}
-                </>
-              )}
+                ))}
+              </div>
+              <span className="text-sm text-slate-600 dark:text-gray-400 font-medium">
+                AI 正在思考中...
+              </span>
             </div>
-
-            {/* Copy Button for Assistant Messages */}
-            {!isUser && !isStreaming && displayedContent !== '' && (
-              <button
-                onClick={handleCopy}
-                className="mt-4 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg flex items-center gap-1.5 transition-all duration-200"
-              >
-                {isCopied ? (
-                  <>
-                    <CheckIcon className="w-3.5 h-3.5" />
-                    已复制
-                  </>
-                ) : (
-                  <>
-                    <CopyIcon className="w-3.5 h-3.5" />
-                    复制内容
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+          ) : (
+            <>
+              {/* AI消息使用打字机效果，用户消息直接显示 */}
+              {renderContent(message.content, isStreaming && !isUser)}
+            </>
+          )}
         </div>
       </div>
     </div>

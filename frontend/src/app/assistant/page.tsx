@@ -4,8 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { ChatSidebar, MessageBubble, InputArea } from '@/components/features/assistant';
 import { assistantApi } from '@/lib/api/assistant';
-import { BotIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 // 本地类型
 interface Message {
@@ -102,7 +100,8 @@ export default function AssistantPage() {
             streaming: true,
         };
         setMessages((prev) => [...prev, tempAIMessage]);
-        setStreamingMessageIndex(messages.length + 1);
+        const streamingIndex = messages.length + 1;
+        setStreamingMessageIndex(streamingIndex);
 
         try {
             const response = await assistantApi.chat({
@@ -116,24 +115,44 @@ export default function AssistantPage() {
                 await loadConversations();
             }
 
-            // 更新AI回复
+            // 更新AI回复 - 保持 streaming 状态，让打字机效果完成
             setMessages((prev) => {
                 const newMessages = [...prev];
                 newMessages[newMessages.length - 1] = {
                     role: 'assistant',
                     content: response.message,
                     created_at: new Date().toISOString(),
+                    streaming: true, // 保持 streaming 状态
                 };
                 return newMessages;
             });
+            // 注意：不在这里清除 streamingMessageIndex，让打字机效果完成后再清除
         } catch (error) {
             console.error('发送消息失败:', error);
             // 移除临时消息
             setMessages((prev) => prev.slice(0, -2));
+            setStreamingMessageIndex(null);
         } finally {
             setIsSending(false);
-            setStreamingMessageIndex(null);
+            // 不在这里清除 streamingMessageIndex
         }
+    };
+
+    // 处理打字机效果完成
+    const handleTypingComplete = (messageIndex: number) => {
+        // 清除 streaming 状态
+        setMessages((prev) => {
+            const newMessages = [...prev];
+            if (newMessages[messageIndex]) {
+                newMessages[messageIndex] = {
+                    ...newMessages[messageIndex],
+                    streaming: false,
+                };
+            }
+            return newMessages;
+        });
+        // 清除 streamingMessageIndex
+        setStreamingMessageIndex(null);
     };
 
     const handleNewConversation = () => {
@@ -196,22 +215,6 @@ export default function AssistantPage() {
                             </div>
                         ) : messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                                {/* AI 机器人图标 - 渐变背景 */}
-                                <div className="relative mb-8">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl blur-2xl opacity-20 animate-pulse" />
-                                    <div className="relative w-24 h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/30 dark:shadow-blue-400/20">
-                                        <BotIcon className="w-12 h-12 text-white" strokeWidth={2} />
-                                    </div>
-                                </div>
-
-                                {/* 标题和描述 */}
-                                <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-3 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                                    开始新对话
-                                </h3>
-                                <p className="text-slate-600 dark:text-gray-400 max-w-md mb-12 text-base leading-relaxed">
-                                    向 AI 助手提问，获取个性化推荐和内容分析
-                                </p>
-
                                 {/* 快捷建议卡片 - Grid 布局 */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl w-full">
                                     {[
@@ -225,10 +228,7 @@ export default function AssistantPage() {
                                             className="group relative p-6 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-800 hover:border-transparent hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-gray-900/50 transition-all duration-300 hover:-translate-y-1 text-left overflow-hidden"
                                         >
                                             {/* 渐变背景 - hover 时显示 */}
-                                            <div className={cn(
-                                                "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 transition-opacity duration-300",
-                                                item.color
-                                            )} />
+                                            <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 transition-opacity duration-300 ${item.color}`} />
 
                                             {/* 内容 */}
                                             <div className="relative">
@@ -250,12 +250,6 @@ export default function AssistantPage() {
                                         </button>
                                     ))}
                                 </div>
-
-                                {/* 底部提示 */}
-                                <div className="mt-12 flex items-center gap-2 text-xs text-slate-400 dark:text-gray-500">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                    <span>AI 助手已就绪</span>
-                                </div>
                             </div>
                         ) : (
                             <div className="max-w-4xl mx-auto">
@@ -264,6 +258,7 @@ export default function AssistantPage() {
                                         key={index}
                                         message={msg}
                                         isStreaming={streamingMessageIndex === index}
+                                        onTypingComplete={() => handleTypingComplete(index)}
                                     />
                                 ))}
 

@@ -18,7 +18,6 @@
 'use client';
 
 import { useState, useRef, KeyboardEvent } from 'react';
-import { Button } from '@/components/ui';
 import {
   SendIcon,
   ZapIcon,
@@ -224,7 +223,7 @@ export function InputArea({
       </div>
 
       {/* 提示信息 */}
-      <div className="mt-3 text-xs text-slate-500 dark:text-gray-400 text-center flex items-center justify-center gap-2">
+      {/* <div className="mt-3 text-xs text-slate-500 dark:text-gray-400 text-center flex items-center justify-center gap-2">
         <span className="flex items-center gap-1">
           <kbd className="px-2 py-1 bg-white dark:bg-gray-800 rounded-md border border-slate-300 dark:border-gray-600 font-mono text-xs shadow-sm">
             Enter
@@ -238,7 +237,7 @@ export function InputArea({
           </kbd>
           换行
         </span>
-      </div>
+      </div> */}
     </div>
   );
 }
