@@ -29,6 +29,7 @@ export default function AssistantPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [streamingMessageIndex, setStreamingMessageIndex] = useState<number | null>(null);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // 加载对话列表
@@ -177,35 +178,59 @@ export default function AssistantPage() {
 
     return (
         <ProtectedRoute>
-            <div className="flex h-screen bg-gray-50 dark:bg-black">
+            {/* 全屏容器 - 锁定视口高度，减去 Navbar 高度 */}
+            <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50 dark:bg-black">
+                {/* 移动端遮罩层 */}
+                {isMobileSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                        onClick={() => setIsMobileSidebarOpen(false)}
+                    />
+                )}
+
                 {/* 侧边栏 - ChatSidebar */}
-                <ChatSidebar
-                    conversations={conversations}
-                    currentConversationId={currentConversationId}
-                    onSelectConversation={setCurrentConversationId}
-                    onNewConversation={handleNewConversation}
-                    onDeleteConversation={handleDeleteConversation}
-                />
+                <div className={`
+                    fixed md:relative inset-y-0 left-0 z-50 md:z-auto
+                    transform transition-transform duration-300 ease-in-out
+                    ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                `}>
+                    <ChatSidebar
+                        conversations={conversations}
+                        currentConversationId={currentConversationId}
+                        onSelectConversation={(id) => {
+                            setCurrentConversationId(id);
+                            setIsMobileSidebarOpen(false);
+                        }}
+                        onNewConversation={() => {
+                            handleNewConversation();
+                            setIsMobileSidebarOpen(false);
+                        }}
+                        onDeleteConversation={handleDeleteConversation}
+                    />
+                </div>
 
-                {/* 主聊天区域 */}
-                <div className="flex-1 flex flex-col">
-                    {/* 标题栏 */}
-                    {/* <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-                        <div className="flex items-center gap-3">
-                            <BotIcon className="w-10 h-10 text-gray-700 dark:text-gray-300" />
-                            <div>
-                                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                                    AI 助手
-                                </h1>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    智能对话与个性化推荐
-                                </p>
-                            </div>
-                        </div>
-                    </div> */}
+                {/* 主聊天区域 - Gemini 风格布局（黄框+红框） */}
+                <div className="flex-1 flex flex-col min-h-0 overflow-hidden h-full">
+                    {/* 移动端顶部栏 */}
+                    <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+                        <button
+                            onClick={() => setIsMobileSidebarOpen(true)}
+                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <h1 className="text-lg font-semibold">AI 助手</h1>
+                    </div>
 
-                    {/* 消息列表 */}
-                    <div className="flex-1 overflow-y-auto px-6 py-6 bg-gradient-to-b from-slate-50 to-white dark:from-black dark:to-gray-950">
+                    {/* 消息滚动区域 - 独立滚动（黄框） */}
+                    <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 bg-gradient-to-b from-slate-50 to-white dark:from-black dark:to-gray-950 scroll-smooth"
+                        style={{
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgb(203 213 225) transparent'
+                        }}
+                    >
                         {isLoading ? (
                             <div className="flex justify-center items-center h-full">
                                 <div className="relative">
@@ -218,9 +243,60 @@ export default function AssistantPage() {
                                 {/* 快捷建议卡片 - Grid 布局 */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl w-full">
                                     {[
-                                        { icon: '🎬', title: '推荐电影', desc: '根据观看历史推荐', color: 'from-rose-500 to-pink-500' },
-                                        { icon: '📊', title: '数据统计', desc: '分析观影趋势', color: 'from-blue-500 to-cyan-500' },
-                                        { icon: '🏷️', title: '标签分析', desc: '总结内容类型', color: 'from-violet-500 to-purple-500' }
+                                        {
+                                            icon: (
+                                                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M19.82 2H4.18C2.97602 2 2 2.97602 2 4.18V19.82C2 21.024 2.97602 22 4.18 22H19.82C21.024 22 22 21.024 22 19.82V4.18C22 2.97602 21.024 2 19.82 2Z" fill="url(#movie_gradient)" fillOpacity="0.2" />
+                                                    <path d="M7 2L7 22M17 2V22M2 12H22M2 7H7M2 17H7M17 7H22M17 17H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                    <defs>
+                                                        <linearGradient id="movie_gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                                            <stop stopColor="#F43F5E" />
+                                                            <stop offset="1" stopColor="#EC4899" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                            ),
+                                            title: '推荐电影',
+                                            desc: '根据观看历史推荐',
+                                            color: 'from-rose-500 to-pink-500'
+                                        },
+                                        {
+                                            icon: (
+                                                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="3" y="3" width="7" height="7" rx="1" fill="url(#stats_gradient)" fillOpacity="0.2" />
+                                                    <rect x="3" y="14" width="7" height="7" rx="1" fill="url(#stats_gradient)" fillOpacity="0.2" />
+                                                    <rect x="14" y="3" width="7" height="7" rx="1" fill="url(#stats_gradient)" fillOpacity="0.2" />
+                                                    <rect x="14" y="14" width="7" height="7" rx="1" fill="url(#stats_gradient)" fillOpacity="0.2" />
+                                                    <path d="M3 17L10 10M14 17L21 10M3 7L10 14M14 7L21 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                    <defs>
+                                                        <linearGradient id="stats_gradient" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                                                            <stop stopColor="#3B82F6" />
+                                                            <stop offset="1" stopColor="#06B6D4" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                            ),
+                                            title: '数据统计',
+                                            desc: '分析观影趋势',
+                                            color: 'from-blue-500 to-cyan-500'
+                                        },
+                                        {
+                                            icon: (
+                                                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M20.59 13.41L13.42 20.58C13.2343 20.766 13.0137 20.9135 12.7709 21.0141C12.5281 21.1148 12.2678 21.1666 12.005 21.1666C11.7422 21.1666 11.4819 21.1148 11.2391 21.0141C10.9963 20.9135 10.7757 20.766 10.59 20.58L2 12V2H12L20.59 10.59C20.9625 10.9647 21.1716 11.4716 21.1716 12C21.1716 12.5284 20.9625 13.0353 20.59 13.41Z" fill="url(#tag_gradient)" fillOpacity="0.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    <circle cx="7" cy="7" r="1.5" fill="currentColor" />
+                                                    <defs>
+                                                        <linearGradient id="tag_gradient" x1="2" y1="2" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                                                            <stop stopColor="#8B5CF6" />
+                                                            <stop offset="1" stopColor="#A855F7" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                            ),
+                                            title: '标签分析',
+                                            desc: '总结内容类型',
+                                            color: 'from-violet-500 to-purple-500'
+                                        }
                                     ].map((item) => (
                                         <button
                                             key={item.title}
@@ -232,7 +308,7 @@ export default function AssistantPage() {
 
                                             {/* 内容 */}
                                             <div className="relative">
-                                                <div className="text-4xl mb-3">{item.icon}</div>
+                                                <div className="mb-3 text-slate-700 dark:text-gray-300">{item.icon}</div>
                                                 <h4 className="text-base font-semibold text-slate-900 dark:text-white mb-1.5">
                                                     {item.title}
                                                 </h4>
@@ -252,7 +328,7 @@ export default function AssistantPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="max-w-4xl mx-auto">
+                            <div className="max-w-4xl mx-auto pb-8">
                                 {messages.map((msg, index) => (
                                     <MessageBubble
                                         key={index}
@@ -267,9 +343,9 @@ export default function AssistantPage() {
                         )}
                     </div>
 
-                    {/* 输入区域 - 悬浮式设计 */}
-                    <div className="relative px-6 py-6 bg-gradient-to-t from-white via-white to-transparent dark:from-gray-950 dark:via-gray-950 dark:to-transparent">
-                        <div className="max-w-4xl mx-auto">
+                    {/* 输入区域 - 固定在底部（红框） */}
+                    <div className="flex-shrink-0 border-t border-slate-200/60 dark:border-gray-800/60 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
+                        <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4">
                             <InputArea
                                 onSend={handleSendMessage}
                                 disabled={isSending}

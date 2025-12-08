@@ -113,15 +113,15 @@ export function MessageBubble({ message, isStreaming = false, onTypingComplete }
   };
 
   return (
-    <div className={cn('mb-8 flex gap-4', isUser && 'flex-row-reverse')}>
+    <div className={cn('mb-8 flex gap-4 items-start', isUser && 'flex-row-reverse')}>
       {/* 头像 */}
       <div className="flex-shrink-0">
         <div
           className={cn(
-            'w-10 h-10 rounded-full flex items-center justify-center',
+            'w-10 h-10 rounded-full flex items-center justify-center shadow-lg',
             isUser
-              ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white'
-              : 'bg-gradient-to-br from-purple-500 to-pink-600 text-white'
+              ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white ring-2 ring-blue-500/20'
+              : 'bg-gradient-to-br from-purple-500 to-pink-600 text-white ring-2 ring-purple-500/20'
           )}
         >
           {isUser ? (
@@ -133,8 +133,13 @@ export function MessageBubble({ message, isStreaming = false, onTypingComplete }
       </div>
 
       {/* 消息内容 */}
-      <div className="flex-1 max-w-3xl">
-        <div className="text-[15px] leading-relaxed text-slate-900 dark:text-white">
+      <div className={cn('flex-1 max-w-3xl', isUser && 'flex justify-end')}>
+        <div className={cn(
+          'text-[15px] leading-relaxed',
+          isUser
+            ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm shadow-lg max-w-[85%]'
+            : 'text-slate-900 dark:text-white'
+        )}>
           {message.content === '' && message.role === 'assistant' ? (
             // Loading animation
             <div className="flex items-center gap-3 py-2">
