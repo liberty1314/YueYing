@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, Button, Switch } from '@/components/ui';
-import { SaveIcon, SettingsIcon, AlertCircleIcon, CheckCircleIcon } from 'lucide-react';
+import { SaveIcon, SettingsIcon } from 'lucide-react';
 import { api } from '@/lib/apiClient';
 
 interface SystemSettings {
@@ -208,7 +208,7 @@ export default function SystemSettingsPage() {
       </div>
 
       {/* 当前配置摘要 */}
-      <Card className="p-5 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+      {/* <Card className="p-5 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
         <div className="flex items-start gap-3">
           <CheckCircleIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
           <div>
@@ -222,7 +222,7 @@ export default function SystemSettingsPage() {
             </ul>
           </div>
         </div>
-      </Card>
+      </Card> */}
 
       {/* 提示信息 */}
       <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">

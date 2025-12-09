@@ -1,0 +1,59 @@
+/**
+ * useSystemSettings Hook
+ * 获取系统设置的自定义 Hook
+ */
+
+import { useState, useEffect } from 'react';
+import { api, CachePresets } from '@/lib/apiClient';
+
+export interface SystemSettings {
+    id: number;
+    enable_explore: boolean;
+    allow_user_ai_tag_settings: boolean;
+    allow_anonymous_home_access: boolean;
+}
+
+export function useSystemSettings() {
+    const [settings, setSettings] = useState<SystemSettings | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                setLoading(true);
+                // 使用中等缓存时间（5分钟），因为系统设置不会频繁变化
+                // 调用公开端点，不需要认证
+                const data = await api.get<Partial<SystemSettings>>(
+                    '/system-settings/public',
+                    false, // 不需要认证
+                    CachePresets.MEDIUM
+                );
+                // 合并默认值，因为公开端点只返回部分字段
+                setSettings({
+                    id: 0,
+                    enable_explore: data.enable_explore ?? true,
+                    allow_user_ai_tag_settings: true,
+                    allow_anonymous_home_access: data.allow_anonymous_home_access ?? true,
+                });
+                setError(null);
+            } catch (err) {
+                console.error('Failed to fetch system settings:', err);
+                setError(err instanceof Error ? err : new Error('Unknown error'));
+                // 如果获取失败，使用默认值（全部启用）
+                setSettings({
+                    id: 0,
+                    enable_explore: true,
+                    allow_user_ai_tag_settings: true,
+                    allow_anonymous_home_access: true,
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSettings();
+    }, []);
+
+    return { settings, loading, error };
+}

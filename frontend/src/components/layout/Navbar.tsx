@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { AnimatedThemeToggler } from '@/components/ui';
 import { SmartSearchBar } from '@/components/features/search/SmartSearchBar';
 import { useAuthStore } from '@/stores/authStore';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { authApi } from '@/lib/api';
 import {
   HomeIcon,
@@ -35,11 +36,18 @@ import {
   LogInIcon,
 } from 'lucide-react';
 
-const navItems = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requiresExplore?: boolean;
+}
+
+const allNavItems: NavItem[] = [
   { href: '/', label: '首页', icon: HomeIcon },
   { href: '/library', label: '我的记录', icon: LayoutGridIcon },
   { href: '/assistant', label: 'AI助手', icon: BotIcon },
-  { href: '/recommendations', label: '智能推荐', icon: SparklesIcon },
+  { href: '/recommendations', label: '智能推荐', icon: SparklesIcon, requiresExplore: true },
   { href: '/analytics', label: '数据统计', icon: BarChart3Icon },
 ];
 
@@ -53,6 +61,18 @@ export function Navbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { settings } = useSystemSettings();
+
+  // 根据系统设置过滤导航项
+  const navItems = useMemo(() => {
+    return allNavItems.filter(item => {
+      // 如果菜单项需要探索功能，检查系统设置
+      if (item.requiresExplore) {
+        return settings?.enable_explore ?? true; // 默认显示，直到设置加载完成
+      }
+      return true;
+    });
+  }, [settings]);
 
   // 点击外部关闭用户菜单
   useEffect(() => {

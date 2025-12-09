@@ -30,13 +30,15 @@ async def get_public_system_settings(
     """
     获取公开的系统设置（无需登录）
     
-    仅返回：
+    返回：
     - allow_anonymous_home_access: 是否允许未登录用户访问首页
+    - enable_explore: 是否启用探索/推荐功能
     """
     try:
         settings = SystemSettingsService.get_settings(db)
         return {
             "allow_anonymous_home_access": settings.allow_anonymous_home_access,
+            "enable_explore": settings.enable_explore,
         }
     except Exception as e:
         logger.error(f"Error getting public system settings: {e}", exc_info=True)
