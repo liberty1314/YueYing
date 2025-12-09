@@ -3,6 +3,8 @@
  * 
  * Week 6: AI洞察 - 基于用户行为的智能分析和建议
  * 升级版：支持多种洞察类型、优先级排序、刷新机制
+ * 
+ * 注意：此组件受系统设置控制，当"启用探索/推荐功能"关闭时不显示
  */
 
 'use client';
@@ -11,6 +13,7 @@ import { useState, useEffect } from 'react';
 import { Card, Button, Badge } from '@/components/ui';
 import { SparklesIcon, TrendingUpIcon, HeartIcon, AwardIcon, LightbulbIcon, RefreshCwIcon, ChevronRightIcon } from 'lucide-react';
 import { api, APIError } from '@/lib/apiClient';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 
 interface Insight {
   type: 'trend' | 'recommendation' | 'achievement' | 'suggestion';
@@ -57,10 +60,14 @@ const priorityBadges = {
 export function AIInsightsPanel({ className }: AIInsightsPanelProps) {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(false);
+  const { settings } = useSystemSettings();
 
   useEffect(() => {
-    fetchInsights();
-  }, []);
+    // 只有在探索功能启用时才获取洞察数据
+    if (settings?.enable_explore) {
+      fetchInsights();
+    }
+  }, [settings?.enable_explore]);
 
   const fetchInsights = async () => {
     setLoading(true);
@@ -77,6 +84,11 @@ export function AIInsightsPanel({ className }: AIInsightsPanelProps) {
       setLoading(false);
     }
   };
+
+  // 如果系统设置关闭了探索/推荐功能，不显示此组件
+  if (settings && !settings.enable_explore) {
+    return null;
+  }
 
   return (
     <Card className={className}>
@@ -115,9 +127,9 @@ export function AIInsightsPanel({ className }: AIInsightsPanelProps) {
           /* Insights List */
           <div className="space-y-3">
             {insights.map((insight, index) => {
-              const Icon = iconComponents[insight.type];
-              const colorClass = typeColors[insight.type];
-              const badge = priorityBadges[insight.priority];
+              const Icon = iconComponents[insight.type] || LightbulbIcon;
+              const colorClass = typeColors[insight.type] || typeColors.suggestion;
+              const badge = priorityBadges[insight.priority] || priorityBadges.low;
 
               return (
                 <div
@@ -148,7 +160,7 @@ export function AIInsightsPanel({ className }: AIInsightsPanelProps) {
 
                       {/* Type Label */}
                       <span className="inline-block text-xs font-medium text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 px-2 py-0.5 rounded">
-                        {typeLabels[insight.type]}
+                        {typeLabels[insight.type] || '其他'}
                       </span>
                     </div>
 

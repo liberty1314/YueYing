@@ -24,14 +24,19 @@ router = APIRouter(prefix="/ai", tags=["AI 洞察"])
 # ====================================
 
 
+class InsightAction(BaseModel):
+    """洞察操作"""
+    label: str = Field(..., description="操作标签")
+    link: str | None = Field(None, description="操作链接")
+
+
 class Insight(BaseModel):
     """洞察数据"""
-    type: str = Field(..., description="洞察类型")
+    type: str = Field(..., description="洞察类型: trend, recommendation, achievement, suggestion")
     title: str = Field(..., description="标题")
     description: str = Field(..., description="描述")
-    icon: str = Field(..., description="图标")
-    priority: str = Field(..., description="优先级")
-    metadata: dict = Field(default_factory=dict, description="额外数据")
+    priority: str = Field(..., description="优先级: high, medium, low")
+    action: InsightAction | None = Field(None, description="操作按钮")
 
 
 class InsightsResponse(BaseModel):
@@ -132,18 +137,16 @@ async def analyze_watch_trend(db: Session, user_id: int) -> Insight | None:
                 type="trend",
                 title="观看趋势上升",
                 description=f"你在过去一个月的观看数量比上月增加了 {growth_rate:.0f}%，保持良好的习惯！",
-                icon="trending",
                 priority="high",
-                metadata={"growth_rate": growth_rate, "current_count": current_month}
+                action=InsightAction(label="查看统计", link="/analytics")
             )
         else:
             return Insight(
                 type="trend",
                 title="观看活跃度下降",
                 description=f"你在过去一个月的观看数量比上月减少了 {abs(growth_rate):.0f}%，要不要看点新内容？",
-                icon="trending",
                 priority="medium",
-                metadata={"growth_rate": growth_rate, "current_count": current_month}
+                action=InsightAction(label="探索内容", link="/explore")
             )
     except Exception as e:
         logger.error(f"Error analyzing watch trend: {e}")
@@ -191,12 +194,11 @@ async def analyze_content_preference(db: Session, user_id: int) -> Insight | Non
         description += "。我们为你推荐了更多相关内容。"
         
         return Insight(
-            type="preference",
+            type="suggestion",
             title="偏好类型分析",
             description=description,
-            icon="heart",
             priority="medium",
-            metadata={"top_type": top_type.content_type, "percentage": percentage}
+            action=InsightAction(label="查看收藏", link="/library")
         )
     except Exception as e:
         logger.error(f"Error analyzing content preference: {e}")
@@ -220,9 +222,8 @@ async def generate_recommendation_insight(db: Session, user_id: int) -> Insight 
             type="recommendation",
             title="智能推荐",
             description="基于你的观看历史和评分，我们为你准备了个性化推荐列表，快去推荐页面看看吧！",
-            icon="sparkles",
             priority="high",
-            metadata={"recent_count": len(recent_items)}
+            action=InsightAction(label="查看推荐", link="/discover")
         )
     except Exception as e:
         logger.error(f"Error generating recommendation insight: {e}")
@@ -246,9 +247,7 @@ async def check_achievements(db: Session, user_id: int) -> Insight | None:
                     type="achievement",
                     title=f"观影里程碑 - {milestone}",
                     description=f"恭喜！你已经收藏了 {total_count} 项内容，继续保持这个节奏！",
-                    icon="clock",
-                    priority="low",
-                    metadata={"milestone": milestone, "total_count": total_count}
+                    priority="low"
                 )
         
         return None
