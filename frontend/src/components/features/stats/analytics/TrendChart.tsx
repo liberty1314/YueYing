@@ -1,12 +1,17 @@
 /**
- * TrendChart - 趋势图表组件
+ * TrendChart - 趋势图表组件（优化版）
  * 
- * 使用 Recharts 绘制时间趋势图
+ * 特点：
+ * - 平滑曲线（Basis）
+ * - 渐变填充区域
+ * - 隐藏网格线
+ * - 优雅的 Tooltip
  */
 
 'use client';
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useTheme } from 'next-themes';
 import type { TrendDataPoint } from './types';
 
 interface TrendChartProps {
@@ -15,47 +20,87 @@ interface TrendChartProps {
     color?: string;
 }
 
-export function TrendChart({ data, dataKey = 'value', color = '#007AFF' }: TrendChartProps) {
+export function TrendChart({ data, dataKey = 'value', color = '#34C759' }: TrendChartProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
+    // 自定义 Tooltip - 增强动画
+    const CustomTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 shadow-2xl animate-in fade-in zoom-in duration-200">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        {payload[0].payload.date}
+                    </p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {payload[0].value} 项
+                    </p>
+                </div>
+            );
+        }
+        return null;
+    };
+
     return (
         <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                        <stop offset="95%" stopColor={color} stopOpacity={0} />
+                    {/* 渐变填充 */}
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+                        <stop offset="50%" stopColor={color} stopOpacity={0.2} />
+                        <stop offset="100%" stopColor={color} stopOpacity={0} />
+                    </linearGradient>
+                    {/* 线条渐变 */}
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+                        <stop offset="50%" stopColor={color} stopOpacity={1} />
+                        <stop offset="100%" stopColor={color} stopOpacity={0.8} />
                     </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+
+                {/* 隐藏网格线 */}
                 <XAxis
                     dataKey="date"
-                    stroke="rgba(0,0,0,0.3)"
-                    style={{ fontSize: '12px' }}
-                    tickLine={false}
-                />
-                <YAxis
-                    stroke="rgba(0,0,0,0.3)"
-                    style={{ fontSize: '12px' }}
+                    stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
+                    style={{ fontSize: '11px', fontWeight: 500 }}
                     tickLine={false}
                     axisLine={false}
+                    dy={10}
                 />
-                <Tooltip
-                    contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        border: '1px solid rgba(0,0,0,0.1)',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                    }}
+                <YAxis
+                    stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
+                    style={{ fontSize: '11px', fontWeight: 500 }}
+                    tickLine={false}
+                    axisLine={false}
+                    dx={-10}
+                    width={40}
                 />
-                <Line
-                    type="monotone"
+
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '4 4' }} />
+
+                {/* 平滑曲线 + 渐变填充 */}
+                <Area
+                    type="basis"
                     dataKey={dataKey}
-                    stroke={color}
+                    stroke="url(#lineGradient)"
                     strokeWidth={3}
-                    dot={{ fill: color, strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6 }}
-                    fill="url(#colorValue)"
+                    fill="url(#areaGradient)"
+                    dot={false}
+                    activeDot={{
+                        r: 7,
+                        fill: color,
+                        stroke: '#fff',
+                        strokeWidth: 3,
+                        style: {
+                            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                            transition: 'all 0.2s ease',
+                        }
+                    }}
+                    animationDuration={1200}
+                    animationEasing="ease-out"
                 />
-            </LineChart>
+            </AreaChart>
         </ResponsiveContainer>
     );
 }

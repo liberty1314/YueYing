@@ -59,56 +59,57 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                 ease: [0.25, 0.46, 0.45, 0.94]
             }}
             className={cn(
-                'relative overflow-hidden',
-                'bg-white dark:bg-[#1C1C1E]',
-                'rounded-2xl',
-                'border border-gray-100 dark:border-white/5',
+                'relative overflow-hidden h-full',
+                'bg-white/80 dark:bg-[#1C1C1E]/80',
+                'backdrop-blur-xl',
+                'rounded-2xl lg:rounded-3xl',
+                'border border-gray-200/50 dark:border-white/5',
                 'shadow-sm',
-                'p-6'
+                'p-5 md:p-6'
             )}
         >
             {/* 顶部装饰渐变 - 增强动画 */}
             <motion.div
-                className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+                className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ duration: 0.8, delay: 0.5, ease: 'easeOut' }}
+                transition={{ duration: 1, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 style={{ transformOrigin: 'left' }}
             />
 
             {/* 背景光晕效果 */}
             <motion.div
-                className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-full blur-3xl"
+                className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-blue-400/10 via-purple-400/10 to-pink-400/10 dark:from-blue-400/5 dark:via-purple-400/5 dark:to-pink-400/5 rounded-full blur-3xl"
                 animate={{
                     scale: [1, 1.2, 1],
                     opacity: [0.3, 0.5, 0.3],
                 }}
                 transition={{
-                    duration: 4,
+                    duration: 5,
                     repeat: Infinity,
                     ease: 'easeInOut'
                 }}
             />
 
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-5 md:mb-6">
                 <div className="flex items-center gap-3">
                     <motion.div
                         className="relative"
-                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        whileHover={{ scale: 1.15, rotate: 10 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 15 }}
                     >
                         <motion.div
-                            className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+                            className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg"
                             animate={{
                                 boxShadow: [
                                     '0 0 0 0 rgba(59, 130, 246, 0)',
-                                    '0 0 0 8px rgba(59, 130, 246, 0.1)',
+                                    '0 0 0 10px rgba(59, 130, 246, 0.1)',
                                     '0 0 0 0 rgba(59, 130, 246, 0)',
                                 ],
                             }}
                             transition={{
-                                duration: 2,
+                                duration: 2.5,
                                 repeat: Infinity,
                                 ease: 'easeInOut'
                             }}
@@ -124,17 +125,17 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                                     ease: 'easeInOut'
                                 }}
                             >
-                                <Sparkles className="w-5 h-5 text-white" />
+                                <Sparkles className="w-5 h-5 text-white drop-shadow-lg" />
                             </motion.div>
                         </motion.div>
                         {/* 流光效果 - 增强版 */}
                         <motion.div
-                            className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                            className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/50 to-transparent"
                             animate={{
                                 x: ['-100%', '200%'],
                             }}
                             transition={{
-                                duration: 2,
+                                duration: 2.5,
                                 repeat: Infinity,
                                 repeatDelay: 3,
                                 ease: 'easeInOut'
@@ -146,7 +147,7 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5, delay: 0.5 }}
                     >
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white tracking-tight">
                             AI 智能洞察
                         </h3>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -156,10 +157,12 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                 </div>
 
                 {onRefresh && (
-                    <button
+                    <motion.button
                         onClick={onRefresh}
                         disabled={loading}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
                     >
                         <motion.div
                             animate={loading ? { rotate: 360 } : {}}
@@ -167,7 +170,7 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                         >
                             <Sparkles className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                         </motion.div>
-                    </button>
+                    </motion.button>
                 )}
             </div>
 

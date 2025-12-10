@@ -83,9 +83,58 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
     const showAIInsights = settings?.enable_explore ?? true;
 
     return (
-        <div className="min-h-screen bg-[var(--color-background-paper)] dark:bg-[#0F0F0F]">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-[#0A0A0A] dark:via-[#0F0F0F] dark:to-[#0A0A0A]">
+            {/* 背景装饰 - 增强版 */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                {/* 主光晕 - 右上角 */}
+                <motion.div
+                    className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/8 via-cyan-400/6 to-transparent dark:from-blue-400/4 dark:via-cyan-400/3 dark:to-transparent rounded-full blur-3xl"
+                    animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0.4, 0.7, 0.4],
+                        x: [0, 30, 0],
+                        y: [0, 20, 0],
+                    }}
+                    transition={{
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: [0.45, 0.05, 0.55, 0.95]
+                    }}
+                />
+                {/* 次光晕 - 左下角 */}
+                <motion.div
+                    className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-purple-400/8 via-pink-400/6 to-transparent dark:from-purple-400/4 dark:via-pink-400/3 dark:to-transparent rounded-full blur-3xl"
+                    animate={{
+                        scale: [1.2, 1, 1.2],
+                        opacity: [0.6, 0.4, 0.6],
+                        x: [0, -30, 0],
+                        y: [0, -20, 0],
+                    }}
+                    transition={{
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: [0.45, 0.05, 0.55, 0.95],
+                        delay: 1.5
+                    }}
+                />
+                {/* 第三光晕 - 中间 */}
+                <motion.div
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-indigo-400/4 via-violet-400/3 to-transparent dark:from-indigo-400/2 dark:via-violet-400/2 dark:to-transparent rounded-full blur-3xl"
+                    animate={{
+                        scale: [1, 1.15, 1],
+                        opacity: [0.3, 0.5, 0.3],
+                        rotate: [0, 90, 0],
+                    }}
+                    transition={{
+                        duration: 15,
+                        repeat: Infinity,
+                        ease: 'linear'
+                    }}
+                />
+            </div>
+
             {/* Container with max width */}
-            <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-8">
+            <div className="relative max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-8">
                 {/* Header - 增强动画 */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -102,10 +151,10 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.5, delay: 0.1 }}
                         >
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">
                                 数据统计
                             </h1>
-                            <p className="text-gray-600 dark:text-gray-400">
+                            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
                                 查看你的观看习惯和内容分析
                             </p>
                         </motion.div>
@@ -114,26 +163,45 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
                             disabled={refreshing}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.3, delay: 0.2 }}
-                            whileHover={{ scale: 1.05, y: -2 }}
+                            transition={{
+                                duration: 0.4,
+                                delay: 0.2,
+                                type: 'spring',
+                                stiffness: 200,
+                                damping: 15
+                            }}
+                            whileHover={{
+                                scale: 1.05,
+                                y: -3,
+                                boxShadow: '0 10px 30px -10px rgba(0, 122, 255, 0.3)',
+                                transition: { duration: 0.2 }
+                            }}
                             whileTap={{ scale: 0.95 }}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 hover:shadow-lg transition-shadow"
+                            className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
+                            {/* 悬停光效 */}
+                            <motion.div
+                                className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0"
+                                initial={{ x: '-100%' }}
+                                whileHover={{ x: '100%' }}
+                                transition={{ duration: 0.6, ease: 'easeInOut' }}
+                            />
                             <motion.div
                                 animate={refreshing ? { rotate: 360 } : {}}
                                 transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: 'linear' }}
+                                className="relative z-10"
                             >
-                                <RefreshCw className="w-4 h-4" />
+                                <RefreshCw className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                             </motion.div>
-                            <span className="text-sm font-medium">刷新</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 relative z-10">刷新</span>
                         </motion.button>
                     </div>
                 </motion.div>
 
-                {/* Bento Grid Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+                {/* Bento Grid Layout - 优化间距和响应式 */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 lg:gap-6">
                     {/* KPI Cards - 3 columns on desktop */}
-                    <div className="lg:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="lg:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                         <KPICard {...displayData.kpis.totalItems} delay={0} />
                         <KPICard {...displayData.kpis.avgRating} delay={0.1} />
                         <KPICard {...displayData.kpis.monthlyNew} delay={0.2} />
@@ -144,10 +212,10 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
                         {showAIInsights && (
                             <motion.div
                                 key="ai-insights"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, x: -20, height: 0 }}
+                                animate={{ opacity: 1, x: 0, height: 'auto' }}
+                                exit={{ opacity: 0, x: -20, height: 0 }}
+                                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
                                 className="lg:col-span-5"
                                 layout
                             >
@@ -163,7 +231,7 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
                     {/* Items Added Trend - 动态调整列宽 */}
                     <motion.div
                         layout
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
                         className={showAIInsights ? 'lg:col-span-7' : 'lg:col-span-12'}
                     >
                         <ChartContainer
@@ -171,9 +239,9 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
                             description="最近 6 个月的新增收藏变化"
                             delay={0.3}
                             action={
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                     <Calendar className="w-4 h-4" />
-                                    <span>近 6 个月</span>
+                                    <span className="hidden sm:inline">近 6 个月</span>
                                 </div>
                             }
                         >

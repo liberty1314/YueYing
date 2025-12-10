@@ -64,44 +64,53 @@ export function KPICard({
             transition={{
                 duration: 0.6,
                 delay,
-                ease: [0.25, 0.46, 0.45, 0.94], // 自定义缓动函数
+                ease: [0.25, 0.46, 0.45, 0.94],
             }}
             whileHover={{
                 scale: 1.02,
-                y: -6,
-                transition: { duration: 0.2, ease: 'easeOut' }
+                y: -8,
+                transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
             }}
             whileTap={{ scale: 0.98 }}
             className={cn(
-                'group relative overflow-hidden cursor-pointer',
-                'bg-white dark:bg-[#1C1C1E]',
-                'rounded-2xl',
-                'border border-gray-100 dark:border-white/5',
+                'group relative overflow-hidden cursor-pointer h-full',
+                'bg-white/80 dark:bg-[#1C1C1E]/80',
+                'backdrop-blur-xl',
+                'rounded-2xl lg:rounded-3xl',
+                'border border-gray-200/50 dark:border-white/5',
                 'shadow-sm hover:shadow-2xl',
-                'transition-shadow duration-300',
-                'p-6',
+                'transition-all duration-300',
+                'p-5 md:p-6',
                 className
             )}
         >
             {/* 背景渐变效果 - 增强版 */}
             <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-pink-950/20"
+                className="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-purple-50/40 to-pink-50/60 dark:from-blue-950/30 dark:via-purple-950/20 dark:to-pink-950/30"
                 initial={{ opacity: 0 }}
                 whileHover={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
             />
 
             {/* 光晕效果 */}
             <motion.div
-                className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"
+                className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 dark:from-blue-400/10 dark:to-purple-400/10 rounded-full blur-3xl"
                 initial={{ opacity: 0, scale: 0.8 }}
-                whileHover={{ opacity: 1, scale: 1.2 }}
-                transition={{ duration: 0.5 }}
+                whileHover={{ opacity: 1, scale: 1.4 }}
+                transition={{ duration: 0.7, ease: [0.34, 1.56, 0.64, 1] }}
+            />
+
+            {/* 流光效果 */}
+            <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent dark:via-white/10"
+                initial={{ x: '-100%', opacity: 0 }}
+                whileHover={{ x: '100%', opacity: 1 }}
+                transition={{ duration: 0.8, ease: 'easeInOut' }}
             />
 
             <div className="relative z-10">
                 {/* 标签 */}
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
+                <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 tracking-wide">
                     {label}
                 </p>
 
@@ -110,22 +119,37 @@ export function KPICard({
                     className="flex items-baseline gap-2 mb-4"
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: delay + 0.2 }}
+                    transition={{
+                        duration: 0.6,
+                        delay: delay + 0.2,
+                        type: 'spring',
+                        stiffness: 100,
+                        damping: 12
+                    }}
                 >
-                    <h3 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    <motion.h3
+                        className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white tracking-tight"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    >
                         {value}
-                    </h3>
+                    </motion.h3>
                     {suffix && (
-                        <span className="text-xl font-semibold text-gray-500 dark:text-gray-400">
+                        <motion.span
+                            className="text-lg md:text-xl font-semibold text-gray-500 dark:text-gray-400"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: delay + 0.4 }}
+                        >
                             {suffix}
-                        </span>
+                        </motion.span>
                     )}
                 </motion.div>
 
                 {/* 趋势指示器 - 添加弹性动画 */}
                 {config && trendValue !== undefined && (
                     <motion.div
-                        className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full', config.bg)}
+                        className={cn('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full', config.bg)}
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{
@@ -135,7 +159,7 @@ export function KPICard({
                             stiffness: 200,
                             damping: 15
                         }}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.08 }}
                     >
                         {TrendIcon && (
                             <motion.div
@@ -154,7 +178,7 @@ export function KPICard({
                         <span className={cn('text-xs font-semibold', config.color)}>
                             {trendValue > 0 ? '+' : ''}{trendValue}%
                         </span>
-                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                        <span className="text-xs text-gray-600 dark:text-gray-400 hidden sm:inline">
                             vs 上月
                         </span>
                     </motion.div>
