@@ -88,6 +88,16 @@ export default function SystemSettingsPage() {
       const updated = await api.put<SystemSettings>('/system-settings', updateData, true);
       setSettings(updated);
       setOriginalSettings(updated);
+
+      // 清除缓存并触发更新事件
+      api.clearCache();
+
+      // 动态导入事件总线（避免服务端渲染问题）
+      if (typeof window !== 'undefined') {
+        const { eventBus, Events } = await import('@/lib/events');
+        eventBus.emit(Events.SYSTEM_SETTINGS_UPDATED, updated);
+      }
+
       showToast('系统设置已保存', 'success');
     } catch (error) {
       console.error('Failed to save settings:', error);

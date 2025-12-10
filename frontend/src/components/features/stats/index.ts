@@ -10,12 +10,7 @@ export { default as RatingDistributionChart } from './RatingDistributionChart';
 export { default as TimeTrendChart } from './TimeTrendChart';
 export { default as TopTagsCloud } from './TopTagsCloud';
 
-// Named exports
-export { AIInsightsPanel } from './AIInsightsPanel';
-export { ContentTypeDistribution } from './ContentTypeDistribution';
-export { RatingDistribution } from './RatingDistribution';
-export { StatsOverview } from './StatsOverview';
-export { WatchTimeChart } from './WatchTimeChart';
+// Named exports (legacy components removed - migrated to analytics/)
 
 // Week 6 New Components
 export { StatCard, StatCardGrid } from './StatCard';
@@ -23,3 +18,6 @@ export { BarChartWidget } from './BarChartWidget';
 export { PieChartWidget } from './PieChartWidget';
 export { LineChartWidget } from './LineChartWidget';
 export { TagCloudWidget } from './TagCloudWidget';
+
+// Premium Analytics Dashboard (Bento Grid)
+export * from './analytics';

@@ -2,228 +2,39 @@
  * Analytics Page - 数据统计页面
  * 路由: /analytics
  * 
- * Week 6: 数据可视化统计页面
- * 整合Recharts图表组件和AI洞察面板
+ * 展示高级感的 Bento Grid 布局数据仪表盘
  */
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MainLayout } from '@/components/layout';
-import { WatchTimeChart } from '@/components/features/stats/WatchTimeChart';
-import { ContentTypeDistribution } from '@/components/features/stats/ContentTypeDistribution';
-import { RatingDistribution } from '@/components/features/stats/RatingDistribution';
-import { AIInsightsPanel } from '@/components/features/stats/AIInsightsPanel';
-import { StatsOverview } from '@/components/features/stats/StatsOverview';
-import { BarChartIcon, PackageIcon, StarIcon, ClockIcon } from 'lucide-react';
+import { AnalyticsDashboard } from '@/components/features/stats/analytics';
+import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { api, APIError, CachePresets } from '@/lib/apiClient';
-import { SkeletonChart, ErrorDisplay } from '@/components/ui';
 
-interface StatsData {
-  watchTime: Array<{ month: string; hours: number; items: number }>;
-  contentType: Array<{ type: string; count: number; percentage: number }>;
-  rating: Array<{ range: string; count: number; avgRating: number }>;
-  overview: {
-    totalItems: number;
-    totalHours: number;
-    avgRating: number;
-    thisMonthItems: number;
-  };
-}
+export default function AnalyticsPage() {
+  const { data, loading, error, refetch } = useAnalyticsData();
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-
-export default function StatsPage() {
-  const [data, setData] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // 调用综合统计API（启用中等缓存，需要认证）
-      const statsData = await api.get<any>(
-        '/stats/comprehensive?time_period=month&months=6',
-        true,
-        CachePresets.MEDIUM // 5分钟缓存
-      );
-
-      // 适配后端数据格式
-      const adaptedData: StatsData = {
-        watchTime: statsData.time_trend.data.map((point: any) => ({
-          month: point.date,
-          hours: Math.round(point.count * 2), // 模拟时长，假设每项 2 小时
-          items: point.count,
-        })),
-        contentType: statsData.type_distribution.map((item: any) => ({
-          type: item.type,
-          count: item.count,
-          percentage: item.percentage,
-        })),
-        rating: [
-          { range: '9-10分', count: 0, avgRating: 9.5 },
-          { range: '8-9分', count: 0, avgRating: 8.5 },
-          { range: '7-8分', count: 0, avgRating: 7.5 },
-          { range: '6-7分', count: 0, avgRating: 6.5 },
-          { range: '0-6分', count: 0, avgRating: 5.0 },
-        ].map((range, index) => {
-          const ratingData = statsData.rating_distribution.filter(
-            (r: any) => r.rating >= index * 2 && r.rating < (index + 1) * 2
-          );
-          const count = ratingData.reduce((sum: number, r: any) => sum + r.count, 0);
-          return { ...range, count };
-        }),
-        overview: {
-          totalItems: statsData.overview.total_items,
-          totalHours: Math.round(statsData.overview.total_items * 2), // 模拟时长
-          avgRating: statsData.overview.average_rating || 0,
-          thisMonthItems: statsData.overview.this_month_added,
-        },
-      };
-
-      setData(adaptedData);
-    } catch (err) {
-      if (err instanceof APIError) {
-        console.error('Failed to fetch stats:', err.detail);
-      }
-      setError(err instanceof Error ? err : new Error('获取统计数据失败'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 加载状态显示骨架屏
-  if (loading) {
+  if (error) {
     return (
       <ProtectedRoute>
-        <MainLayout>
-          <div className="space-y-8">
-            {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <BarChartIcon className="w-8 h-8 text-primary-500" />
-                数据统计
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                查看你的观看习惯和内容偏好分析
-              </p>
-            </div>
-
-            {/* 骨架屏 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <SkeletonChart />
-              <SkeletonChart />
-            </div>
-            <SkeletonChart />
+        <div className="min-h-screen bg-[var(--color-background-paper)] dark:bg-[#0F0F0F] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500 mb-4">加载数据失败: {error.message}</p>
+            <button
+              onClick={refetch}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              重试
+            </button>
           </div>
-        </MainLayout>
+        </div>
       </ProtectedRoute>
     );
   }
-
-  // 错误状态显示
-  if (error && !data) {
-    return (
-      <ProtectedRoute>
-        <MainLayout>
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <ErrorDisplay
-              error={error}
-              onRetry={fetchStats}
-              size="lg"
-            />
-          </div>
-        </MainLayout>
-      </ProtectedRoute>
-    );
-  }
-
-  if (!data) {
-    return (
-      <ProtectedRoute>
-        <MainLayout>
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              暂无统计数据
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              开始添加内容到收藏库，以查看统计数据
-            </p>
-          </div>
-        </MainLayout>
-      </ProtectedRoute>
-    );
-  }
-
-  const overviewStats = [
-    {
-      label: '总收藏数',
-      value: data.overview.totalItems,
-      change: 15,
-      trend: 'up' as const,
-      icon: <PackageIcon className="w-4 h-4" />,
-    },
-    {
-      label: '总观看时长',
-      value: `${data.overview.totalHours}h`,
-      change: 12,
-      trend: 'up' as const,
-      icon: <ClockIcon className="w-4 h-4" />,
-    },
-    {
-      label: '平均评分',
-      value: data.overview.avgRating.toFixed(1),
-      icon: <StarIcon className="w-4 h-4" />,
-    },
-    {
-      label: '本月新增',
-      value: data.overview.thisMonthItems,
-      change: 8,
-      trend: 'down' as const,
-      icon: <BarChartIcon className="w-4 h-4" />,
-    },
-  ];
 
   return (
     <ProtectedRoute>
-      <MainLayout>
-        <div className="space-y-8">
-          {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <BarChartIcon className="w-8 h-8 text-primary-500" />
-              数据统计
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              查看你的观看习惯和内容偏好分析
-            </p>
-          </div>
-
-          {/* Overview Stats */}
-          <StatsOverview stats={overviewStats} />
-
-          {/* AI Insights */}
-          <AIInsightsPanel />
-
-          {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Watch Time Chart */}
-            <WatchTimeChart data={data.watchTime} />
-
-            {/* Content Type Distribution */}
-            <ContentTypeDistribution data={data.contentType} />
-          </div>
-
-          {/* Rating Distribution - Full Width */}
-          <RatingDistribution data={data.rating} />
-        </div>
-      </MainLayout>
+      <AnalyticsDashboard data={data || undefined} loading={loading} onRefresh={refetch} />
     </ProtectedRoute>
   );
 }
