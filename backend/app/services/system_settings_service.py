@@ -21,6 +21,8 @@ class SystemSettingsService:
             enable_explore=config.DEFAULT_ENABLE_EXPLORE,
             allow_user_ai_tag_settings=config.DEFAULT_ALLOW_USER_AI_TAG_SETTINGS,
             allow_anonymous_home_access=config.DEFAULT_ALLOW_ANONYMOUS_HOME_ACCESS,
+            enable_stats=config.DEFAULT_ENABLE_STATS,
+            enable_ai_assistant=config.DEFAULT_ENABLE_AI_ASSISTANT,
         )
         
         db.add(default_settings)
@@ -38,6 +40,8 @@ class SystemSettingsService:
         settings.enable_explore = config.DEFAULT_ENABLE_EXPLORE
         settings.allow_user_ai_tag_settings = config.DEFAULT_ALLOW_USER_AI_TAG_SETTINGS
         settings.allow_anonymous_home_access = config.DEFAULT_ALLOW_ANONYMOUS_HOME_ACCESS
+        settings.enable_stats = config.DEFAULT_ENABLE_STATS
+        settings.enable_ai_assistant = config.DEFAULT_ENABLE_AI_ASSISTANT
         
         db.commit()
         db.refresh(settings)

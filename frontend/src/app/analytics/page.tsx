@@ -3,6 +3,8 @@
  * 路由: /analytics
  * 
  * 展示高级感的 Bento Grid 布局数据仪表盘
+ * 
+ * 注意：路由保护已在 middleware 层面实现
  */
 
 'use client';

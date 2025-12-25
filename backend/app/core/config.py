@@ -194,6 +194,8 @@ class Settings(BaseSettings):
     DEFAULT_ENABLE_EXPLORE: bool = Field(default=False, alias="DEFAULT_ENABLE_EXPLORE")
     DEFAULT_ALLOW_USER_AI_TAG_SETTINGS: bool = Field(default=True, alias="DEFAULT_ALLOW_USER_AI_TAG_SETTINGS")
     DEFAULT_ALLOW_ANONYMOUS_HOME_ACCESS: bool = Field(default=True, alias="DEFAULT_ALLOW_ANONYMOUS_HOME_ACCESS")
+    DEFAULT_ENABLE_STATS: bool = Field(default=True, alias="DEFAULT_ENABLE_STATS")
+    DEFAULT_ENABLE_AI_ASSISTANT: bool = Field(default=True, alias="DEFAULT_ENABLE_AI_ASSISTANT")
 
     # ====================================
     # 首页数据缓存配置

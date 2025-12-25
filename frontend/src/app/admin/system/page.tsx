@@ -17,6 +17,8 @@ interface SystemSettings {
   enable_explore: boolean;
   allow_user_ai_tag_settings: boolean;
   allow_anonymous_home_access: boolean;
+  enable_stats: boolean;
+  enable_ai_assistant: boolean;
 }
 
 interface SettingCardProps {
@@ -83,14 +85,26 @@ export default function SystemSettingsPage() {
         enable_explore: settings.enable_explore,
         allow_user_ai_tag_settings: settings.allow_user_ai_tag_settings,
         allow_anonymous_home_access: settings.allow_anonymous_home_access,
+        enable_stats: settings.enable_stats,
+        enable_ai_assistant: settings.enable_ai_assistant,
       };
 
       const updated = await api.put<SystemSettings>('/system-settings', updateData, true);
       setSettings(updated);
       setOriginalSettings(updated);
 
-      // 清除缓存并触发更新事件
+      // 清除 API 客户端缓存
       api.clearCache();
+
+      // 清除 Middleware 缓存（关键步骤）
+      try {
+        await fetch('/api/clear-cache', {
+          method: 'POST',
+        });
+        console.log('[SystemSettings] Middleware cache cleared');
+      } catch (cacheError) {
+        console.error('[SystemSettings] Failed to clear middleware cache:', cacheError);
+      }
 
       // 动态导入事件总线（避免服务端渲染问题）
       if (typeof window !== 'undefined') {
@@ -98,7 +112,12 @@ export default function SystemSettingsPage() {
         eventBus.emit(Events.SYSTEM_SETTINGS_UPDATED, updated);
       }
 
-      showToast('系统设置已保存', 'success');
+      showToast('系统设置已保存，页面将在 2 秒后刷新', 'success');
+
+      // 延迟刷新页面，确保用户看到成功提示
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       console.error('Failed to save settings:', error);
       showToast(error instanceof Error ? error.message : '保存失败', 'error');
@@ -117,7 +136,9 @@ export default function SystemSettingsPage() {
   const hasChanges = settings && originalSettings && (
     settings.enable_explore !== originalSettings.enable_explore ||
     settings.allow_user_ai_tag_settings !== originalSettings.allow_user_ai_tag_settings ||
-    settings.allow_anonymous_home_access !== originalSettings.allow_anonymous_home_access
+    settings.allow_anonymous_home_access !== originalSettings.allow_anonymous_home_access ||
+    settings.enable_stats !== originalSettings.enable_stats ||
+    settings.enable_ai_assistant !== originalSettings.enable_ai_assistant
   );
 
   if (loading || !settings) {
@@ -213,6 +234,20 @@ export default function SystemSettingsPage() {
             description="开启后，未登录用户可以访问首页并查看公开内容；关闭后将强制登录"
             checked={settings.allow_anonymous_home_access}
             onChange={(checked) => setSettings({ ...settings, allow_anonymous_home_access: checked })}
+          />
+
+          <SettingCard
+            title="启用数据统计页面"
+            description="开启后，用户可以访问数据统计页面查看个人的阅读/观影统计数据和分析"
+            checked={settings.enable_stats}
+            onChange={(checked) => setSettings({ ...settings, enable_stats: checked })}
+          />
+
+          <SettingCard
+            title="启用AI助手页面"
+            description="开启后，用户可以访问AI助手页面与智能助手进行对话和获取推荐"
+            checked={settings.enable_ai_assistant}
+            onChange={(checked) => setSettings({ ...settings, enable_ai_assistant: checked })}
           />
         </div>
       </div>

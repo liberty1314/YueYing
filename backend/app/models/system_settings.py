@@ -36,7 +36,23 @@ class SystemSettings(BaseModel):
         server_default='true',
         comment="允许未登录用户访问首页"
     )
+    
+    enable_stats = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default='true',
+        comment="启用数据统计页面"
+    )
+    
+    enable_ai_assistant = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default='true',
+        comment="启用AI助手页面"
+    )
 
     def __repr__(self):
-        return f"<SystemSettings(id={self.id}, enable_explore={self.enable_explore}, allow_user_ai_tag_settings={self.allow_user_ai_tag_settings}, allow_anonymous_home_access={self.allow_anonymous_home_access})>"
+        return f"<SystemSettings(id={self.id}, enable_explore={self.enable_explore}, allow_user_ai_tag_settings={self.allow_user_ai_tag_settings}, allow_anonymous_home_access={self.allow_anonymous_home_access}, enable_stats={self.enable_stats}, enable_ai_assistant={self.enable_ai_assistant})>"
 

@@ -41,14 +41,16 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   requiresExplore?: boolean;
+  requiresStats?: boolean;
+  requiresAiAssistant?: boolean;
 }
 
 const allNavItems: NavItem[] = [
   { href: '/', label: '首页', icon: HomeIcon },
   { href: '/library', label: '我的记录', icon: LayoutGridIcon },
-  { href: '/assistant', label: 'AI助手', icon: BotIcon },
+  { href: '/assistant', label: 'AI助手', icon: BotIcon, requiresAiAssistant: true },
   { href: '/recommendations', label: '智能推荐', icon: SparklesIcon, requiresExplore: true },
-  { href: '/analytics', label: '数据统计', icon: BarChart3Icon },
+  { href: '/analytics', label: '数据统计', icon: BarChart3Icon, requiresStats: true },
 ];
 
 export function Navbar() {
@@ -69,6 +71,14 @@ export function Navbar() {
       // 如果菜单项需要探索功能，检查系统设置
       if (item.requiresExplore) {
         return settings?.enable_explore ?? true; // 默认显示，直到设置加载完成
+      }
+      // 如果菜单项需要数据统计功能，检查系统设置
+      if (item.requiresStats) {
+        return settings?.enable_stats ?? true;
+      }
+      // 如果菜单项需要AI助手功能，检查系统设置
+      if (item.requiresAiAssistant) {
+        return settings?.enable_ai_assistant ?? true;
       }
       return true;
     });

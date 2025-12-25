@@ -17,6 +17,8 @@ export interface SystemSettings {
     enable_explore: boolean;
     allow_user_ai_tag_settings: boolean;
     allow_anonymous_home_access: boolean;
+    enable_stats: boolean;
+    enable_ai_assistant: boolean;
 }
 
 export function useSystemSettings() {
@@ -40,6 +42,8 @@ export function useSystemSettings() {
                 enable_explore: data.enable_explore ?? true,
                 allow_user_ai_tag_settings: true,
                 allow_anonymous_home_access: data.allow_anonymous_home_access ?? true,
+                enable_stats: data.enable_stats ?? true,
+                enable_ai_assistant: data.enable_ai_assistant ?? true,
             });
             setError(null);
         } catch (err) {
@@ -51,6 +55,8 @@ export function useSystemSettings() {
                 enable_explore: true,
                 allow_user_ai_tag_settings: true,
                 allow_anonymous_home_access: true,
+                enable_stats: true,
+                enable_ai_assistant: true,
             });
         } finally {
             setLoading(false);

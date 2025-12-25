@@ -100,11 +100,11 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
     >
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
-        {!collapsed && (
+        {/* {!collapsed && (
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
             后台管理
           </h2>
-        )}
+        )} */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -132,17 +132,16 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
                   className={`
                     flex items-center gap-3 px-3 py-2.5 rounded-lg
                     transition-all duration-200
-                    ${
-                      active
-                        ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ${active
+                      ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                     }
                     ${collapsed ? 'justify-center' : ''}
                   `}
                   title={collapsed ? item.name : ''}
                 >
                   <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-primary-600 dark:text-primary-400' : ''}`} />
-                  
+
                   {!collapsed && (
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">

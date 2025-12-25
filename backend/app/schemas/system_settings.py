@@ -18,6 +18,14 @@ class SystemSettingsBase(BaseModel):
         default=True,
         description="允许未登录用户访问首页"
     )
+    enable_stats: bool = Field(
+        default=True,
+        description="启用数据统计页面"
+    )
+    enable_ai_assistant: bool = Field(
+        default=True,
+        description="启用AI助手页面"
+    )
 
 
 class SystemSettingsUpdate(SystemSettingsBase):
