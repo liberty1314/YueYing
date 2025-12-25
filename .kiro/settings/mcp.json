@@ -34,8 +34,20 @@
         "-y",
         "@figma/mcp-server-figma"
       ],
-      "disabled": false,
-      "autoApprove": []
+      "disabled": true,
+      "autoApprove": [],
+      "disabledTools": [
+        "get_screenshot",
+        "create_design_system_rules",
+        "get_design_context",
+        "get_metadata",
+        "get_variable_defs",
+        "get_figjam",
+        "generate_diagram",
+        "get_code_connect_map",
+        "whoami",
+        "add_code_connect_map"
+      ]
     }
   }
 }

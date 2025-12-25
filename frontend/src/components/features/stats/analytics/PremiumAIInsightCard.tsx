@@ -70,24 +70,54 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
         >
             {/* 顶部装饰渐变 - 增强动画 */}
             <motion.div
-                className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 1, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: 1 }}
+                transition={{ duration: 1.2, delay: 0.5, ease: [0.4, 0, 0.2, 1] }}
                 style={{ transformOrigin: 'left' }}
-            />
+            >
+                {/* 流动光效 */}
+                <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                    animate={{
+                        x: ['-100%', '200%'],
+                    }}
+                    transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        repeatDelay: 2,
+                        ease: 'easeInOut'
+                    }}
+                />
+            </motion.div>
 
-            {/* 背景光晕效果 */}
+            {/* 多层背景光晕效果 */}
             <motion.div
-                className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-blue-400/10 via-purple-400/10 to-pink-400/10 dark:from-blue-400/5 dark:via-purple-400/5 dark:to-pink-400/5 rounded-full blur-3xl"
+                className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-blue-400/12 via-purple-400/12 to-pink-400/12 dark:from-blue-400/6 dark:via-purple-400/6 dark:to-pink-400/6 rounded-full blur-3xl"
                 animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.3, 0.5, 0.3],
+                    scale: [1, 1.3, 1],
+                    opacity: [0.4, 0.7, 0.4],
+                    rotate: [0, 90, 0],
                 }}
                 transition={{
-                    duration: 5,
+                    duration: 8,
                     repeat: Infinity,
                     ease: 'easeInOut'
+                }}
+            />
+
+            <motion.div
+                className="absolute -bottom-32 -left-32 w-64 h-64 bg-gradient-to-tr from-pink-400/10 via-purple-400/10 to-blue-400/10 dark:from-pink-400/5 dark:via-purple-400/5 dark:to-blue-400/5 rounded-full blur-3xl"
+                animate={{
+                    scale: [1.2, 1, 1.2],
+                    opacity: [0.5, 0.3, 0.5],
+                    rotate: [0, -90, 0],
+                }}
+                transition={{
+                    duration: 10,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 1
                 }}
             />
 
@@ -96,15 +126,15 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                 <div className="flex items-center gap-3">
                     <motion.div
                         className="relative"
-                        whileHover={{ scale: 1.15, rotate: 10 }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                        whileHover={{ scale: 1.2, rotate: 15 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                     >
                         <motion.div
                             className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg"
                             animate={{
                                 boxShadow: [
                                     '0 0 0 0 rgba(59, 130, 246, 0)',
-                                    '0 0 0 10px rgba(59, 130, 246, 0.1)',
+                                    '0 0 0 12px rgba(59, 130, 246, 0.15)',
                                     '0 0 0 0 rgba(59, 130, 246, 0)',
                                 ],
                             }}
@@ -116,11 +146,11 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                         >
                             <motion.div
                                 animate={{
-                                    rotate: [0, 10, -10, 0],
-                                    scale: [1, 1.1, 1],
+                                    rotate: [0, 15, -15, 0],
+                                    scale: [1, 1.15, 1],
                                 }}
                                 transition={{
-                                    duration: 3,
+                                    duration: 4,
                                     repeat: Infinity,
                                     ease: 'easeInOut'
                                 }}
@@ -128,17 +158,30 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                                 <Sparkles className="w-5 h-5 text-white drop-shadow-lg" />
                             </motion.div>
                         </motion.div>
-                        {/* 流光效果 - 增强版 */}
+                        {/* 多层流光效果 */}
                         <motion.div
-                            className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                            className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/60 to-transparent"
                             animate={{
                                 x: ['-100%', '200%'],
                             }}
                             transition={{
-                                duration: 2.5,
+                                duration: 2,
                                 repeat: Infinity,
                                 repeatDelay: 3,
-                                ease: 'easeInOut'
+                                ease: 'easeOut'
+                            }}
+                        />
+                        <motion.div
+                            className="absolute inset-0 rounded-xl bg-gradient-to-l from-transparent via-white/40 to-transparent"
+                            animate={{
+                                x: ['100%', '-200%'],
+                            }}
+                            transition={{
+                                duration: 2.5,
+                                repeat: Infinity,
+                                repeatDelay: 4,
+                                ease: 'easeOut',
+                                delay: 1
                             }}
                         />
                     </motion.div>
@@ -194,19 +237,23 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                         return (
                             <motion.div
                                 key={index}
-                                initial={{ opacity: 0, x: -20, scale: 0.95 }}
-                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                initial={{ opacity: 0, x: -30, scale: 0.9, rotateY: -10 }}
+                                animate={{ opacity: 1, x: 0, scale: 1, rotateY: 0 }}
                                 transition={{
-                                    duration: 0.4,
-                                    delay: index * 0.1,
+                                    duration: 0.5,
+                                    delay: index * 0.08,
                                     type: 'spring',
-                                    stiffness: 200,
+                                    stiffness: 250,
                                     damping: 20
                                 }}
                                 whileHover={{
                                     scale: 1.02,
                                     x: 6,
-                                    transition: { duration: 0.2 }
+                                    y: -3,
+                                    transition: {
+                                        duration: 0.35,
+                                        ease: [0.34, 1.56, 0.64, 1]
+                                    }
                                 }}
                                 whileTap={{ scale: 0.98 }}
                                 className={cn(
@@ -217,15 +264,28 @@ export function PremiumAIInsightCard({ insights, loading, onRefresh }: PremiumAI
                                     'border-l-4',
                                     border,
                                     'border border-gray-100 dark:border-white/5',
-                                    'cursor-pointer group'
+                                    'cursor-pointer group',
+                                    'shadow-sm hover:shadow-lg',
+                                    'transition-shadow duration-300'
                                 )}
                             >
-                                {/* 悬停光效 */}
+                                {/* 悬停光效 - 增强版 */}
                                 <motion.div
-                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
                                     initial={{ x: '-100%', opacity: 0 }}
                                     whileHover={{ x: '100%', opacity: 1 }}
-                                    transition={{ duration: 0.6 }}
+                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                />
+
+                                {/* 边框光效 */}
+                                <motion.div
+                                    className="absolute inset-0 rounded-xl"
+                                    initial={{ opacity: 0 }}
+                                    whileHover={{
+                                        opacity: 1,
+                                        boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.1)'
+                                    }}
+                                    transition={{ duration: 0.3 }}
                                 />
 
                                 <div className="flex items-start gap-3 relative z-10">

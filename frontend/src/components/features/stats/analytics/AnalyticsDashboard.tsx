@@ -84,138 +84,227 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-[#0A0A0A] dark:via-[#0F0F0F] dark:to-[#0A0A0A]">
-            {/* 背景装饰 - 增强版 */}
+            {/* 背景装饰 - 超级增强版 */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 {/* 主光晕 - 右上角 */}
                 <motion.div
-                    className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/8 via-cyan-400/6 to-transparent dark:from-blue-400/4 dark:via-cyan-400/3 dark:to-transparent rounded-full blur-3xl"
+                    className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/10 via-cyan-400/8 to-transparent dark:from-blue-400/5 dark:via-cyan-400/4 dark:to-transparent rounded-full blur-3xl"
                     animate={{
-                        scale: [1, 1.3, 1],
-                        opacity: [0.4, 0.7, 0.4],
-                        x: [0, 30, 0],
-                        y: [0, 20, 0],
+                        scale: [1, 1.4, 1],
+                        opacity: [0.5, 0.8, 0.5],
+                        x: [0, 40, 0],
+                        y: [0, 30, 0],
                     }}
                     transition={{
-                        duration: 10,
+                        duration: 12,
                         repeat: Infinity,
-                        ease: [0.45, 0.05, 0.55, 0.95]
+                        ease: [0.4, 0, 0.2, 1]
                     }}
                 />
                 {/* 次光晕 - 左下角 */}
                 <motion.div
-                    className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-purple-400/8 via-pink-400/6 to-transparent dark:from-purple-400/4 dark:via-pink-400/3 dark:to-transparent rounded-full blur-3xl"
+                    className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-purple-400/10 via-pink-400/8 to-transparent dark:from-purple-400/5 dark:via-pink-400/4 dark:to-transparent rounded-full blur-3xl"
                     animate={{
-                        scale: [1.2, 1, 1.2],
-                        opacity: [0.6, 0.4, 0.6],
-                        x: [0, -30, 0],
+                        scale: [1.3, 1, 1.3],
+                        opacity: [0.7, 0.5, 0.7],
+                        x: [0, -40, 0],
+                        y: [0, -30, 0],
+                    }}
+                    transition={{
+                        duration: 12,
+                        repeat: Infinity,
+                        ease: [0.4, 0, 0.2, 1],
+                        delay: 2
+                    }}
+                />
+                {/* 第三光晕 - 中间旋转 */}
+                <motion.div
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-indigo-400/6 via-violet-400/4 to-transparent dark:from-indigo-400/3 dark:via-violet-400/2 dark:to-transparent rounded-full blur-3xl"
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.4, 0.6, 0.4],
+                        rotate: [0, 180, 360],
+                    }}
+                    transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: 'linear'
+                    }}
+                />
+                {/* 第四光晕 - 右下角 */}
+                <motion.div
+                    className="absolute -bottom-32 -right-32 w-[400px] h-[400px] bg-gradient-to-tl from-emerald-400/8 via-teal-400/6 to-transparent dark:from-emerald-400/4 dark:via-teal-400/3 dark:to-transparent rounded-full blur-3xl"
+                    animate={{
+                        scale: [1.1, 1.3, 1.1],
+                        opacity: [0.4, 0.6, 0.4],
+                        x: [0, -20, 0],
                         y: [0, -20, 0],
                     }}
                     transition={{
-                        duration: 10,
+                        duration: 14,
                         repeat: Infinity,
-                        ease: [0.45, 0.05, 0.55, 0.95],
-                        delay: 1.5
+                        ease: [0.4, 0, 0.2, 1],
+                        delay: 3
                     }}
                 />
-                {/* 第三光晕 - 中间 */}
+                {/* 第五光晕 - 左上角 */}
                 <motion.div
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-indigo-400/4 via-violet-400/3 to-transparent dark:from-indigo-400/2 dark:via-violet-400/2 dark:to-transparent rounded-full blur-3xl"
+                    className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-gradient-to-br from-rose-400/8 via-orange-400/6 to-transparent dark:from-rose-400/4 dark:via-orange-400/3 dark:to-transparent rounded-full blur-3xl"
                     animate={{
-                        scale: [1, 1.15, 1],
-                        opacity: [0.3, 0.5, 0.3],
-                        rotate: [0, 90, 0],
+                        scale: [1.2, 1, 1.2],
+                        opacity: [0.5, 0.3, 0.5],
+                        x: [0, 20, 0],
+                        y: [0, 20, 0],
                     }}
                     transition={{
-                        duration: 15,
+                        duration: 16,
                         repeat: Infinity,
-                        ease: 'linear'
+                        ease: [0.4, 0, 0.2, 1],
+                        delay: 4
                     }}
                 />
             </div>
 
             {/* Container with max width */}
             <div className="relative max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-8">
-                {/* Header - 增强动画 */}
+                {/* Header - 超级增强动画 */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: -30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
-                        duration: 0.6,
-                        ease: [0.25, 0.46, 0.45, 0.94]
+                        duration: 0.8,
+                        ease: [0.4, 0, 0.2, 1]
                     }}
                     className="mb-8"
                 >
                     <div className="flex items-center justify-between">
                         <motion.div
-                            initial={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
+                            transition={{
+                                duration: 0.6,
+                                delay: 0.1,
+                                type: 'spring',
+                                stiffness: 120,
+                                damping: 20
+                            }}
                         >
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">
+                            <motion.h1
+                                className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.2 }}
+                            >
                                 数据统计
-                            </h1>
-                            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+                            </motion.h1>
+                            <motion.p
+                                className="text-sm md:text-base text-gray-600 dark:text-gray-400"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.3 }}
+                            >
                                 查看你的观看习惯和内容分析
-                            </p>
+                            </motion.p>
                         </motion.div>
                         <motion.button
                             onClick={handleRefresh}
                             disabled={refreshing}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                            initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
+                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
                             transition={{
-                                duration: 0.4,
+                                duration: 0.5,
                                 delay: 0.2,
                                 type: 'spring',
-                                stiffness: 200,
-                                damping: 15
+                                stiffness: 300,
+                                damping: 20
                             }}
                             whileHover={{
-                                scale: 1.05,
-                                y: -3,
-                                boxShadow: '0 10px 30px -10px rgba(0, 122, 255, 0.3)',
-                                transition: { duration: 0.2 }
+                                scale: 1.08,
+                                y: -4,
+                                boxShadow: '0 12px 40px -12px rgba(0, 122, 255, 0.4)',
+                                transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] }
                             }}
-                            whileTap={{ scale: 0.95 }}
-                            className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileTap={{ scale: 0.94 }}
+                            className="relative flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {/* 悬停光效 */}
+                            {/* 背景渐变 */}
                             <motion.div
-                                className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0"
+                                className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30"
+                                initial={{ opacity: 0 }}
+                                whileHover={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                            />
+
+                            {/* 悬停流光 */}
+                            <motion.div
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/15 to-transparent"
                                 initial={{ x: '-100%' }}
                                 whileHover={{ x: '100%' }}
-                                transition={{ duration: 0.6, ease: 'easeInOut' }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
                             />
+
+                            {/* 图标 */}
                             <motion.div
                                 animate={refreshing ? { rotate: 360 } : {}}
-                                transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: 'linear' }}
+                                transition={{ duration: 0.8, repeat: refreshing ? Infinity : 0, ease: 'linear' }}
                                 className="relative z-10"
                             >
                                 <RefreshCw className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                             </motion.div>
+
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 relative z-10">刷新</span>
                         </motion.button>
                     </div>
                 </motion.div>
 
                 {/* Bento Grid Layout - 优化间距和响应式 */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 lg:gap-6">
+                <motion.div
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 lg:gap-6"
+                    initial="initial"
+                    animate="animate"
+                    variants={{
+                        initial: { opacity: 0 },
+                        animate: {
+                            opacity: 1,
+                            transition: {
+                                staggerChildren: 0.06,
+                                delayChildren: 0.3,
+                            }
+                        }
+                    }}
+                >
                     {/* KPI Cards - 3 columns on desktop */}
-                    <div className="lg:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                        <KPICard {...displayData.kpis.totalItems} delay={0} />
-                        <KPICard {...displayData.kpis.avgRating} delay={0.1} />
-                        <KPICard {...displayData.kpis.monthlyNew} delay={0.2} />
-                    </div>
+                    <motion.div
+                        className="lg:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5"
+                        variants={{
+                            initial: { opacity: 0, y: 20 },
+                            animate: {
+                                opacity: 1,
+                                y: 0,
+                                transition: {
+                                    staggerChildren: 0.08,
+                                }
+                            }
+                        }}
+                    >
+                        <KPICard {...displayData.kpis.totalItems} delay={0.4} />
+                        <KPICard {...displayData.kpis.avgRating} delay={0.5} />
+                        <KPICard {...displayData.kpis.monthlyNew} delay={0.6} />
+                    </motion.div>
 
                     {/* AI Insights - 条件渲染，带动画 */}
                     <AnimatePresence mode="wait">
                         {showAIInsights && (
                             <motion.div
                                 key="ai-insights"
-                                initial={{ opacity: 0, x: -20, height: 0 }}
-                                animate={{ opacity: 1, x: 0, height: 'auto' }}
-                                exit={{ opacity: 0, x: -20, height: 0 }}
-                                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                                initial={{ opacity: 0, x: -30, height: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, x: 0, height: 'auto', scale: 1 }}
+                                exit={{ opacity: 0, x: -30, height: 0, scale: 0.95 }}
+                                transition={{
+                                    duration: 0.5,
+                                    ease: [0.4, 0, 0.2, 1],
+                                    layout: { duration: 0.4 }
+                                }}
                                 className="lg:col-span-5"
                                 layout
                             >
@@ -231,18 +320,30 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
                     {/* Items Added Trend - 动态调整列宽 */}
                     <motion.div
                         layout
-                        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            duration: 0.6,
+                            delay: 0.7,
+                            ease: [0.4, 0, 0.2, 1],
+                            layout: { duration: 0.4 }
+                        }}
                         className={showAIInsights ? 'lg:col-span-7' : 'lg:col-span-12'}
                     >
                         <ChartContainer
                             title="新增内容趋势"
                             description="最近 6 个月的新增收藏变化"
-                            delay={0.3}
+                            delay={0.8}
                             action={
-                                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <motion.div
+                                    className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.9, duration: 0.3 }}
+                                >
                                     <Calendar className="w-4 h-4" />
                                     <span className="hidden sm:inline">近 6 个月</span>
-                                </div>
+                                </motion.div>
                             }
                         >
                             <TrendChart data={displayData.trends.itemsAdded} color="#34C759" />
@@ -250,27 +351,47 @@ export function AnalyticsDashboard({ data = emptyData, loading = false, onRefres
                     </motion.div>
 
                     {/* Content Type Distribution - 6 cols on desktop */}
-                    <motion.div layout className="lg:col-span-6">
+                    <motion.div
+                        layout
+                        className="lg:col-span-6"
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            duration: 0.6,
+                            delay: 0.9,
+                            ease: [0.4, 0, 0.2, 1]
+                        }}
+                    >
                         <ChartContainer
-                            title="内容类型分布"
+                            title="观影类型分析"
                             description="不同类型内容的收藏占比"
-                            delay={0.4}
+                            delay={1.0}
                         >
                             <TypeDistributionChart data={displayData.distributions.contentType} />
                         </ChartContainer>
                     </motion.div>
 
                     {/* Rating Distribution - 6 cols on desktop */}
-                    <motion.div layout className="lg:col-span-6">
+                    <motion.div
+                        layout
+                        className="lg:col-span-6"
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            duration: 0.6,
+                            delay: 1.0,
+                            ease: [0.4, 0, 0.2, 1]
+                        }}
+                    >
                         <ChartContainer
-                            title="评分分布"
+                            title="评分分析"
                             description="你的评分习惯分析"
-                            delay={0.5}
+                            delay={1.1}
                         >
                             <RatingDistributionChart data={displayData.distributions.rating} />
                         </ChartContainer>
                     </motion.div>
-                </div>
+                </motion.div>
             </div>
         </div>
     );

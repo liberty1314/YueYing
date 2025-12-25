@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   // 输出配置（用于 Docker 生产环境）
   output: 'standalone',
 
+  // 开发指示器开关
+  devIndicators: false,
+
   // 图片优化配置
   images: {
     remotePatterns: [

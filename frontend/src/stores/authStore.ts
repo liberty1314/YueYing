@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types';
 import { authApi } from '@/lib/api';
+import { setAuthTokenCookie, removeAuthTokenCookie } from '@/lib/cookies';
 
 interface AuthState {
     user: User | null;
@@ -45,13 +46,16 @@ export const useAuthStore = create<AuthStore>()(
                     token,
                 }),
 
-            login: (user, token) =>
+            login: (user, token) => {
                 set({
                     user,
                     token,
                     isAuthenticated: true,
                     isLoading: false,
-                }),
+                });
+                // 将 token 保存到 cookie，供 middleware 使用
+                setAuthTokenCookie(token);
+            },
 
             logout: () => {
                 set({
@@ -60,10 +64,11 @@ export const useAuthStore = create<AuthStore>()(
                     isAuthenticated: false,
                     isLoading: false,
                 });
-                // 清除本地存储
+                // 清除本地存储和 cookie
                 if (typeof window !== 'undefined') {
                     localStorage.removeItem('auth-storage');
                 }
+                removeAuthTokenCookie();
             },
 
             setLoading: (loading) =>
@@ -82,6 +87,8 @@ export const useAuthStore = create<AuthStore>()(
                             isLoading: false,
                             initialized: true,
                         });
+                        // 确保 cookie 中也有 token
+                        setAuthTokenCookie(token);
                     } catch (error) {
                         // Token 无效，清除认证状态
                         set({
@@ -91,6 +98,8 @@ export const useAuthStore = create<AuthStore>()(
                             isLoading: false,
                             initialized: true,
                         });
+                        // 清除 cookie
+                        removeAuthTokenCookie();
                     }
                 } else {
                     set({

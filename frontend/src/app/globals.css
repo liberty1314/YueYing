@@ -304,3 +304,33 @@ body {
   animation: none;
   mix-blend-mode: normal;
 }
+
+/* ====================================
+   隐藏开发工具图标
+   ==================================== */
+
+/* 隐藏 Next.js 开发指示器 */
+#__next-build-watcher {
+  display: none !important;
+}
+
+/* 隐藏可能的 React DevTools 或其他开发工具浮动按钮 */
+[data-nextjs-dialog-overlay],
+[data-nextjs-toast],
+.__next-dev-overlay {
+  display: none !important;
+}
+
+/* 隐藏左下角固定定位的开发工具图标 */
+body>div[style*="position: fixed"][style*="bottom"][style*="left"],
+body>div[style*="position:fixed"][style*="bottom"][style*="left"] {
+  display: none !important;
+}
+
+/* 针对可能的 z-index 很高的开发工具 */
+body>div[style*="z-index: 9999"],
+body>div[style*="z-index: 10000"],
+body>div[style*="z-index:9999"],
+body>div[style*="z-index:10000"] {
+  display: none !important;
+}
