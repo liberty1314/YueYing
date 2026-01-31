@@ -188,8 +188,8 @@ services:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - frontend_node_modules:/app/node_modules
+      - frontend_next:/app/.next
     depends_on:
       - backend
     networks:
@@ -229,6 +229,10 @@ volumes:
   backend_cache:
     driver: local
   backend_uploads:
+    driver: local
+  frontend_node_modules:
+    driver: local
+  frontend_next:
     driver: local
   nginx_logs:
     driver: local

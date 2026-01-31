@@ -1,49 +1,47 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { Moon, Sun } from "lucide-react"
 import { flushSync } from "react-dom"
 
 import { cn } from "@/lib/utils"
+import { useUiStore } from "@/stores/uiStore"
 
 interface AnimatedThemeTogglerProps
   extends React.ComponentPropsWithoutRef<"button"> {
   duration?: number
 }
 
+/**
+ * AnimatedThemeToggler - 主题切换按钮组件
+ * 
+ * 集成 Zustand store 进行主题状态管理
+ * 使用 View Transition API 实现平滑的主题切换动画
+ * 
+ * @param duration - 动画持续时间（毫秒），默认 400ms
+ */
 export const AnimatedThemeToggler = ({
   className,
   duration = 400,
   ...props
 }: AnimatedThemeTogglerProps) => {
-  const [isDark, setIsDark] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    const updateTheme = () => {
-      setIsDark(document.documentElement.classList.contains("dark"))
-    }
-
-    updateTheme()
-
-    const observer = new MutationObserver(updateTheme)
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    })
-
-    return () => observer.disconnect()
-  }, [])
+  const { theme, toggleTheme: toggleThemeStore } = useUiStore()
+  const isDark = theme === 'dark'
 
   const toggleTheme = useCallback(async () => {
     if (!buttonRef.current) return
 
+    // 检查浏览器是否支持 View Transition API
+    if (!document.startViewTransition) {
+      // 不支持则直接切换主题
+      toggleThemeStore()
+      return
+    }
+
     await document.startViewTransition(() => {
       flushSync(() => {
-        const newTheme = !isDark
-        setIsDark(newTheme)
-        document.documentElement.classList.toggle("dark")
-        localStorage.setItem("theme", newTheme ? "dark" : "light")
+        toggleThemeStore()
       })
     }).ready
 
@@ -69,20 +67,27 @@ export const AnimatedThemeToggler = ({
         pseudoElement: "::view-transition-new(root)",
       }
     )
-  }, [isDark, duration])
+  }, [toggleThemeStore, duration])
 
   return (
     <button
       ref={buttonRef}
       onClick={toggleTheme}
+      aria-label={isDark ? "切换到亮色模式" : "切换到暗色模式"}
       className={cn(
-        "flex items-center justify-center w-9 h-9 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
+        "flex items-center justify-center w-9 h-9 rounded-lg",
+        "text-[var(--color-text-secondary)]",
+        "hover:bg-[var(--color-background-paper)]",
+        "transition-colors duration-200",
+        "focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]",
         className
       )}
       {...props}
     >
       {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">
+        {isDark ? "切换到亮色模式" : "切换到暗色模式"}
+      </span>
     </button>
   )
 }

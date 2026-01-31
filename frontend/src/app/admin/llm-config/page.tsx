@@ -1,329 +1,226 @@
 /**
  * LLM Configuration Page
- * Week 7 Day 5: LLM配置页面
+ * 
+ * 使用 ConfigForm 组件实现 LLM 配置管理
+ * 验证需求: 15.2
  * 
  * 注意：此页面已被 /app/admin/layout.tsx 包装在 AdminLayout 中
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, Button, Input, Badge, Switch } from '@/components/ui';
-import { useLLMConfig, type LLMProvider, type LLMConfigUpdate, type LLMConfig } from '@/hooks/useLLMConfig';
-import { BrainCircuitIcon, CheckCircleIcon, XCircleIcon, EyeIcon, EyeOffIcon, SaveIcon } from 'lucide-react';
+import { useMemo } from 'react';
+import { z } from 'zod';
+import { ConfigForm, ConfigField } from '@/components/admin/ConfigForm';
+import { useLLMConfig } from '@/hooks/useLLMConfig';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { AppleCard } from '@/components/ui/AppleCard';
+import { Badge } from '@/components/ui/badge';
 
 export default function LLMConfigPage() {
-  const { config, presets, loading, error, updateConfig, createConfig, testConnection } = useLLMConfig();
+  const { config, presets, loading, error, updateConfig, createConfig } = useLLMConfig();
 
-  const [formData, setFormData] = useState<LLMConfigUpdate>({});
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  // 定义 LLM 配置字段
+  const fields: ConfigField[] = useMemo(() => [
+    {
+      name: 'provider',
+      label: 'LLM 提供商',
+      type: 'select',
+      options: [
+        { label: 'SiliconFlow', value: 'siliconflow' },
+        { label: 'DeepSeek', value: 'deepseek' },
+        { label: 'OpenAI', value: 'openai' },
+        { label: 'Anthropic Claude', value: 'anthropic' },
+      ],
+      helpText: '选择 LLM 服务提供商',
+      section: '基础配置',
+      validation: z.string().min(1, '请选择提供商'),
+    },
+    {
+      name: 'api_key',
+      label: 'API 密钥',
+      type: 'password',
+      placeholder: 'sk-...',
+      helpText: '从提供商处获取的 API 密钥',
+      section: '基础配置',
+      validation: z.string().min(1, 'API 密钥不能为空'),
+    },
+    {
+      name: 'base_url',
+      label: 'Base URL',
+      type: 'text',
+      placeholder: 'https://api.siliconflow.cn/v1',
+      helpText: '可选，自定义 API 端点地址',
+      section: '基础配置',
+    },
+    {
+      name: 'default_model',
+      label: '默认模型',
+      type: 'text',
+      placeholder: 'deepseek-ai/DeepSeek-V3',
+      helpText: '默认使用的模型名称',
+      section: '基础配置',
+    },
+    {
+      name: 'temperature',
+      label: '温度 (Temperature)',
+      type: 'number',
+      placeholder: '0.7',
+      helpText: '控制输出的随机性，范围 0-2，值越高输出越随机',
+      section: '模型参数',
+      min: 0,
+      max: 2,
+      step: 0.1,
+      validation: z.number().min(0, '温度不能小于 0').max(2, '温度不能大于 2'),
+    },
+    {
+      name: 'max_tokens',
+      label: '最大 Token 数',
+      type: 'number',
+      placeholder: '2000',
+      helpText: '生成文本的最大长度',
+      section: '模型参数',
+      min: 1,
+      max: 100000,
+      validation: z.number().min(1, '最大 Token 数至少为 1').max(100000, '最大 Token 数不能超过 100000').nullable(),
+    },
+    {
+      name: 'top_p',
+      label: 'Top P',
+      type: 'number',
+      placeholder: '1.0',
+      helpText: '核采样参数，范围 0-1',
+      section: '模型参数',
+      min: 0,
+      max: 1,
+      step: 0.1,
+      validation: z.number().min(0, 'Top P 不能小于 0').max(1, 'Top P 不能大于 1'),
+    },
+    {
+      name: 'enabled',
+      label: '启用 LLM 服务',
+      type: 'switch',
+      helpText: '是否启用 LLM 功能',
+      section: '功能开关',
+    },
+    {
+      name: 'auto_tag_enabled',
+      label: '启用自动标签生成',
+      type: 'switch',
+      helpText: '是否自动为内容生成标签',
+      section: '功能开关',
+    },
+    {
+      name: 'description',
+      label: '描述',
+      type: 'textarea',
+      placeholder: '可选，添加配置说明',
+      helpText: '帮助你记住这个配置的用途',
+      section: '其他设置',
+      rows: 3,
+    },
+  ], []);
 
-  // 当 config 加载完成时，初始化 formData
-  useEffect(() => {
-    if (config && Object.keys(formData).length === 0) {
-      setFormData({
-        provider: config.provider,
-        api_key: config.api_key,
-        base_url: config.base_url,
-        default_model: config.default_model,
-        temperature: config.temperature,
-        max_tokens: config.max_tokens,
-        top_p: config.top_p,
-        enabled: config.enabled,
-        auto_tag_enabled: config.auto_tag_enabled,
-        description: config.description,
-      });
+  // 初始值
+  const initialValues = useMemo(() => ({
+    provider: config?.provider || 'siliconflow',
+    api_key: config?.api_key || '',
+    base_url: config?.base_url || '',
+    default_model: config?.default_model || '',
+    temperature: config?.temperature ?? 0.7,
+    max_tokens: config?.max_tokens || null,
+    top_p: config?.top_p ?? 1.0,
+    enabled: config?.enabled ?? true,
+    auto_tag_enabled: config?.auto_tag_enabled ?? false,
+    description: config?.description || '',
+  }), [config]);
+
+  // 提交处理
+  const handleSubmit = async (data: Record<string, any>) => {
+    if (config) {
+      await updateConfig(data);
+    } else {
+      await createConfig(data);
     }
-  }, [config]);
-
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
   };
 
-  const handleTest = async () => {
-    setTesting(true);
-    setTestResult(null);
-    try {
-      // 使用当前表单数据进行测试
-      const testData = {
-        provider: getCurrentValue('provider') as LLMProvider,
-        api_key: getCurrentValue('api_key') as string,
-        base_url: getCurrentValue('base_url') as string | undefined,
-        model: getCurrentValue('default_model') as string | undefined,
-      };
-
-      const success = await testConnection(testData);
-      setTestResult(success ? 'success' : 'error');
-      showToast(success ? '连接测试成功' : '连接测试失败', success ? 'success' : 'error');
-    } catch (err) {
-      setTestResult('error');
-      showToast(err instanceof Error ? err.message : '连接测试失败', 'error');
-    } finally {
-      setTesting(false);
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      let savedConfig: LLMConfig;
-      if (config) {
-        savedConfig = await updateConfig(formData);
-      } else {
-        savedConfig = await createConfig(formData as Required<LLMConfigUpdate>);
-      }
-      showToast('配置已保存', 'success');
-
-      // 保存成功后，用返回的配置更新 formData
-      setFormData({
-        provider: savedConfig.provider,
-        api_key: savedConfig.api_key,
-        base_url: savedConfig.base_url,
-        default_model: savedConfig.default_model,
-        temperature: savedConfig.temperature,
-        max_tokens: savedConfig.max_tokens,
-        top_p: savedConfig.top_p,
-        enabled: savedConfig.enabled,
-        auto_tag_enabled: savedConfig.auto_tag_enabled,
-        description: savedConfig.description,
-      });
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : '保存失败', 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const getCurrentValue = (key: keyof LLMConfigUpdate) => {
-    return formData[key] !== undefined ? formData[key] : config?.[key as keyof typeof config];
-  };
-
+  // 加载状态
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  // 错误状态
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+          LLM 配置
+        </h1>
+        <AppleCard variant="elevated" sx={{ p: 4 }}>
+          <div className="text-center space-y-2">
+            <p className="text-[var(--color-error)]">加载失败</p>
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              {error.message}
+            </p>
+          </div>
+        </AppleCard>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Toast 通知 */}
-      {toast && (
-        <div
-          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-            }`}
-        >
-          {toast.message}
-        </div>
-      )}
+      {/* 配置表单 */}
+      <ConfigForm
+        title="LLM 配置"
+        description="配置大语言模型的参数和 API 密钥"
+        fields={fields}
+        initialValues={initialValues}
+        onSubmit={handleSubmit}
+        loading={loading}
+      />
 
-      {/* 页面头部 */}
-      <div className="flex items-center gap-3">
-        <BrainCircuitIcon className="w-8 h-8 text-primary-600" />
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">LLM配置</h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {config ? '已配置' : '未配置'} {config && `• 提供商: ${config.provider}`}
+      {/* 环境变量预设信息 */}
+      {presets && Object.keys(presets).length > 0 && (
+        <AppleCard variant="elevated" sx={{ p: 4 }}>
+          <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
+            环境变量预设
+          </h3>
+          <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+            以下提供商已在环境变量中配置了 API 密钥
           </p>
-        </div>
-      </div>
-
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
-          加载失败: {error.message}
-        </div>
-      )}
-
-      {/* LLM 提供商配置卡片 */}
-      <div className="grid grid-cols-1 gap-6">
-        {/* 主配置表单 */}
-        <Card className="p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">基础配置</h2>
-
-          {/* 提供商选择 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              LLM提供商
-            </label>
-            <select
-              value={getCurrentValue('provider') as string || 'siliconflow'}
-              onChange={(e) => {
-                const newProvider = e.target.value as LLMProvider;
-                const preset = presets?.[newProvider];
-
-                // 切换提供商时自动填充预设配置（包括 API Key）
-                if (preset) {
-                  setFormData({
-                    ...formData,
-                    provider: newProvider,
-                    api_key: preset.api_key || '',  // 从预设中读取 API Key
-                    base_url: preset.base_url,
-                    default_model: preset.default_model,
-                  });
-                } else {
-                  setFormData({
-                    ...formData,
-                    provider: newProvider,
-                    api_key: '',  // 清空 API Key
-                  });
-                }
-              }}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            >
-              <option value="siliconflow">SiliconFlow</option>
-              <option value="deepseek">DeepSeek</option>
-              <option value="openai">OpenAI</option>
-              <option value="anthropic">Anthropic Claude</option>
-            </select>
-          </div>
-
-          {/* API密钥 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              API密钥
-            </label>
-            <div className="relative">
-              <Input
-                type={showApiKey ? 'text' : 'password'}
-                value={getCurrentValue('api_key') as string || ''}
-                onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                placeholder="sk-..."
-                className="pr-12"
-                fullWidth
-              />
-              <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 z-10"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(presets).map(([provider, preset]) => (
+              <div
+                key={provider}
+                className="p-4 rounded-[var(--radius-md)] border border-[var(--color-text-disabled)]/20 bg-[var(--color-background-paper)]"
               >
-                {showApiKey ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Base URL */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Base URL (可选)
-            </label>
-            <Input
-              value={getCurrentValue('base_url') as string || ''}
-              onChange={(e) => setFormData({ ...formData, base_url: e.target.value })}
-              placeholder="https://api.siliconflow.cn/v1"
-              fullWidth
-            />
-          </div>
-
-          {/* 默认模型 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              默认模型
-            </label>
-            <Input
-              value={getCurrentValue('default_model') as string || ''}
-              onChange={(e) => setFormData({ ...formData, default_model: e.target.value })}
-              placeholder="deepseek-ai/DeepSeek-V3"
-              fullWidth
-            />
-          </div>
-
-          {/* 温度参数 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              温度 (Temperature): {getCurrentValue('temperature') || 0.7}
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="2"
-              step="0.1"
-              value={getCurrentValue('temperature') as number || 0.7}
-              onChange={(e) => setFormData({ ...formData, temperature: parseFloat(e.target.value) })}
-              className="w-full"
-            />
-          </div>
-
-          {/* 功能开关 */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label htmlFor="enabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                启用LLM服务
-              </label>
-              <Switch
-                checked={getCurrentValue('enabled') as boolean ?? true}
-                onChange={(checked) => setFormData({ ...formData, enabled: checked })}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="auto_tag" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                启用自动标签生成
-              </label>
-              <Switch
-                checked={getCurrentValue('auto_tag_enabled') as boolean ?? false}
-                onChange={(checked) => setFormData({ ...formData, auto_tag_enabled: checked })}
-              />
-            </div>
-          </div>
-
-          {/* 操作按钮 */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <Button
-              onClick={handleTest}
-              variant="outline"
-              disabled={testing || !getCurrentValue('api_key')}
-              className="gap-2"
-            >
-              {testing ? '测试中...' : '测试连接'}
-              {testResult === 'success' && <CheckCircleIcon className="w-5 h-5 text-green-500" />}
-              {testResult === 'error' && <XCircleIcon className="w-5 h-5 text-red-500" />}
-            </Button>
-            <Button
-              onClick={handleSave}
-              variant="primary"
-              disabled={saving || Object.keys(formData).length === 0}
-              className="gap-2"
-            >
-              <SaveIcon className="w-5 h-5" />
-              {saving ? '保存中...' : '保存配置'}
-            </Button>
-          </div>
-        </Card>
-
-        {/* 预设配置 */}
-        {presets && (
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              环境变量预设
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(presets).map(([provider, preset]) => (
-                <div
-                  key={provider}
-                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                      {provider}
-                    </h3>
-                    <Badge variant={preset.api_key ? 'success' : 'default'}>
-                      {preset.api_key ? '已配置' : '未配置'}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {preset.description}
-                  </p>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-[var(--color-text-primary)] capitalize">
+                    {provider}
+                  </h4>
+                  <Badge variant={preset.api_key ? 'success' : 'default'}>
+                    {preset.api_key ? '已配置' : '未配置'}
+                  </Badge>
                 </div>
-              ))}
-            </div>
-          </Card>
-        )}
-      </div>
+                <p className="text-sm text-[var(--color-text-secondary)]">
+                  {preset.description}
+                </p>
+                {preset.default_model && (
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                    默认模型: {preset.default_model}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </AppleCard>
+      )}
     </div>
   );
 }

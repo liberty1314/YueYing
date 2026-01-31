@@ -13,7 +13,6 @@ import { MainLayout } from '@/components/layout';
 import { UnifiedSearchBar } from '@/components/features/search/UnifiedSearchBar';
 import { SearchResultGrid } from '@/components/features/search/SearchResultGrid';
 import { SimpleFilterBar } from '@/components/features/search/SimpleFilterBar';
-import { Badge } from '@/components/ui';
 import { SearchIcon } from 'lucide-react';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { api, APIError } from '@/lib/apiClient';
@@ -35,7 +34,6 @@ interface SearchResult {
   external_id?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 const currentYear = new Date().getFullYear();
 
 export default function SearchPage() {
@@ -43,7 +41,6 @@ export default function SearchPage() {
   const initialQuery = searchParams.get('q') || '';
 
   const [query, setQuery] = useState(initialQuery);
-  const [searchMode, setSearchMode] = useState<'keyword' | 'semantic'>('keyword');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState('');
@@ -54,7 +51,6 @@ export default function SearchPage() {
   // 详情弹窗状态
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<any>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [forceAdded, setForceAdded] = useState(false);
 
   // 添加到收藏库弹窗状态
@@ -87,37 +83,30 @@ export default function SearchPage() {
   // 初始搜索
   useEffect(() => {
     if (initialQuery) {
-      performSearch(initialQuery, 'keyword');
+      performSearch(initialQuery);
     }
   }, [initialQuery]);
 
-  const performSearch = async (searchQuery: string, mode: 'keyword' | 'semantic') => {
+  const performSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
 
     setLoading(true);
     setQuery(searchQuery);
-    setSearchMode(mode);
 
     try {
       const allResults: SearchResult[] = [];
 
-      if (mode === 'keyword') {
-        // 关键词搜索：并行调用本地库和统一搜索接口
-        const [localResults, externalResults] = await Promise.allSettled([
-          searchLocal(searchQuery),
-          searchUnified(searchQuery, selectedType || 'all'),
-        ]);
+      // 关键词搜索：并行调用本地库和统一搜索接口
+      const [localResults, externalResults] = await Promise.allSettled([
+        searchLocal(searchQuery),
+        searchUnified(searchQuery, selectedType || 'all'),
+      ]);
 
-        if (localResults.status === 'fulfilled') {
-          allResults.push(...localResults.value);
-        }
-        if (externalResults.status === 'fulfilled') {
-          allResults.push(...externalResults.value);
-        }
-      } else {
-        // AI 语义搜索
-        const semanticResults = await searchSemantic(searchQuery);
-        allResults.push(...semanticResults);
+      if (localResults.status === 'fulfilled') {
+        allResults.push(...localResults.value);
+      }
+      if (externalResults.status === 'fulfilled') {
+        allResults.push(...externalResults.value);
       }
 
       setResults(allResults);
@@ -190,37 +179,6 @@ export default function SearchPage() {
     }
   };
 
-  // AI 语义搜索
-  const searchSemantic = async (searchQuery: string): Promise<SearchResult[]> => {
-    try {
-      const data = await api.post<any[]>('/rag/search', {
-        query: searchQuery,
-        limit: 20,
-        min_similarity: 0.3,
-      });
-
-      // 适配RAG搜索结果格式
-      return (data || []).map((item: any) => ({
-        id: item.user_item?.id || item.item?.id,
-        title: item.item?.title || '',
-        original_title: item.item?.original_title,
-        content_type: item.item?.content_type || 'movie',
-        poster_url: item.item?.poster_url,
-        backdrop_url: item.item?.backdrop_url,
-        year: item.item?.year,
-        rating: item.item?.rating,
-        overview: item.item?.overview,
-        source: 'library' as const,
-        external_id: item.item?.id?.toString(),
-      }));
-    } catch (error) {
-      if (error instanceof APIError) {
-        console.error('Semantic search error:', error.detail);
-      }
-      return [];
-    }
-  };
-
   // 筛选结果
   const filteredResults = results.filter((result) => {
     if (selectedType && result.content_type !== selectedType) return false;
@@ -276,7 +234,7 @@ export default function SearchPage() {
               统一搜索
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              搜索电影、剧集、动画、书籍和游戏
+              搜索电影、剧集、动画、书籍
             </p>
           </div>
 
@@ -284,7 +242,6 @@ export default function SearchPage() {
           <UnifiedSearchBar
             onSearch={performSearch}
             initialQuery={query}
-            initialMode={searchMode}
           />
 
           {/* Filters */}
@@ -304,11 +261,6 @@ export default function SearchPage() {
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   找到 <strong className="text-gray-900 dark:text-white">{filteredResults.length}</strong> 条结果
                 </span>
-                {searchMode === 'semantic' && (
-                  <Badge variant="primary" size="sm">
-                    AI 语义搜索
-                  </Badge>
-                )}
               </div>
               {/* View Mode Toggle */}
               <div className="flex items-center gap-2">
@@ -355,7 +307,6 @@ export default function SearchPage() {
           content={selectedContent}
           onClose={handleCloseDetail}
           onAddToLibrary={handleAddToLibrary}
-          refreshTrigger={refreshTrigger}
           forceAdded={forceAdded}
         />
 

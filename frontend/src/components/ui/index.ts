@@ -3,6 +3,8 @@ export { AppleButton } from './AppleButton';
 export { AppleCard } from './AppleCard';
 export { AppleInput } from './AppleInput';
 export { AppleDialog } from './AppleDialog';
+export { AppleSelect } from './AppleSelect';
+export { AppleSwitch } from './AppleSwitch';
 export { default as AppleTabSwitch } from './AppleTabSwitch';
 export { Loading } from './Loading';
 export { AnimatedThemeToggler } from './animated-theme-toggler';
@@ -50,4 +52,6 @@ export {
 export { ErrorDisplay, InlineError, ErrorToast } from './ErrorDisplay';
 
 export type { AppleInputProps } from './AppleInput';
+export type { AppleSelectProps, SelectOption } from './AppleSelect';
+export type { AppleSwitchProps } from './AppleSwitch';
 export type { SwitchProps } from './Switch';

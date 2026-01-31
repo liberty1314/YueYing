@@ -173,3 +173,6 @@ backend/data/chromadb/
 
 # ====================================
 
+.claude/
+.kiro/
+AGENTS.md

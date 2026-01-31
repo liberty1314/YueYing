@@ -4,8 +4,10 @@ import './globals.css';
 import NextTopLoader from 'nextjs-toploader';
 import ThemeRegistry from '@/components/shared/ThemeRegistry';
 import AuthProvider from '@/components/shared/AuthProvider';
+import QueryProvider from '@/components/providers/QueryProvider';
 import ErrorBoundary from '@/components/shared/ErrorBoundary';
 import { Navbar } from '@/components/layout/Navbar';
+import { themeScript } from '@/lib/theme-script';
 
 // 字体优化
 const inter = Inter({
@@ -26,6 +28,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className={inter.variable} suppressHydrationWarning>
+      <head>
+        {/* 主题初始化脚本 - 防止闪烁 */}
+        <script
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+          suppressHydrationWarning
+        />
+      </head>
       <body className={`${inter.className} bg-background text-foreground`}>
         {/* 全局路由加载进度条 - 解决开发环境懒编译导致的"无反馈"问题 */}
         <NextTopLoader
@@ -40,14 +49,16 @@ export default function RootLayout({
           shadow="0 0 5px #cbd5e1"
           zIndex={1600}
         />
-        <ThemeRegistry>
-          <AuthProvider>
-            <ErrorBoundary>
-              <Navbar />
-              {children}
-            </ErrorBoundary>
-          </AuthProvider>
-        </ThemeRegistry>
+        <QueryProvider>
+          <ThemeRegistry>
+            <AuthProvider>
+              <ErrorBoundary>
+                <Navbar />
+                {children}
+              </ErrorBoundary>
+            </AuthProvider>
+          </ThemeRegistry>
+        </QueryProvider>
       </body>
     </html>
   );

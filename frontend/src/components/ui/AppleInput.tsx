@@ -1,120 +1,119 @@
+'use client';
+
+import { forwardRef } from 'react';
 import { TextField, TextFieldProps, styled } from '@mui/material';
 
-const StyledTextField = styled(TextField)(({ theme }) => ({
-    '& .MuiOutlinedInput-root': {
-        borderRadius: 12,
-        backgroundColor: theme.palette.mode === 'light' ? '#F5F5F7' : '#1C1C1E',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        fontSize: '16px',
-        minHeight: '48px',
+export interface AppleInputProps extends Omit<TextFieldProps, 'variant'> {
+  helpText?: string;
+}
 
-        '& fieldset': {
-            borderColor: 'transparent',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        },
-
-        '&:hover': {
-            backgroundColor: theme.palette.mode === 'light' ? '#EBEBED' : '#2C2C2E',
-
-            '& fieldset': {
-                borderColor: theme.palette.primary.main,
-                borderWidth: '1px',
-            },
-        },
-
-        '&.Mui-focused': {
-            backgroundColor: theme.palette.mode === 'light' ? '#FFFFFF' : '#1C1C1E',
-            boxShadow: `0 0 0 4px ${theme.palette.mode === 'light' ? 'rgba(0, 122, 255, 0.1)' : 'rgba(0, 122, 255, 0.2)'}`,
-
-            '& fieldset': {
-                borderColor: theme.palette.primary.main,
-                borderWidth: '2px',
-            },
-        },
-
-        '&.Mui-error fieldset': {
-            borderColor: theme.palette.error.main,
-        },
+const StyledTextField = styled(TextField)(() => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 'var(--radius-md, 12px)',
+    backgroundColor: 'var(--color-background-elevated, #FFFFFF)',
+    transition: 'all 200ms ease-in-out',
+    
+    '& fieldset': {
+      borderColor: 'transparent',
+      transition: 'border-color 200ms ease-in-out',
     },
-
-    '& .MuiInputLabel-root': {
-        color: theme.palette.text.secondary,
-        fontSize: '14px',
-        fontWeight: 500,
-
-        '&.Mui-focused': {
-            color: theme.palette.primary.main,
-        },
+    
+    '&:hover fieldset': {
+      borderColor: 'var(--color-text-secondary, #86868B)',
     },
-
-    '& .MuiFormHelperText-root': {
-        marginLeft: 4,
-        marginTop: 6,
-        fontSize: '13px',
+    
+    '&.Mui-focused fieldset': {
+      borderColor: 'var(--color-primary, #007AFF)',
+      borderWidth: '2px',
     },
-
-    '& .MuiSelect-select': {
-        paddingTop: '14px',
-        paddingBottom: '14px',
+    
+    '&.Mui-focused': {
+      backgroundColor: 'var(--color-background-default, #FFFFFF)',
     },
-
-    '& .MuiInputBase-input': {
-        padding: '14px 16px',
+    
+    '&.Mui-disabled': {
+      opacity: 0.5,
+      backgroundColor: 'var(--color-background-paper, #F5F5F7)',
     },
-
-    '& .MuiInputBase-multiline': {
-        padding: 0,
+    
+    '&.Mui-error fieldset': {
+      borderColor: 'var(--color-error, #FF3B30)',
     },
+    
+    '&.Mui-error:hover fieldset': {
+      borderColor: 'var(--color-error, #FF3B30)',
+    },
+    
+    '&.Mui-error.Mui-focused fieldset': {
+      borderColor: 'var(--color-error, #FF3B30)',
+    },
+  },
+  
+  '& .MuiInputBase-input': {
+    color: 'var(--color-text-primary, #1D1D1F)',
+    padding: '12px 16px',
+    fontSize: '16px',
+    
+    '&::placeholder': {
+      color: 'var(--color-text-disabled, #C7C7CC)',
+      opacity: 1,
+    },
+  },
+  
+  '& .MuiInputLabel-root': {
+    color: 'var(--color-text-primary, #1D1D1F)',
+    fontSize: '14px',
+    fontWeight: 500,
+    
+    '&.Mui-focused': {
+      color: 'var(--color-primary, #007AFF)',
+    },
+    
+    '&.Mui-error': {
+      color: 'var(--color-error, #FF3B30)',
+    },
+    
+    '&.Mui-error.Mui-focused': {
+      color: 'var(--color-error, #FF3B30)',
+    },
+  },
+  
+  '& .MuiFormHelperText-root': {
+    color: 'var(--color-text-secondary, #86868B)',
+    fontSize: '12px',
+    marginTop: '4px',
+    marginLeft: 0,
+    
+    '&.Mui-error': {
+      color: 'var(--color-error, #FF3B30)',
+    },
+  },
+  
+  '& .MuiSelect-icon': {
+    color: 'var(--color-text-secondary, #86868B)',
+  },
+  
+  '& .MuiInputBase-multiline': {
+    padding: 0,
+  },
 }));
 
-/**
- * Apple 风格输入框组件的属性接口
- * 
- * @interface AppleInputProps
- * @extends {Omit<TextFieldProps, 'variant'>}
- */
-export interface AppleInputProps extends Omit<TextFieldProps, 'variant'> {
-    // Additional custom props can be added here
-}
+const AppleInput = forwardRef<HTMLDivElement, AppleInputProps>(
+  ({ helpText, helperText, ...props }, ref) => {
+    const finalHelperText = helperText || helpText;
+    
+    return (
+      <StyledTextField
+        ref={ref}
+        helperText={finalHelperText}
+        fullWidth
+        {...props}
+      />
+    );
+  }
+);
 
-/**
- * Apple 风格输入框组件
- * 
- * 基于 Material-UI TextField 构建的 Apple 风格输入框。
- * 特点：圆角设计、柔和的背景色、流畅的聚焦动画。
- * 
- * @component
- * @example
- * ```tsx
- * // 基础输入框
- * <AppleInput
- *   label="用户名"
- *   placeholder="请输入用户名"
- *   value={value}
- *   onChange={(e) => setValue(e.target.value)}
- * />
- * 
- * // 带错误提示的输入框
- * <AppleInput
- *   label="邮箱"
- *   error
- *   helperText="邮箱格式不正确"
- * />
- * 
- * // 多行文本输入框
- * <AppleInput
- *   label="备注"
- *   multiline
- *   rows={4}
- *   fullWidth
- * />
- * ```
- * 
- * @param {AppleInputProps} props - 组件属性
- * @returns {JSX.Element} Apple 风格输入框组件
- */
-export function AppleInput(props: AppleInputProps) {
-    return <StyledTextField variant="outlined" {...props} />;
-}
+AppleInput.displayName = 'AppleInput';
 
+export { AppleInput };
 export default AppleInput;

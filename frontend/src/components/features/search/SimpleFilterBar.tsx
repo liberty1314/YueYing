@@ -69,24 +69,54 @@ export function SimpleFilterBar({
             </Badge>
           )}
         </div>
-        <div className="px-2">
-          <input
-            type="range"
-            min={1990}
-            max={currentYear}
-            value={selectedYearRange?.[0] || 1990}
-            onChange={(e) => {
-              const minYear = parseInt(e.target.value);
-              const maxYear = selectedYearRange?.[1] || currentYear;
-              onYearRangeChange([minYear, maxYear]);
-            }}
-            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
-          />
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
-            <span>1990</span>
-            <span>{selectedYearRange?.[0] || 1990}</span>
-            <span>{selectedYearRange?.[1] || currentYear}</span>
-            <span>{currentYear}</span>
+        <div className="px-2 space-y-4">
+          {/* 最小年份滑块 */}
+          <div>
+            <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+              最早年份: {selectedYearRange?.[0] || 1990}
+            </label>
+            <input
+              type="range"
+              min={1990}
+              max={currentYear}
+              value={selectedYearRange?.[0] || 1990}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const minYear = parseInt(e.target.value);
+                const maxYear = selectedYearRange?.[1] || currentYear;
+                // 确保最小年份不大于最大年份
+                if (minYear <= maxYear) {
+                  onYearRangeChange([minYear, maxYear]);
+                }
+              }}
+              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500"
+            />
+          </div>
+          
+          {/* 最大年份滑块 */}
+          <div>
+            <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+              最晚年份: {selectedYearRange?.[1] || currentYear}
+            </label>
+            <input
+              type="range"
+              min={1990}
+              max={currentYear}
+              value={selectedYearRange?.[1] || currentYear}
+              onChange={(e) => {
+                const maxYear = parseInt(e.target.value);
+                const minYear = selectedYearRange?.[0] || 1990;
+                // 确保最大年份不小于最小年份
+                if (maxYear >= minYear) {
+                  onYearRangeChange([minYear, maxYear]);
+                }
+              }}
+              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500"
+            />
+          </div>
+          
+          {/* 年份范围显示 */}
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <span>可选范围: 1990 - {currentYear}</span>
           </div>
         </div>
       </div>
